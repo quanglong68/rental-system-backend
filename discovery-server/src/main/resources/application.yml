@@ -1,0 +1,26 @@
+# Task B1: Eureka standalone 1 node (docs muc 4.1).
+# Khong dang ky chinh minh, khong fetch registry tu peer.
+server:
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  server:
+    # Dev 1 node: tat che do tu bao ve de instance het han bi loai ngay, tranh treo danh sach.
+    enable-self-preservation: ${EUREKA_SELF_PRESERVATION:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

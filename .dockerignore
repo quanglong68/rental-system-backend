@@ -1,0 +1,8 @@
+# Build context la repo root: loai file khong can thiet de build nhanh, anh nhe.
+target/
+.git/
+.idea/
+docs/
+*.md
+.env
+infra/postgres/

@@ -137,7 +137,10 @@ services:
     restart: "no"
 
   discovery-server:
-    build: ../discovery-server
+    # Build tu repo root de thay parent pom (dockerfile tuong tu cho cac service khac).
+    build:
+      context: ..
+      dockerfile: discovery-server/Dockerfile
     container_name: rental-discovery
     restart: unless-stopped
     environment:
