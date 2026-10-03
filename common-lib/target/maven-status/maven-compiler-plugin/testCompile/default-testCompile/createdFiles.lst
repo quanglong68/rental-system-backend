@@ -1,2 +1,3 @@
 com\rental\common\error\GlobalExceptionHandlerTest$DummyController.class
+com\rental\common\security\HeaderAuthenticationFilterTest.class
 com\rental\common\error\GlobalExceptionHandlerTest.class
