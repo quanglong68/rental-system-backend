@@ -154,7 +154,9 @@ services:
       retries: 12
 
   auth-service:
-    build: ../auth-service
+    build:
+      context: ..
+      dockerfile: auth-service/Dockerfile
     container_name: rental-auth
     restart: unless-stopped
     depends_on:
