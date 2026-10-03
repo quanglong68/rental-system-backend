@@ -1,6 +1,0 @@
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\error\GlobalExceptionHandlerTest.java
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\feign\FeignDefaultConfigTest.java
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\feign\FeignErrorDecoderTest.java
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\feign\FeignHeaderInterceptorTest.java
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\feign\GetOnlyRetryerTest.java
-F:\rental-system-backend\common-lib\src\test\java\com\rental\common\security\HeaderAuthenticationFilterTest.java

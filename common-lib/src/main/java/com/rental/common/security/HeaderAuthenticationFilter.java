@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,6 +44,8 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
     public static final String MDC_CORRELATION_ID = "correlationId";
     public static final String MDC_USER_ID = "userId";
 
+    private static final Logger log = LoggerFactory.getLogger(HeaderAuthenticationFilter.class);
+
     private final ObjectMapper objectMapper;
 
     public HeaderAuthenticationFilter() {
@@ -59,6 +63,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
         MDC.put(MDC_CORRELATION_ID, correlationId);
         try {
             if (isSkipped(request.getRequestURI())) {
+                log.debug("Bo qua header-auth cho {}", request.getRequestURI());
                 chain.doFilter(request, response);
                 return;
             }
@@ -66,6 +71,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             String userId = request.getHeader(Headers.X_USER_ID);
             String userType = request.getHeader(Headers.X_USER_TYPE);
             if (isBlank(userId) || isBlank(userType)) {
+                log.debug("Thieu header X-User-*: tra 401");
                 writeUnauthenticated(response, correlationId);
                 return;
             }
@@ -76,6 +82,8 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(principal,
                     null, authoritiesOf(roles));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("Da xac thuc {} ({}) voi {} quyen", principal.getUserId(), principal.getUserType(),
+                    roles.size());
             chain.doFilter(request, response);
         } finally {
             MDC.remove(MDC_CORRELATION_ID);
