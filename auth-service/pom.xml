@@ -17,6 +17,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -51,10 +56,10 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <!-- BCrypt cost 10 (docs muc 7.1). Chi crypto, chua can filter chain (Task C3) -->
+        <!-- Security: filter chain + @PreAuthorize + BCrypt cost 10 (docs muc 6.2, 7.1) -->
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-crypto</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <!-- JWT HS256: Auth ky, Gateway xac thuc (docs muc 2, 7.1) -->
         <dependency>
