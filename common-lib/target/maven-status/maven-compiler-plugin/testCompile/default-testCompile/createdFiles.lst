@@ -1,3 +1,7 @@
 com\rental\common\error\GlobalExceptionHandlerTest$DummyController.class
-com\rental\common\security\HeaderAuthenticationFilterTest.class
+com\rental\common\feign\FeignDefaultConfigTest.class
 com\rental\common\error\GlobalExceptionHandlerTest.class
+com\rental\common\feign\FeignHeaderInterceptorTest.class
+com\rental\common\feign\FeignErrorDecoderTest.class
+com\rental\common\feign\GetOnlyRetryerTest.class
+com\rental\common\security\HeaderAuthenticationFilterTest.class

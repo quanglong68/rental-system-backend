@@ -1,6 +1,8 @@
 package com.rental.common.error;
 
 import com.rental.common.constant.Headers;
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.UUID;
@@ -74,6 +76,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthenticated(AuthenticationException ex) {
         return build(ErrorCode.UNAUTHENTICATED.name(), "Chua dang nhap", ErrorCode.UNAUTHENTICATED.getHttpStatus(),
                 null);
+    }
+
+    /** Loi mang/timeout Feign (RetryableException) -> 503 DEPENDENCY_UNAVAILABLE (docs muc 5.2). */
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeign(FeignException ex) {
+        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Service phu thuoc khong phan hoi",
+                ErrorCode.DEPENDENCY_UNAVAILABLE.getHttpStatus(), null);
+    }
+
+    /** Mach ngat dang mo -> 503 DEPENDENCY_UNAVAILABLE (docs muc 5.2). */
+    @ExceptionHandler(CallNotPermittedException.class)
+    public ResponseEntity<ErrorResponse> handleCircuitOpen(CallNotPermittedException ex) {
+        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Service phu thuoc khong phan hoi",
+                ErrorCode.DEPENDENCY_UNAVAILABLE.getHttpStatus(), null);
     }
 
     /** Loi khong luong truoc -> 500 INTERNAL_ERROR, khong lo thong tin noi bo. */
