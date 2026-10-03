@@ -140,6 +140,16 @@
                             </exclude>
                         </excludes>
                     </configuration>
+                    <!-- Du an khong ke thua spring-boot-starter-parent nen phai khai execution
+                         repackage tuong minh (BOM import khong mang theo plugin executions) -->
+                    <executions>
+                        <execution>
+                            <id>repackage</id>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
