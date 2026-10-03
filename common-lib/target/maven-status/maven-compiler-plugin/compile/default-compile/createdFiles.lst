@@ -1,9 +1,13 @@
 com\rental\common\security\HeaderAuthenticationFilter.class
+com\rental\common\feign\GetOnlyRetryer.class
 com\rental\common\error\BusinessException.class
+com\rental\common\feign\FeignErrorDecoder.class
 com\rental\common\event\EventEnvelope.class
 com\rental\common\error\NotFoundException.class
+com\rental\common\feign\FeignDefaultConfig.class
 com\rental\common\error\ErrorResponse.class
 com\rental\common\event\EventEnvelope$EventEnvelopeBuilder.class
+com\rental\common\feign\FeignHeaderInterceptor.class
 com\rental\common\constant\Headers.class
 com\rental\common\error\DependencyUnavailableException.class
 com\rental\common\error\FieldViolation.class
