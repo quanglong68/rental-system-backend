@@ -1,4 +1,12 @@
+com\rental\common\error\ErrorResponse.class
 com\rental\common\event\EventEnvelope$EventEnvelopeBuilder.class
 com\rental\common\constant\Headers.class
+com\rental\common\error\DependencyUnavailableException.class
+com\rental\common\error\FieldViolation.class
 com\rental\common\constant\UserTypes.class
+com\rental\common\error\BusinessException.class
+com\rental\common\error\ErrorCode.class
+com\rental\common\error\ErrorResponse$ErrorResponseBuilder.class
 com\rental\common\event\EventEnvelope.class
+com\rental\common\error\NotFoundException.class
+com\rental\common\error\GlobalExceptionHandler.class

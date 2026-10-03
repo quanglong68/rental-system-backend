@@ -32,6 +32,13 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
         </dependency>
+        <!-- Servlet API: spring-web types (ServletRequestAttributes) tham chieu den;
+             provided vi service web runtime tu cung cap (Tomcat), lib khong dong goi theo -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- Jakarta Validation: @Valid tren DTO cac service tai dung -->
         <dependency>
             <groupId>jakarta.validation</groupId>
