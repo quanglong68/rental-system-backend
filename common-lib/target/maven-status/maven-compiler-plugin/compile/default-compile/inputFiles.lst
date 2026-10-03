@@ -1,3 +1,10 @@
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\constant\Headers.java
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\constant\UserTypes.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\BusinessException.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\DependencyUnavailableException.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\ErrorCode.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\ErrorResponse.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\FieldViolation.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\GlobalExceptionHandler.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\NotFoundException.java
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\event\EventEnvelope.java
