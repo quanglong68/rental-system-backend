@@ -1,1 +1,15 @@
+com\rental\auth\repository\AccountRepository.class
+com\rental\auth\entity\Account.class
+com\rental\auth\entity\AccountType.class
+com\rental\auth\repository\AccountRoleRepository.class
+com\rental\auth\repository\OutboxEventRepository.class
+com\rental\auth\entity\ProcessedEvent.class
+com\rental\auth\entity\RefreshToken.class
+com\rental\auth\entity\AccountRole.class
+com\rental\auth\entity\OutboxEvent.class
+com\rental\auth\repository\RoleRepository.class
+com\rental\auth\entity\AccountRoleId.class
+com\rental\auth\repository\ProcessedEventRepository.class
 com\rental\auth\AuthServiceApplication.class
+com\rental\auth\entity\Role.class
+com\rental\auth\repository\RefreshTokenRepository.class
