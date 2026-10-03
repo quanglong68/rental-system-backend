@@ -3,7 +3,13 @@ package com.rental.common.error;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rental.common.constant.Headers;
+import feign.Request;
+import feign.RetryableException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
+import java.util.Date;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,6 +126,30 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErrorResponse> response = handler.handleBusiness(new NotFoundException("Khong thay"));
 
         assertThat(response.getBody().getTraceId()).isNotBlank();
+    }
+
+    @Test
+    void feignTimeout_mapsTo503() {
+        feign.Request request = org.mockito.Mockito.mock(feign.Request.class);
+        org.mockito.Mockito.when(request.httpMethod()).thenReturn(feign.Request.HttpMethod.GET);
+        RetryableException timeout = new RetryableException(-1, "read timed out", Request.HttpMethod.GET,
+                new SocketTimeoutException(), (Date) null, request);
+
+        ResponseEntity<ErrorResponse> response = handler.handleFeign(timeout);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody().getCode()).isEqualTo("DEPENDENCY_UNAVAILABLE");
+    }
+
+    @Test
+    void circuitOpen_mapsTo503() {
+        CallNotPermittedException open = CallNotPermittedException
+                .createCallNotPermittedException(CircuitBreaker.ofDefaults("test"));
+
+        ResponseEntity<ErrorResponse> response = handler.handleCircuitOpen(open);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody().getCode()).isEqualTo("DEPENDENCY_UNAVAILABLE");
     }
 
     @SuppressWarnings("unused")
