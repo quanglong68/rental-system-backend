@@ -44,6 +44,11 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
+        <!-- SLF4J + MDC: log co correlationId xuyen service (docs muc 2) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
         <!-- Jackson: serialize EventEnvelope (outbox payload JSON, docs muc 5.3) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

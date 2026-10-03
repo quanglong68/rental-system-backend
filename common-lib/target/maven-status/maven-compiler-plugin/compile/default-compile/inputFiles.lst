@@ -8,3 +8,5 @@ F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\FieldV
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\GlobalExceptionHandler.java
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\error\NotFoundException.java
 F:\rental-system-backend\common-lib\src\main\java\com\rental\common\event\EventEnvelope.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\security\HeaderAuthenticationFilter.java
+F:\rental-system-backend\common-lib\src\main\java\com\rental\common\security\HeaderUser.java
