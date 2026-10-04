@@ -1,7 +1,9 @@
 package com.rental.auth;
 
+import com.rental.common.error.GlobalExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -12,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @EnableScheduling
 @SpringBootApplication
+@Import(GlobalExceptionHandler.class)
 public class AuthServiceApplication {
 
     public static void main(String[] args) {
