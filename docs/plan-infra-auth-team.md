@@ -232,6 +232,8 @@ rental-system-backend/
 ```
 0.1 parent pom → 0.2 compose/.env → A1 → A2 → A3 → A4 (common-lib xong, gồm FeignConfig)
 → B1 (discovery, song song được từ sau 0.2)
+
+
 → C1 → C2 → C3 → C4 → C5 → C6 (auth)
 → D1 → D2 → D3 (gateway, cần JWT_SECRET + common-lib error format)
 → E1 (E2E qua Gateway + Kafka)
