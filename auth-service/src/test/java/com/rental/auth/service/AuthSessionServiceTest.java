@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -54,7 +56,9 @@ class AuthSessionServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
-    private final JwtProvider jwtProvider = new JwtProvider(SECRET, "rental-auth", 900);
+    /** JwtProvider that (khong mock) de kiem tra token cap ra dung cau truc. */
+    @Spy
+    private JwtProvider jwtProvider = new JwtProvider(SECRET, "rental-auth", 900);
 
     @InjectMocks
     private AuthSessionService service;
@@ -171,7 +175,7 @@ class AuthSessionServiceTest {
 
         assertThatThrownBy(() -> service.refresh(refreshRequest("raw-old"))).isInstanceOf(BusinessException.class)
                 .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("REFRESH_TOKEN_INVALID"));
-        verify(refreshTokens).revokeAllByAccountId(7L, any());
+        verify(refreshTokens).revokeAllByAccountId(eq(7L), any());
     }
 
     @Test
@@ -242,7 +246,7 @@ class AuthSessionServiceTest {
         ArgumentCaptor<Account> saved = ArgumentCaptor.forClass(Account.class);
         verify(accounts).save(saved.capture());
         assertThat(saved.getValue().getPasswordHash()).isEqualTo("HASH-NEW");
-        verify(refreshTokens).revokeAllByAccountId(7L, any());
+        verify(refreshTokens).revokeAllByAccountId(eq(7L), any());
     }
 
     private static LoginRequest loginRequest(String username, String password) {
