@@ -108,6 +108,9 @@
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>
+                        <!-- Giu ten tham so phuong thuc de Spring doc @RequestParam/@PathVariable
+                             khong can ghi name (giong spring-boot-starter-parent). -->
+                        <parameters>true</parameters>
                         <!-- Lombok + MapStruct chay chung (can binding) -->
                         <annotationProcessorPaths>
                             <path>
