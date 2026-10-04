@@ -49,7 +49,9 @@ public class AuthSessionService {
     private final RefreshTokenService refreshTokenService;
 
     /** Dang nhap -> cap cap access + refresh (role that tu DB). */
-    @Transactional
+    // noRollbackFor: moi lan throw o day deu di kem ghi nhan trang thai phai giu lai
+    // (dem sai mat khau, locked_until, thu hoi token khi tai khoan bi khoa).
+    @Transactional(noRollbackFor = BusinessException.class)
     public LoginResponse login(LoginRequest request) {
         String username = normalize(request.getUsername());
         Account account = accounts.findByUsername(username)
@@ -72,7 +74,8 @@ public class AuthSessionService {
     }
 
     /** Refresh token -> cap cap moi (rotation), token cu bi thu hoi ngay. */
-    @Transactional
+    // noRollbackFor: truong hop replay phai giu lai revokeAll truoc khi nem 401.
+    @Transactional(noRollbackFor = BusinessException.class)
     public LoginResponse refresh(RefreshRequest request) {
         String hash = refreshTokenService.hash(request.getRefreshToken());
         RefreshToken token = refreshTokens.findByTokenHash(hash).orElseThrow(

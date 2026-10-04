@@ -40,6 +40,10 @@ class AccountServiceTest {
     private AccountRoleRepository accountRoles;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private AuthSessionService sessions;
+    @Mock
+    private AccountRoleLookup roleLookup;
 
     @InjectMocks
     private AccountService service;
@@ -176,11 +180,7 @@ class AccountServiceTest {
         Account staff = account(8L, "staff@mail.com", AccountType.STAFF);
         when(accounts.findById(8L)).thenReturn(Optional.of(staff));
         when(accounts.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
-        AccountRole link = new AccountRole();
-        link.setAccountId(8L);
-        link.setRoleId(2);
-        when(accountRoles.findByAccountId(8L)).thenReturn(List.of(link));
-        when(roles.findAllById(List.of(2))).thenReturn(List.of(role(2, "QUAN_LY")));
+        when(roleLookup.roleCodesOf(8L)).thenReturn(List.of("QUAN_LY"));
 
         AccountResponse res = service.updateStatus(8L, false);
 
