@@ -121,6 +121,11 @@
             <artifactId>kafka</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -128,6 +133,30 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Task E1: integration test Testcontainers (*IT) chay o phase verify, can Docker -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <!-- FAILSAFE BAT BUOC dung target/classes thay vi jar dong goi:
+                                 jar repackage cua Boot (BOOT-INF) khong doc duoc tren classpath
+                                 thuong -> Spring khong thay @SpringBootConfiguration -->
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <!-- Docker Engine moi (>= 29.x) bat API >= 1.40; Testcontainers mac dinh
+                                 gui 1.32 nen phai nang qua system property (docker-java doc key nay) -->
+                            <systemPropertyVariables>
+                                <api.version>1.44</api.version>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <finalName>auth-service</finalName>
