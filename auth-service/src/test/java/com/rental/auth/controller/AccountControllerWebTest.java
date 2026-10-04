@@ -15,6 +15,7 @@ import com.rental.auth.dto.PageResponse;
 import com.rental.auth.dto.RegisterResponse;
 import com.rental.auth.entity.AccountType;
 import com.rental.auth.service.AccountService;
+import com.rental.auth.service.AuthSessionService;
 import com.rental.common.constant.Headers;
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.ErrorCode;
@@ -43,6 +44,10 @@ class AccountControllerWebTest {
 
     @MockBean
     private AccountService accountService;
+
+    /** AuthController (Task C5) dung AuthSessionService; test nay chi focus API account. */
+    @MockBean
+    private AuthSessionService sessionService;
 
     @Test
     void register_khongCanAuth_201() throws Exception {
