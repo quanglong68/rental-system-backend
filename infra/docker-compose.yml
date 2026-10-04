@@ -184,7 +184,10 @@ services:
       retries: 12
 
   api-gateway:
-    build: ../api-gateway
+    # Build tu repo root de thay parent pom + common-lib (giong discovery/auth).
+    build:
+      context: ..
+      dockerfile: api-gateway/Dockerfile
     container_name: rental-gateway
     restart: unless-stopped
     depends_on:
