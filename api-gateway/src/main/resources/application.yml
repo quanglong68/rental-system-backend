@@ -1,0 +1,70 @@
+# Task D1: dinh tuyen theo prefix (docs Table 2) + Task D3: CORS, JWT (docs muc 4.2, 6.1).
+# Khong StripPrefix: service ha nguon giu nguyen /api/v1/... (controller da khai bao day du).
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Route tuong minh, khong dung discovery locator (ke hoach D1).
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: user-notification-service
+          uri: lb://user-notification-service
+          predicates:
+            - Path=/api/v1/users/**,/api/v1/staff/**,/api/v1/notifications/**,/api/v1/devices/**
+        - id: property-service
+          uri: lb://property-service
+          predicates:
+            - Path=/api/v1/locations/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**
+        - id: listing-booking-service
+          uri: lb://listing-booking-service
+          predicates:
+            - Path=/api/v1/listings/**,/api/v1/rental-requests/**,/api/v1/appointments/**,/api/v1/roommate-posts/**,/api/v1/roommate-applications/**
+        - id: contract-tenant-service
+          uri: lb://contract-tenant-service
+          predicates:
+            - Path=/api/v1/contracts/**,/api/v1/move-out-requests/**
+        - id: billing-utility-service
+          uri: lb://billing-utility-service
+          predicates:
+            - Path=/api/v1/utility-types/**,/api/v1/meters/**,/api/v1/meter-readings/**,/api/v1/services/**,/api/v1/contract-services/**,/api/v1/invoices/**,/api/v1/payments/**
+        - id: asset-maintenance-service
+          uri: lb://asset-maintenance-service
+          predicates:
+            - Path=/api/v1/appliances/**,/api/v1/reports/**,/api/v1/maintenance-requests/**,/api/v1/maintenance-schedules/**
+      # CORS cho web/app (docs muc 4.2, Task D3): origin qua env, FE dev mac dinh localhost:3000.
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# JWT (docs muc 7.1, 6.1): cung secret/iss/claims voi auth-service (veriy HS256).
+jwt:
+  secret: ${JWT_SECRET:please-override-min-32-chars-secret-for-local-dev}
+  issuer: ${JWT_ISSUER:rental-auth}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

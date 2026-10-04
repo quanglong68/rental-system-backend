@@ -1,0 +1,21 @@
+# Task E1: CI cho mono-repo (docs muc 12): build + test moi PR.
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build + test (gom integration test Testcontainers, runner co san Docker)
+        run: mvn -B clean verify
