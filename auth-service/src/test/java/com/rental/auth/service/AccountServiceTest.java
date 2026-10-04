@@ -44,6 +44,8 @@ class AccountServiceTest {
     private AuthSessionService sessions;
     @Mock
     private AccountRoleLookup roleLookup;
+    @Mock
+    private com.rental.auth.outbox.OutboxEventPublisher outboxPublisher;
 
     @InjectMocks
     private AccountService service;

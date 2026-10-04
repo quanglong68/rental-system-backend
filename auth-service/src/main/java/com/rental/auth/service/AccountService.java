@@ -9,6 +9,7 @@ import com.rental.auth.entity.Account;
 import com.rental.auth.entity.AccountRole;
 import com.rental.auth.entity.AccountType;
 import com.rental.auth.entity.Role;
+import com.rental.auth.outbox.OutboxEventPublisher;
 import com.rental.auth.repository.AccountRepository;
 import com.rental.auth.repository.AccountRoleRepository;
 import com.rental.auth.repository.RoleRepository;
@@ -52,6 +53,7 @@ public class AccountService {
     private final AccountRoleRepository accountRoles;
     private final AccountRoleLookup roleLookup;
     private final AuthSessionService sessions;
+    private final OutboxEventPublisher outboxPublisher;
     private final PasswordEncoder passwordEncoder;
 
     /** Dang ky CUSTOMER (PUBLIC) -> 201. Mac dinh gan role CUSTOMER. */
@@ -62,6 +64,9 @@ public class AccountService {
         checkUsernameAvailable(username);
         Account saved = saveAccount(username, req.getPassword(), AccountType.CUSTOMER);
         assignRoles(saved.getId(), List.of("CUSTOMER"));
+        // Ghi outbox cung giao dich tao account (docs muc 5.3, Task C6).
+        outboxPublisher.publishAccountRegistered(saved.getId(), saved.getAccountType(), saved.getUsername(),
+                req.getFullName(), req.getEmail(), req.getPhone());
         return new RegisterResponse(saved.getId(), saved.getUsername(), saved.getAccountType());
     }
 
@@ -75,6 +80,9 @@ public class AccountService {
         List<String> roleCodes = type == AccountType.ADMIN ? List.of("ADMIN") : validateStaffRoles(req.getRoles());
         Account saved = saveAccount(username, req.getPassword(), type);
         assignRoles(saved.getId(), roleCodes);
+        // Ghi outbox cung giao dich tao account (docs muc 5.3, Task C6).
+        outboxPublisher.publishAccountRegistered(saved.getId(), saved.getAccountType(), saved.getUsername(),
+                req.getFullName(), req.getEmail(), req.getPhone());
         return toResponse(saved, roleCodes);
     }
 
