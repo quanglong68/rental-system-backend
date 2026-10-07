@@ -2,8 +2,7 @@
 # de thay duoc parent pom. Tu chay: docker build -f discovery-server/Dockerfile .
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY discovery-server ./discovery-server
+COPY . .
 RUN mvn -q -pl discovery-server package -DskipTests
 
 FROM eclipse-temurin:21-jre
