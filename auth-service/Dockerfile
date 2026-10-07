@@ -1,9 +1,7 @@
 # Task C1: build tu repo root (compose: context .., dockerfile auth-service/Dockerfile).
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY common-lib ./common-lib
-COPY auth-service ./auth-service
+COPY . .
 RUN mvn -q -pl auth-service -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
