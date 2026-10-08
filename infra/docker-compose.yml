@@ -78,7 +78,15 @@ services:
       - |
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists \
           --topic auth.events --partitions 3 --replication-factor 1 \
-          --bootstrap-server kafka:9092
+          --bootstrap-server kafka:9092 && \
+        for topic in property.events listing.events contract.events billing.events asset.events; do \
+          /opt/kafka/bin/kafka-topics.sh --create --if-not-exists \
+            --topic $$topic --partitions 3 --replication-factor 1 --bootstrap-server kafka:9092; \
+        done && \
+        for topic in auth.events property.events listing.events contract.events billing.events asset.events; do \
+          /opt/kafka/bin/kafka-topics.sh --create --if-not-exists \
+            --topic $${topic}.DLT --partitions 3 --replication-factor 1 --bootstrap-server kafka:9092; \
+        done
     restart: "no"
 
   kafka-ui:
@@ -183,6 +191,45 @@ services:
       timeout: 5s
       retries: 12
 
+  user-notification-service:
+    build:
+      context: ..
+      dockerfile: user-notification-service/Dockerfile
+    container_name: rental-user-notification
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
+      SPRING_DATASOURCE_USERNAME: ${USER_DB_USER:-user_svc}
+      SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD:?USER_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NOTIFICATION_EMAIL_ENABLED: ${NOTIFICATION_EMAIL_ENABLED:-false}
+      NOTIFICATION_EMAIL_FROM: ${NOTIFICATION_EMAIL_FROM:-}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-false}
+      NOTIFICATION_PUSH_ENABLED: ${NOTIFICATION_PUSH_ENABLED:-false}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   api-gateway:
     # Build tu repo root de thay parent pom + common-lib (giong discovery/auth).
     build:
@@ -194,6 +241,8 @@ services:
       discovery-server:
         condition: service_healthy
       auth-service:
+        condition: service_healthy
+      user-notification-service:
         condition: service_healthy
     ports:
       - "8080:8080"
