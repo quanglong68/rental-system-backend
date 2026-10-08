@@ -17,6 +17,7 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>auth-service</module>
+        <module>user-notification-service</module>
     </modules>
 
     <properties>
