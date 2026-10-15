@@ -105,7 +105,7 @@ services:
       - rental-net
 
   minio:
-    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    image: minio/minio:latest
     container_name: rental-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -192,6 +192,8 @@ services:
       retries: 12
 
   user-notification-service:
+    ports:
+      - "127.0.0.1:8082:8082"
     build:
       context: ..
       dockerfile: user-notification-service/Dockerfile

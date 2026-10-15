@@ -1,9 +1,7 @@
 # Task D1: build tu repo root (compose: context .., dockerfile api-gateway/Dockerfile).
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY common-lib ./common-lib
-COPY api-gateway ./api-gateway
+COPY . .
 RUN mvn -q -pl api-gateway -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
