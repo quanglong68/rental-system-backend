@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/user_db}
+    username: ${SPRING_DATASOURCE_USERNAME:${USER_DB_USER:user_svc}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${USER_DB_PASSWORD:changeit}}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka/}
