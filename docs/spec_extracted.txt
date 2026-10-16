@@ -1,0 +1,1522 @@
+Đặc tả Hệ thống Microservices – Quản lý Cho thuê Phòng
+Bản nháp v0.2 · 03/10/2026 · Tài liệu dùng chung cho toàn team (BE, FE, DevOps, QA)
+1. Mục tiêu, phạm vi và nguyên tắc
+Mục tiêu: nền tảng cho thuê phòng gồm đăng tin, tìm phòng, đặt lịch xem, ở ghép, hợp đồng, chia hóa đơn theo đầu người, báo hư và bảo trì.
+Tác nhân:
+CUSTOMER: người thuê / người tìm phòng.
+STAFF: nhân viên, có role QUAN_LY, KY_THUAT, SALE. Mỗi staff được phân công theo tòa nhà (bảng staff_building), chỉ thấy và nhận thông báo của tòa nhà mình phụ trách.
+ADMIN: giám đốc / quản lý cấp cao, xem và nhận thông báo toàn hệ thống.
+Phạm vi giai đoạn đầu: chỉ đăng nhập bằng Username/Password (Email hoặc SĐT) qua JWT, không có SSO. Điện nước tính giá cố định (một đơn giá cho mỗi loại tiện ích). Thanh toán ghi nhận tiền mặt do staff nhập.
+Nguyên tắc bắt buộc cho cả team:
+Database per service: mỗi service có database riêng, tuyệt đối không truy vấn DB của service khác.
+Tham chiếu chéo bằng ID: không có foreign key xuyên service; ID của service khác chỉ là cột bigint (soft reference).
+Mặc định giao tiếp bằng Kafka (bất đồng bộ). OpenFeign (đồng bộ) chỉ dùng cho danh sách cuộc gọi đã liệt kê ở mục 5.2; muốn thêm cuộc gọi Feign mới phải thống nhất cả team và ghi vào tài liệu.
+Không gọi Feign dây chuyền: service A gọi B thì B không được gọi tiếp C để trả lời A.
+Ghi DB và phát event phải cùng một giao dịch (Transactional Outbox, mục 5.3); không gọi kafkaTemplate.send trực tiếp trong code nghiệp vụ.
+Consumer phải idempotent: cùng một event nhận hai lần chỉ có tác dụng một lần (bảng processed_event).
+Event bất biến và tương thích ngược: chỉ được thêm field mới, không đổi tên/xóa field; đổi lớn thì tăng version.
+Gateway xác thực, service phân quyền: service không verify JWT, chỉ đọc header do Gateway chuyển vào (mục 6).
+Không chia sẻ code nghiệp vụ giữa các service. Chỉ có thư viện common-lib chứa: định dạng lỗi chuẩn, hằng số header, envelope của event, filter đọc header.
+Mọi cuộc gọi Feign có timeout, circuit breaker và xử lý lỗi rõ ràng; service gọi không được treo vì service bị gọi chết.
+Dữ liệu: thời gian UTC (ISO-8601), tiền VND, mọi bảng có created_at, updated_at.
+Thay đổi API hoặc event phải cập nhật tài liệu này trước khi merge.
+Bắt buộc sử dụng các tiện ích, class, quy chuẩn trong common-lib nếu cần sài đến.
+2. Công nghệ sử dụng
+Hạng mục
+Công nghệ
+Dùng để
+Ngôn ngữ, framework
+Java 21, Spring Boot 3.3.x, Spring Cloud 2023.0.x
+Toàn bộ backend
+Build
+Maven (mỗi service một module)
+Database
+PostgreSQL 16 (image postgis/postgis:16-3.4), một container, mỗi service một database riêng
+Property dùng PostGIS để tìm theo bán kính
+Truy cập dữ liệu
+Spring Data JPA (Hibernate), Flyway
+ORM và migration
+API Gateway
+Spring Cloud Gateway
+Cổng vào, xác thực JWT
+Service Registry
+Netflix Eureka
+Đăng ký và tìm service
+Giao tiếp đồng bộ
+Spring Cloud OpenFeign + Resilience4j
+Gọi REST giữa service
+Giao tiếp bất đồng bộ
+Apache Kafka (KRaft, 1 broker) + Spring for Apache Kafka
+Event giữa service
+JWT
+thư viện jjwt 0.12, thuật toán HS256
+Auth ký, Gateway xác thực
+Mã hóa mật khẩu
+BCrypt (Spring Security Crypto)
+Auth Service
+Lưu ảnh
+MinIO (Docker)
+Ảnh báo hư
+Gửi thông báo
+Spring Mail (SMTP) cho email; Firebase Admin SDK cho push
+Notification
+Tiện ích code
+Lombok, MapStruct, Jakarta Validation
+Tài liệu API
+springdoc-openapi (Swagger UI trên mỗi service)
+Test
+JUnit 5, Mockito, Testcontainers (Postgres, Kafka)
+Chạy và triển khai
+Docker, Docker Compose cho mọi môi trường
+CI
+GitHub Actions: build và test mỗi pull request
+Giám sát
+Spring Boot Actuator (/actuator/health), log có correlationId
+Không dùng: Redis, Config Server, Kubernetes, ELK. Có thể bổ sung sau khi hệ thống chạy ổn.
+3. Danh sách service và port
+Service
+Port
+Database
+Vai trò
+discovery-server
+8761
+–
+Eureka
+api-gateway
+8080
+–
+Cổng vào duy nhất, xác thực JWT, định tuyến
+auth-service
+8081
+auth_db
+Tài khoản, đăng nhập, cấp JWT
+user-notification-service
+8082
+user_db
+Hồ sơ, phân công tòa nhà, thông báo
+property-service
+8083
+property_db
+Tòa nhà, phòng, giá, bản đồ
+listing-booking-service
+8084
+listing_db
+Bài đăng, yêu cầu thuê, lịch xem, ở ghép
+contract-tenant-service
+8085
+contract_db
+Hợp đồng, người ở, trả phòng
+billing-utility-service
+8086
+billing_db
+Điện nước, dịch vụ, hóa đơn, thanh toán
+asset-maintenance-service
+8087
+asset_db
+Thiết bị, báo hư, sửa chữa, bảo trì
+Hạ tầng đi kèm trong Docker Compose: PostgreSQL 5432, Kafka 9092, MinIO 9000 (API) và 9001 (console), Kafka UI 8090 (chỉ cho dev).
+Chỉ api-gateway (8080) mở ra ngoài. Các service còn lại chỉ truy cập được trong mạng Docker nội bộ.
+4. Infrastructure services
+4.1 Discovery Server (Eureka) – port 8761
+Mọi service khai báo spring.application.name (đúng tên ở bảng mục 3) và đăng ký vào Eureka khi khởi động.
+Service gọi nhau bằng tên logic (property-service), không hardcode IP/port.
+Gateway định tuyến bằng lb://&lt;tên-service&gt;.
+4.2 API Gateway – port 8080
+Chức năng:
+Điểm vào duy nhất của hệ thống; định tuyến request theo prefix đường dẫn đến service tương ứng.
+Xác thực chữ ký và hạn của JWT (chi tiết ở mục 6), gắn thông tin người dùng vào header chuyển xuống service.
+Xóa mọi header X-User-* do client tự gửi trước khi xử lý (chống giả mạo).
+Sinh X-Correlation-Id (UUID) nếu request chưa có, để truy vết log xuyên service.
+Chặn mọi đường dẫn /internal/** từ bên ngoài (trả 404).
+Cấu hình CORS cho web/app client.
+Bảng định tuyến:
+Prefix
+Service
+/api/v1/auth/**
+auth-service
+/api/v1/users/**, /api/v1/staff/**, /api/v1/notifications/**, /api/v1/devices/**
+user-notification-service
+/api/v1/locations/**, /api/v1/buildings/**, /api/v1/room-types/**, /api/v1/rooms/**
+property-service
+/api/v1/listings/**, /api/v1/rental-requests/**, /api/v1/appointments/**, /api/v1/roommate-posts/**, /api/v1/roommate-applications/**
+listing-booking-service
+/api/v1/contracts/**, /api/v1/move-out-requests/**
+contract-tenant-service
+/api/v1/utility-types/**, /api/v1/meters/**, /api/v1/meter-readings/**, /api/v1/services/**, /api/v1/contract-services/**, /api/v1/invoices/**, /api/v1/payments/**
+billing-utility-service
+/api/v1/appliances/**, /api/v1/reports/**, /api/v1/maintenance-requests/**, /api/v1/maintenance-schedules/**
+asset-maintenance-service
+Danh sách không cần token (whitelist): POST /api/v1/auth/register, POST /api/v1/auth/login, POST /api/v1/auth/refresh, GET /api/v1/locations/**, GET /api/v1/buildings/nearby, GET /api/v1/listings và GET /api/v1/listings/{id}. Mọi đường dẫn khác bắt buộc có token.
+Gateway không chứa logic nghiệp vụ và không gom dữ liệu nhiều service; việc ghép dữ liệu cho màn hình do client gọi nhiều API hoặc do service sở hữu dữ liệu đã lưu sẵn bản sao (ví dụ room_listing).
+4.3 Kafka, PostgreSQL, MinIO
+Kafka chạy chế độ KRaft một broker (9092), tạo sẵn các topic ở mục 5.3 bằng script khởi tạo trong Docker Compose.
+PostgreSQL một container, script khởi tạo tạo 7 database: auth_db, user_db, property_db, listing_db, contract_db, billing_db, asset_db; mỗi service dùng một user riêng chỉ có quyền trên database của mình. Bật extension postgis cho property_db.
+MinIO có bucket report-images (ảnh báo hư). Client upload bằng presigned URL do Asset Service cấp.
+Thứ tự khởi động: PostgreSQL, Kafka, MinIO → discovery-server → các service nghiệp vụ → api-gateway.
+5. Giao tiếp giữa các service: OpenFeign và Kafka
+5.1 Chọn cái nào
+Tình huống
+Dùng
+Cần dữ liệu ngay để kiểm tra hoặc quyết định trong lúc xử lý request của người dùng (ví dụ kiểm tra sức chứa)
+OpenFeign
+Báo "một việc đã xảy ra" để service khác tự phản ứng (ví dụ hợp đồng đã ký)
+Kafka
+Gửi thông báo cho người dùng
+Kafka (Notification là consumer)
+Cập nhật bản sao dữ liệu hiển thị (giá, trạng thái phòng trong listing)
+Kafka
+5.2 OpenFeign (đồng bộ)
+Cách cấu hình:
+Dependency: spring-cloud-starter-openfeign, spring-cloud-starter-loadbalancer, spring-cloud-starter-circuitbreaker-resilience4j. Bật @EnableFeignClients ở class chính.
+Mỗi service bên gọi đặt các interface trong package client, ví dụ @FeignClient(name = "property-service") với method gắn @GetMapping("/internal/rooms/{roomId}"). Tên service được Eureka phân giải, LoadBalancer chọn instance.
+DTO của response do bên gọi tự khai báo (chỉ các field mình cần), không import class từ service khác.
+Timeout: connectTimeout = 2000ms, readTimeout = 3000ms. Không tự retry với POST/PUT/DELETE; GET retry tối đa 1 lần.
+Circuit breaker (Resilience4j): cửa sổ 10 cuộc gọi, ngưỡng lỗi 50%, mở mạch 10 giây.
+RequestInterceptor sao chép X-User-Id, X-User-Type, X-User-Roles, X-Correlation-Id từ request đang xử lý sang cuộc gọi Feign. Cuộc gọi do scheduler (không có người dùng) gửi X-User-Type: SYSTEM.
+ErrorDecoder: 404 → NotFoundException; 4xx khác → BusinessException giữ nguyên code của bên kia; 5xx, timeout, mạch mở → DependencyUnavailableException (trả 503 với code = DEPENDENCY_UNAVAILABLE). Không nuốt lỗi và không trả dữ liệu giả.
+Endpoint /internal/** chỉ phục vụ service gọi service, Gateway chặn từ bên ngoài.
+Danh sách đóng các cuộc gọi Feign:
+#
+Bên gọi
+Bên được gọi
+Endpoint
+Mục đích
+Khi lỗi
+1
+Contract
+Property
+GET /internal/rooms/{roomId}
+Lấy maxCapacity để kiểm tra trước khi thêm người ở
+Từ chối thao tác, trả 503
+2
+Billing
+Contract
+GET /internal/contracts/billing-data?month&amp;year
+Lấy hợp đồng active và danh sách người ở (kèm ngày vào/ra) khi chốt sổ
+Job dừng, ghi log, staff chạy lại
+3
+Listing
+Contract
+GET /internal/rooms/{roomId}/tenants/{customerId}
+Xác nhận người đăng roommate_post đang ở phòng đó
+Từ chối tạo bài, trả 503
+4
+Asset
+Property
+GET /internal/rooms/{roomId}
+Lấy buildingId khi tạo thiết bị (appliance)
+Từ chối tạo thiết bị, trả 503
+5
+Listing, Contract, Billing, Asset
+User
+GET /internal/staff/{staffId}/buildings
+Kiểm tra staff có phụ trách tòa nhà liên quan (cache Caffeine 5 phút)
+Từ chối thao tác, trả 503
+6
+Billing
+Property
+GET /internal/rooms/{roomId}
+Lấy buildingId khi đăng ký đồng hồ điện nước
+Từ chối đăng ký, trả 503
+7
+Asset
+Contract
+GET /internal/rooms/{roomId}/tenants/{customerId}
+Xác nhận người báo hư đang ở phòng và lấy buildingId
+Từ chối tạo report, trả 503
+5.3 Kafka (bất đồng bộ)
+Cách cấu hình:
+Dependency: spring-kafka. Mỗi service sở hữu một topic phát event của mình:
+Topic
+Service phát
+Khóa message
+auth.events
+auth-service
+accountId
+property.events
+property-service
+roomId hoặc buildingId
+listing.events
+listing-booking-service
+listingId hoặc roommatePostId
+contract.events
+contract-tenant-service
+contractId
+billing.events
+billing-utility-service
+invoiceId
+asset.events
+asset-maintenance-service
+reportId hoặc maintenanceRequestId
+Mỗi topic 3 partition, replication factor 1 (môi trường dev). Khóa message là ID của thực thể gốc để mọi event của cùng một thực thể vào cùng partition và giữ đúng thứ tự.
+Dữ liệu là chuỗi JSON (StringSerializer/StringDeserializer); consumer đọc eventType rồi chuyển cho handler tương ứng, bỏ qua eventType mình không quan tâm.
+Producer: acks=all, enable.idempotence=true.
+Consumer: group.id = tên service; enable.auto.commit=false, ack-mode=RECORD; auto.offset.reset=earliest.
+Lỗi khi xử lý: DefaultErrorHandler thử lại 3 lần cách nhau 1 giây, vẫn lỗi thì đẩy sang topic &lt;tên topic&gt;.DLT để xem tay.
+Envelope chung cho mọi event:
+{  "eventId": "3f1c2d4e-...",  "eventType": "ContractSigned",  "version": 1,  "occurredAt": "2026-10-03T08:00:00Z",  "correlationId": "9a7b...",  "payload": { }}
+Transactional Outbox (bắt buộc ở service phát event):
+Trong cùng giao dịch lưu dữ liệu nghiệp vụ, ghi một dòng vào bảng outbox_event (id, topic, event_key, event_type, payload, created_at, published_at).
+Một @Scheduled(fixedDelay = 1000) đọc tối đa 100 dòng chưa publish theo created_at, gửi lên Kafka, gửi thành công thì đặt published_at.
+Nếu gửi thất bại thì dòng vẫn còn và được gửi lại ở lần quét sau, nên event có thể bị gửi trùng (chấp nhận được vì consumer idempotent).
+Idempotent consumer (bắt buộc ở service nhận event): bảng processed_event(event_id pk, processed_at). Handler chạy trong một giao dịch: nếu event_id đã có thì bỏ qua; nếu chưa thì xử lý nghiệp vụ rồi ghi event_id.
+Danh mục toàn bộ event ở mục 10.
+6. Xác thực ở Gateway, phân quyền ở service
+Nguyên tắc: Gateway chỉ làm Authentication (token có thật, đúng chữ ký, còn hạn không). Các service phía sau chỉ làm Authorization (người này được làm việc này không) dựa trên header Gateway chuyển vào; service không có JWT_SECRET và không verify JWT.
+6.1 Việc của Gateway
+Xóa mọi header X-User-Id, X-User-Type, X-User-Roles mà client gửi lên.
+Nếu đường dẫn thuộc whitelist (mục 4.2) thì cho đi tiếp, không gắn header người dùng.
+Đọc Authorization: Bearer &lt;accessToken&gt;; thiếu hoặc sai định dạng → 401 UNAUTHENTICATED.
+Kiểm tra chữ ký HS256 bằng JWT_SECRET, iss = rental-auth, exp. Hết hạn → 401 TOKEN_EXPIRED; sai chữ ký → 401 UNAUTHENTICATED.
+Hợp lệ thì gắn header (bảng dưới) rồi chuyển request đến service.
+JWT_SECRET (tối thiểu 32 ký tự) chỉ có ở auth-service và api-gateway, đặt qua biến môi trường, không commit vào git. Tài khoản bị khóa vẫn dùng được access token hiện có đến khi hết hạn (tối đa 15 phút).
+Header
+Lấy từ claim
+Ví dụ
+X-User-Id
+sub
+1024
+X-User-Type
+typ (CUSTOMER, STAFF, ADMIN; SYSTEM khi scheduler gọi nội bộ)
+STAFF
+X-User-Roles
+roles nối bằng dấu phẩy
+QUAN_LY,SALE
+X-Correlation-Id
+Gateway sinh nếu thiếu
+UUID
+6.2 Việc của mỗi service
+common-lib có HeaderAuthenticationFilter: đọc 3 header trên, tạo Authentication với principal là X-User-Id và các authority ROLE_&lt;role&gt;. Không có header → 401 (request không đi qua Gateway).
+Bật @EnableMethodSecurity; kiểm quyền bằng @PreAuthorize, ví dụ @PreAuthorize("hasAnyRole('QUAN_LY','ADMIN')"). Mọi endpoint ghi "STAFF" trong bảng API ở mục 9 đều cho phép thêm ADMIN.
+Quyền sở hữu: CUSTOMER chỉ đọc/ghi dữ liệu của chính mình (so X-User-Id với customerId của bản ghi); vi phạm → 403 FORBIDDEN.
+Phạm vi tòa nhà: staff (không phải ADMIN) chỉ thao tác trên tòa nhà mình được phân công. Service gọi GET /internal/staff/{staffId}/buildings (cuộc gọi Feign số 5) rồi so với buildingId của dữ liệu; ADMIN bỏ qua bước này.
+Đường dẫn /internal/** không kiểm quyền người dùng vì chỉ truy cập được trong mạng nội bộ Docker.
+Trong Docker Compose chỉ api-gateway được publish port ra máy host.
+7. Identity &amp; Auth Service – port 8081
+7.1 Chức năng
+Đăng ký tài khoản CUSTOMER bằng Username/Password; username là email hoặc SĐT và phải trùng với email hoặc phone khai báo.
+Tài khoản STAFF và ADMIN do ADMIN tạo, không tự đăng ký.
+Băm mật khẩu BCrypt (cost 10); mật khẩu tối thiểu 8 ký tự.
+Đăng nhập, cấp Access Token (JWT, HS256, sống 15 phút) và Refresh Token (chuỗi ngẫu nhiên, sống 7 ngày; DB chỉ lưu hash SHA-256 của nó).
+Refresh có rotation: mỗi lần refresh cấp cặp token mới và thu hồi refresh token cũ; dùng lại refresh token đã thu hồi thì thu hồi toàn bộ phiên của tài khoản đó.
+Đăng xuất: thu hồi refresh token (access token tự hết hạn).
+Đổi mật khẩu: sau khi đổi thu hồi mọi refresh token.
+Khóa tạm 15 phút sau 5 lần đăng nhập sai liên tiếp; ADMIN khóa/mở khóa tài khoản (khóa thì thu hồi mọi refresh token).
+ADMIN gán role cho tài khoản STAFF (QUAN_LY, KY_THUAT, SALE).
+Phát event AccountRegistered (kể cả khi ADMIN tạo staff) để User Service tạo hồ sơ.
+Chưa làm ở giai đoạn đầu: quên mật khẩu qua email, xác minh email/OTP, SSO.
+JWT claims: sub (= account id), typ (CUSTOMER/STAFF/ADMIN), roles (mảng), iss = rental-auth, iat, exp, jti.
+7.2 API contract
+Method
+Path
+Quyền
+Request body
+Response thành công
+Lỗi
+POST
+/api/v1/auth/register
+PUBLIC
+{username, password, fullName, email?, phone?}
+201 {accountId, username, accountType}
+409 USERNAME_EXISTS, 400 VALIDATION_ERROR
+POST
+/api/v1/auth/login
+PUBLIC
+{username, password}
+200 {accessToken, refreshToken, tokenType:"Bearer", expiresIn:900, account:{id, username, accountType, roles[]}}
+401 INVALID_CREDENTIALS, 423 ACCOUNT_LOCKED, 403 ACCOUNT_DISABLED
+POST
+/api/v1/auth/refresh
+PUBLIC
+{refreshToken}
+200 giống login
+401 REFRESH_TOKEN_INVALID
+POST
+/api/v1/auth/logout
+AUTH
+{refreshToken}
+204
+–
+GET
+/api/v1/auth/me
+AUTH
+–
+200 {id, username, accountType, roles[]}
+–
+PUT
+/api/v1/auth/password
+AUTH
+{oldPassword, newPassword}
+204
+400 WRONG_OLD_PASSWORD
+POST
+/api/v1/auth/accounts
+ADMIN
+{username, password, fullName, email?, phone?, accountType:"STAFF"|"ADMIN", roles[]}
+201 {accountId, username, accountType, roles[]}
+409 USERNAME_EXISTS
+GET
+/api/v1/auth/accounts?accountType&amp;active&amp;page&amp;size
+ADMIN
+–
+200 trang {id, username, accountType, roles[], isActive, createdAt}
+–
+PUT
+/api/v1/auth/accounts/{id}/status
+ADMIN
+{isActive}
+204
+404 NOT_FOUND
+PUT
+/api/v1/auth/accounts/{id}/roles
+ADMIN
+{roles[]} (chỉ cho STAFF)
+204
+404 NOT_FOUND, 422 ROLE_NOT_ALLOWED
+Event phát: AccountRegistered trên auth.events, payload {accountId, accountType, username, fullName, email, phone}.
+7.3 Database (auth_db)
+Table account {  id bigint [pk, note: "Dùng làm customer.id hoặc staff.id ở user_db"]  username varchar [unique]  password_hash varchar  account_type varchar [note: "CUSTOMER, STAFF, ADMIN"]  is_active boolean [default: true]  failed_login_count int [default: 0]  locked_until datetime  created_at datetime  updated_at datetime}Table role {  id int [pk]  code varchar [unique, note: "ADMIN, QUAN_LY, KY_THUAT, SALE, CUSTOMER"]}Table account_role {  account_id bigint [ref: &gt; account.id]  role_id int [ref: &gt; role.id]  indexes { (account_id, role_id) [pk] }}Table refresh_token {  id bigint [pk]  account_id bigint [ref: &gt; account.id]  token_hash varchar [unique]  expires_at datetime  revoked_at datetime  created_at datetime}Table outbox_event { id uuid [pk] topic varchar event_key varchar event_type varchar payload json created_at datetime published_at datetime }
+8. Quy ước API chung
+Đường dẫn: /api/v1/&lt;tài-nguyên-số-nhiều-kebab-case&gt;; JSON camelCase; ngày yyyy-MM-dd; thời điểm ISO-8601 UTC (2026-10-03T08:00:00Z); ID là số nguyên (bigint).
+Mã trả về: tạo mới 201 + đối tượng vừa tạo; lấy/sửa 200 + đối tượng; hành động không có dữ liệu trả về 204. Không bọc response trong {data: ...}.
+Phân trang: query page (từ 0), size (mặc định 20, tối đa 100), sort=field,asc. Response: {content:[...], page, size, totalElements, totalPages}.
+Tiền: số, đơn vị VND. Tiền cố định (giá phòng, cọc, giá dịch vụ) là số nguyên; tổng tiền trên hóa đơn là bội số của 1.000.
+Ký hiệu cột Quyền: PUBLIC (không cần token), AUTH (đã đăng nhập), CUSTOMER, SALE, KY_THUAT, QUAN_LY, ADMIN; STAFF là mọi role nhân viên. Endpoint của staff luôn cho phép thêm ADMIN; staff chỉ thao tác trên tòa nhà được phân công (mục 6.2). CUSTOMER* nghĩa là chỉ trên dữ liệu của chính người đó.
+Định dạng lỗi (mọi service dùng chung qua common-lib):
+{  "code": "ROOM_CAPACITY_EXCEEDED",  "message": "Phòng đã đủ số người tối đa",  "status": 422,  "traceId": "&lt;correlationId&gt;",  "details": [ { "field": "customerId", "message": "..." } ]}
+HTTP
+Dùng khi
+code chung
+400
+Dữ liệu vào sai
+VALIDATION_ERROR
+401
+Chưa đăng nhập / token sai
+UNAUTHENTICATED, TOKEN_EXPIRED
+403
+Không đủ quyền / không phải dữ liệu của mình
+FORBIDDEN
+404
+Không tìm thấy
+NOT_FOUND
+409
+Trùng, xung đột trạng thái
+mã riêng, vd USERNAME_EXISTS
+422
+Vi phạm quy tắc nghiệp vụ
+mã riêng, vd ROOM_CAPACITY_EXCEEDED
+503
+Service phụ thuộc không phản hồi
+DEPENDENCY_UNAVAILABLE
+500
+Lỗi không lường trước
+INTERNAL_ERROR
+Trạng thái (enum) thống nhất:
+Đối tượng
+Giá trị
+room.status
+VACANT, UPCOMING_VACANT, OCCUPIED, MAINTENANCE
+room_listing.status
+ACTIVE, CLOSED
+rental_request.status
+PENDING, ACCEPTED, REJECTED, CANCELLED
+appointment.status
+SCHEDULED, VIEWED, CANCELLED, CONFIRMED
+roommate_post.status
+OPEN, CLOSED
+roommate_application.status
+PENDING, ACCEPTED_PENDING, ACCEPTED, REJECTED, REJECTED_FULL
+contract.status
+DRAFT, ACTIVE, TERMINATED, ENDED
+move_out_request.status
+PENDING, APPROVED, REJECTED, COMPLETED
+invoice.status
+UNPAID, PARTIALLY_PAID, PAID, OVERDUE
+report.status
+PENDING, APPROVED, REJECTED
+maintenance_request.status
+OPEN, ASSIGNED, IN_PROGRESS, DONE
+appliance.status
+GOOD, NEEDS_REPAIR, BROKEN
+9. Các service nghiệp vụ
+Mỗi service gồm: chức năng, API contract (đường dẫn đầy đủ qua Gateway), event phát/nghe (payload ở mục 10) và thay đổi database. Quy ước chung ở mục 8; mọi service có thêm bảng processed_event, và outbox_event nếu có phát event.
+9.1 user-notification-service – port 8082 – user_db
+Chức năng:
+Lưu hồ sơ customer (họ tên, SĐT, email) và staff (họ tên, SĐT, email, chức danh hiển thị). Quyền hạn (role) do Auth quản lý, không lưu ở đây.
+Tự tạo hồ sơ khi nhận AccountRegistered (id = accountId): CUSTOMER vào bảng customer; STAFF/ADMIN vào bảng staff (is_admin = true với ADMIN).
+Khách xem và sửa hồ sơ của mình; staff xem hồ sơ khách; ADMIN sửa hồ sơ staff.
+Phân công tòa nhà cho staff (staff_building): ADMIN gán/thay danh sách tòa nhà phụ trách của một staff.
+Cung cấp API nội bộ trả danh sách tòa nhà của staff (cuộc gọi Feign số 5).
+Notification Engine: nghe event từ mọi topic, xác định người nhận theo bảng mục 10, lưu notification (hiển thị ở "quả chuông"), gửi email qua Spring Mail và push qua FCM cho thiết bị đã đăng ký. Lỗi gửi email/push không làm mất thông báo in-app.
+Quy tắc người nhận phía staff: mọi staff được phân công tòa nhà liên quan và mọi tài khoản ADMIN; staff không thuộc tòa nhà đó không nhận.
+Quản lý thông báo của người dùng: danh sách, đếm chưa đọc, đánh dấu đã đọc. Đăng ký/hủy device token cho push.
+Không có API nội bộ gửi thông báo; mọi thông báo đi qua Kafka.
+Đối tượng: UserProfile {id, fullName, phone, email, position?} (staff có thêm isAdmin, buildingIds[]); Notification {id, type, title, content, refType?, refId?, isRead, createdAt}.
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+GET
+/api/v1/users/me
+AUTH
+–
+200 UserProfile
+–
+PUT
+/api/v1/users/me
+AUTH
+{fullName, phone, email}
+200 UserProfile
+400 VALIDATION_ERROR
+GET
+/api/v1/users/{id}
+STAFF
+–
+200 UserProfile (khách)
+404 NOT_FOUND
+GET
+/api/v1/staff?buildingId&amp;page&amp;size
+ADMIN, QUAN_LY
+–
+200 trang UserProfile staff
+–
+PUT
+/api/v1/staff/{id}
+ADMIN
+{fullName, phone, email, position}
+200 UserProfile
+404 NOT_FOUND
+GET
+/api/v1/staff/{id}/buildings
+ADMIN hoặc chính staff đó
+–
+200 {staffId, buildingIds[]}
+403 FORBIDDEN
+PUT
+/api/v1/staff/{id}/buildings
+ADMIN
+{buildingIds[]} (thay toàn bộ)
+204
+404 NOT_FOUND
+GET
+/api/v1/notifications?unreadOnly&amp;page&amp;size
+AUTH
+–
+200 trang Notification của chính mình
+–
+GET
+/api/v1/notifications/unread-count
+AUTH
+–
+200 {count}
+–
+PUT
+/api/v1/notifications/{id}/read
+AUTH
+–
+204
+404 NOT_FOUND
+PUT
+/api/v1/notifications/read-all
+AUTH
+–
+204
+–
+POST
+/api/v1/devices
+AUTH
+{token, platform:"IOS" hoặc "ANDROID" hoặc "WEB"}
+204
+400 VALIDATION_ERROR
+DELETE
+/api/v1/devices/{token}
+AUTH
+–
+204
+–
+GET
+/internal/staff/{staffId}/buildings
+nội bộ
+–
+200 {staffId, buildingIds[]}
+404 NOT_FOUND
+Event phát: không có. Event nghe: tất cả event ở mục 10.
+Database: customer(id, full_name, phone, email); staff(id, full_name, phone, email, position, is_admin); staff_building(staff_id, building_id) khóa chính kép; notification(id, recipient_id, type, title, content, ref_type, ref_id, is_read, created_at) (recipient_id = account id, dùng được cho cả khách và staff); device_token(id, account_id, token, platform).
+9.2 property-service – port 8083 – property_db
+Chức năng:
+Danh mục hành chính Tỉnh/Thành, Quận/Huyện, Phường/Xã: chỉ đọc, nạp bằng script seed Flyway.
+Tòa nhà: thêm, sửa, xóa mềm (không xóa khi còn phòng đang thuê); lưu địa chỉ, latitude, longitude và cột PostGIS location (geography(Point,4326), index GIST). Tọa độ do client gửi lên khi tạo.
+Tìm tòa nhà trong bán kính X km quanh tọa độ GPS khách gửi (ST_DWithin), trả kèm khoảng cách, sắp xếp gần đến xa.
+Loại phòng (room_type): tên và mô tả (ví dụ Studio 30m2, Duplex có gác).
+Phòng: tạo phòng thuộc một tòa nhà với số phòng (duy nhất trong tòa nhà), loại phòng, max_capacity ≥ 1, giá khởi đầu; phòng mới có trạng thái VACANT.
+Trạng thái phòng: QUAN_LY chỉ được chuyển tay giữa VACANT và MAINTENANCE; OCCUPIED, UPCOMING_VACANT, VACANT (sau khi trả phòng) do event quyết định.
+Giá phòng (room_price): đặt giá mới từ ngày effectiveFrom (không được trong quá khứ); hệ thống tự đóng dòng giá cũ (effective_to = effectiveFrom trừ 1 ngày); các khoảng giá không chồng lấn; xem được giá hiện hành tại một ngày và lịch sử giá. Giá này chỉ là giá niêm yết; giá của hợp đồng đã ký nằm ở contract.rent_amount.
+Phát event khi trạng thái phòng, giá phòng, thông tin tòa nhà đổi.
+Nghe ContractSigned → OCCUPIED; MoveOutApproved → UPCOMING_VACANT; ContractEnded → VACANT, trừ khi payload có nextContractExists = true thì giữ OCCUPIED.
+Đối tượng: Building {id, name, address, wardId, wardName, districtName, provinceName, latitude, longitude}; Room {id, buildingId, roomTypeId, roomTypeName, roomNumber, maxCapacity, status, currentPrice}; RoomPrice {id, roomId, price, effectiveFrom, effectiveTo}.
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+GET
+/api/v1/locations/provinces
+PUBLIC
+–
+200 [{id, name, code}]
+–
+GET
+/api/v1/locations/provinces/{id}/districts
+PUBLIC
+–
+200 [{id, name, code}]
+404 NOT_FOUND
+GET
+/api/v1/locations/districts/{id}/wards
+PUBLIC
+–
+200 [{id, name, code}]
+404 NOT_FOUND
+POST
+/api/v1/buildings
+ADMIN
+{name, address, wardId, latitude, longitude}
+201 Building
+400 VALIDATION_ERROR
+GET
+/api/v1/buildings?wardId&amp;keyword&amp;page&amp;size
+STAFF (chỉ tòa được phân công, ADMIN thấy hết)
+–
+200 trang Building
+–
+GET
+/api/v1/buildings/{id}
+PUBLIC
+–
+200 Building
+404 NOT_FOUND
+PUT
+/api/v1/buildings/{id}
+ADMIN
+như tạo mới
+200 Building
+404 NOT_FOUND
+DELETE
+/api/v1/buildings/{id}
+ADMIN
+–
+204
+409 BUILDING_HAS_ACTIVE_ROOMS
+GET
+/api/v1/buildings/nearby?lat&amp;lng&amp;radiusKm
+PUBLIC
+radiusKm mặc định 5, tối đa 50
+200 [Building + distanceKm]
+400 VALIDATION_ERROR
+GET
+/api/v1/room-types
+PUBLIC
+–
+200 [{id, name, description}]
+–
+POST
+/api/v1/room-types
+ADMIN, QUAN_LY
+{name, description}
+201 {id, name, description}
+–
+PUT
+/api/v1/room-types/{id}
+ADMIN, QUAN_LY
+{name, description}
+200
+404 NOT_FOUND
+POST
+/api/v1/rooms
+QUAN_LY
+{buildingId, roomTypeId, roomNumber, maxCapacity, initialPrice}
+201 Room
+409 ROOM_NUMBER_EXISTS
+GET
+/api/v1/rooms?buildingId&amp;status&amp;page&amp;size
+STAFF
+–
+200 trang Room
+–
+GET
+/api/v1/rooms/{id}
+AUTH
+–
+200 Room
+404 NOT_FOUND
+PUT
+/api/v1/rooms/{id}
+QUAN_LY
+{roomTypeId, roomNumber, maxCapacity}
+200 Room
+409 ROOM_NUMBER_EXISTS
+PUT
+/api/v1/rooms/{id}/status
+QUAN_LY
+{status:"MAINTENANCE" hoặc "VACANT"}
+200 Room
+422 INVALID_STATUS_TRANSITION
+GET
+/api/v1/rooms/{id}/current-price?date
+AUTH
+date mặc định hôm nay
+200 RoomPrice
+404 PRICE_NOT_FOUND
+GET
+/api/v1/rooms/{id}/prices
+STAFF
+–
+200 [RoomPrice] mới nhất trước
+–
+POST
+/api/v1/rooms/{id}/prices
+QUAN_LY
+{price, effectiveFrom}
+201 RoomPrice
+422 EFFECTIVE_FROM_IN_PAST
+GET
+/internal/rooms/{roomId}
+nội bộ
+–
+200 {id, buildingId, roomNumber, maxCapacity, status}
+404 NOT_FOUND
+Event phát (property.events): RoomStatusChanged, RoomPriceChanged, BuildingUpdated. Event nghe: ContractSigned, MoveOutApproved, ContractEnded.
+Database: giữ nguyên các bảng đã có; sửa building.longitude thành decimal(11,8) (kinh độ Việt Nam khoảng 102–110, decimal(10,8) bị tràn); thêm building.location geography(Point,4326) kèm index GIST; ràng buộc duy nhất (building_id, room_number); room_price.price là decimal(15,0).
+9.3 listing-booking-service – port 8084 – listing_db
+Chức năng:
+Bài đăng cho thuê (room_listing): tự tạo khi nhận RoomStatusChanged với trạng thái VACANT hoặc UPCOMING_VACANT (nếu phòng chưa có listing ACTIVE). Sao chép sẵn dữ liệu cần để tìm kiếm (tòa nhà, địa chỉ, ward, quận, loại phòng, giá, tọa độ) nên tìm kiếm không phải gọi sang Property. Tiêu đề tự sinh Phòng {roomNumber} - {buildingName}, SALE sửa tiêu đề/mô tả sau.
+Giữ bản sao đồng bộ: RoomPriceChanged cập nhật giá, BuildingUpdated cập nhật tòa nhà, RoomStatusChanged cập nhật roomStatus; trạng thái OCCUPIED hoặc MAINTENANCE thì đóng listing ACTIVE.
+Nghe ContractSigned: đóng listing ACTIVE của phòng, các rental request PENDING của listing đó chuyển REJECTED (phát RentalRequestRejected) và đóng các roommate_post của phòng đó.
+Bật/tắt hiển thị listing (ACTIVE/CLOSED); chỉ bật được khi roomStatus là VACANT hoặc UPCOMING_VACANT.
+Tìm kiếm công khai: chỉ trả listing ACTIVE; lọc theo khu vực (ward, quận, tòa nhà), khoảng giá, loại phòng, từ khóa, và tùy chọn bán kính quanh tọa độ GPS (lat, lng, radiusKm, tính bằng công thức Haversine); sắp xếp theo giá, mới nhất, khoảng cách.
+Yêu cầu thuê (rental_request): khách gửi cho listing ACTIVE kèm ngày dự kiến vào ở; mỗi khách chỉ có một yêu cầu PENDING cho một listing; khách hủy được khi còn PENDING. SALE/QUAN_LY duyệt hoặc từ chối: duyệt chỉ khi listing còn ACTIVE và yêu cầu còn PENDING; duyệt một yêu cầu thì các yêu cầu PENDING khác của cùng listing bị từ chối tự động.
+Lịch xem phòng (appointment): SALE tạo lịch cho một rental request, chọn staff dẫn xem (staff đó phải được phân công tòa nhà của phòng, kiểm tra bằng cuộc gọi Feign số 5); cập nhật trạng thái VIEWED, CANCELLED, CONFIRMED; khách hủy được lịch của mình.
+Ở ghép: khách đang ở phòng đó (xác nhận bằng cuộc gọi Feign số 3) đăng roommate_post kèm mô tả yêu cầu và budgetShare; khách đang tìm phòng nộp roommate_application; chủ bài duyệt/từ chối. Duyệt thì đơn sang ACCEPTED_PENDING và phát RoommateApplicationAccepted; khi nhận TenantAdded đơn thành ACCEPTED, khi nhận TenantAddRejected đơn thành REJECTED_FULL.
+Phát event để Notification báo cho các bên (mục 10).
+Đối tượng:
+Listing {id, roomId, buildingId, buildingName, address, wardId, districtId, roomTypeId, roomTypeName, roomNumber, maxCapacity, price, latitude, longitude, roomStatus, title, description, status, createdAt, distanceKm?}
+RentalRequest {id, customerId, listingId, roomId, buildingId, status, moveInDate, note, rejectReason, requestedAt}
+Appointment {id, rentalRequestId, customerId, staffId, appointmentDate, status}
+RoommatePost {id, customerId, roomId, buildingId, title, description, budgetShare, status}
+RoommateApplication {id, roommatePostId, customerId, message, status, createdAt}
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+GET
+/api/v1/listings?wardId&amp;districtId&amp;buildingId&amp;roomTypeId&amp;minPrice&amp;maxPrice&amp;keyword&amp;lat&amp;lng&amp;radiusKm&amp;sort&amp;page&amp;size
+PUBLIC
+sort = price,asc / price,desc / createdAt,desc / distance,asc
+200 trang Listing (chỉ ACTIVE)
+–
+GET
+/api/v1/listings/{id}
+PUBLIC
+–
+200 Listing
+404 NOT_FOUND
+GET
+/api/v1/listings/manage?buildingId&amp;status&amp;page&amp;size
+SALE, QUAN_LY
+–
+200 trang Listing
+–
+PUT
+/api/v1/listings/{id}
+SALE, QUAN_LY
+{title, description}
+200 Listing
+404 NOT_FOUND
+PUT
+/api/v1/listings/{id}/status
+SALE, QUAN_LY
+{status:"ACTIVE" hoặc "CLOSED"}
+200 Listing
+422 ROOM_NOT_AVAILABLE
+POST
+/api/v1/rental-requests
+CUSTOMER
+{listingId, moveInDate, note?}
+201 RentalRequest
+422 LISTING_NOT_ACTIVE, 409 REQUEST_ALREADY_EXISTS
+GET
+/api/v1/rental-requests/mine?status&amp;page&amp;size
+CUSTOMER
+–
+200 trang RentalRequest
+–
+GET
+/api/v1/rental-requests?buildingId&amp;listingId&amp;status&amp;page&amp;size
+SALE, QUAN_LY
+–
+200 trang RentalRequest
+–
+GET
+/api/v1/rental-requests/{id}
+CUSTOMER*, STAFF
+–
+200 RentalRequest
+404, 403
+PUT
+/api/v1/rental-requests/{id}/cancel
+CUSTOMER*
+–
+204
+422 INVALID_STATUS
+PUT
+/api/v1/rental-requests/{id}/accept
+SALE, QUAN_LY
+–
+200 RentalRequest
+422 LISTING_NOT_ACTIVE, 422 INVALID_STATUS
+PUT
+/api/v1/rental-requests/{id}/reject
+SALE, QUAN_LY
+{reason?}
+200 RentalRequest
+422 INVALID_STATUS
+POST
+/api/v1/appointments
+SALE, QUAN_LY
+{rentalRequestId, staffId, appointmentDate}
+201 Appointment
+422 STAFF_NOT_IN_BUILDING, 422 INVALID_STATUS
+GET
+/api/v1/appointments?staffId&amp;buildingId&amp;status&amp;from&amp;to&amp;page&amp;size
+STAFF
+–
+200 trang Appointment
+–
+GET
+/api/v1/appointments/mine?page&amp;size
+CUSTOMER
+–
+200 trang Appointment
+–
+PUT
+/api/v1/appointments/{id}/status
+STAFF
+{status:"VIEWED" hoặc "CANCELLED" hoặc "CONFIRMED"}
+200 Appointment
+422 INVALID_STATUS
+PUT
+/api/v1/appointments/{id}/cancel
+CUSTOMER*
+–
+204
+422 INVALID_STATUS
+POST
+/api/v1/roommate-posts
+CUSTOMER
+{roomId, title, description, budgetShare}
+201 RoommatePost
+403 NOT_A_TENANT_OF_ROOM
+GET
+/api/v1/roommate-posts?buildingId&amp;maxBudgetShare&amp;keyword&amp;page&amp;size
+AUTH
+–
+200 trang RoommatePost (chỉ OPEN)
+–
+GET
+/api/v1/roommate-posts/mine
+CUSTOMER
+–
+200 [RoommatePost]
+–
+GET
+/api/v1/roommate-posts/{id}
+AUTH
+–
+200 RoommatePost
+404 NOT_FOUND
+PUT
+/api/v1/roommate-posts/{id}
+CUSTOMER* (chủ bài)
+{title, description, budgetShare}
+200 RoommatePost
+403, 422 POST_CLOSED
+PUT
+/api/v1/roommate-posts/{id}/close
+CUSTOMER* (chủ bài)
+–
+204
+403
+POST
+/api/v1/roommate-posts/{postId}/applications
+CUSTOMER
+{message}
+201 RoommateApplication
+409 ALREADY_APPLIED, 422 POST_CLOSED
+GET
+/api/v1/roommate-posts/{postId}/applications?status&amp;page&amp;size
+CUSTOMER* (chủ bài)
+–
+200 trang RoommateApplication
+403
+GET
+/api/v1/roommate-applications/mine
+CUSTOMER
+–
+200 [RoommateApplication]
+–
+PUT
+/api/v1/roommate-applications/{id}/accept
+CUSTOMER* (chủ bài)
+–
+200 (status ACCEPTED_PENDING)
+403, 422 INVALID_STATUS
+PUT
+/api/v1/roommate-applications/{id}/reject
+CUSTOMER* (chủ bài)
+–
+200 (status REJECTED)
+403, 422 INVALID_STATUS
+Event phát (listing.events): RentalRequestCreated, RentalRequestAccepted, RentalRequestRejected, AppointmentScheduled, AppointmentStatusChanged, RoommateApplicationCreated, RoommateApplicationAccepted, RoommateApplicationRejected.
+Event nghe: RoomStatusChanged, RoomPriceChanged, BuildingUpdated, ContractSigned, ContractEnded, TenantAdded, TenantAddRejected.
+Gọi Feign: số 3 (Contract, xác nhận người đang ở) và số 5 (User, kiểm tra staff thuộc tòa nhà).
+Database: room_listing thêm building_id, building_name, address, ward_id, district_id, room_type_id, room_type_name, room_number, max_capacity, price decimal(15,0), latitude decimal(10,8), longitude decimal(11,8), room_status; rental_request thêm room_id, building_id, move_in_date, note, reject_reason, ràng buộc duy nhất cho một yêu cầu PENDING mỗi (khách, listing); appointment thêm customer_id, building_id; roommate_post thêm building_id, description; roommate_application ràng buộc duy nhất (roommate_post_id, customer_id).
+9.4 contract-tenant-service – port 8085 – contract_db
+Chức năng:
+Tạo hợp đồng nháp (DRAFT) khi nhận RentalRequestAccepted: lấy roomId, buildingId, customerId, ngày vào ở làm start_date, giá niêm yết lúc duyệt làm rent_amount mặc định. Mỗi rental_request_id chỉ tạo một hợp đồng.
+Chốt giá thuê: QUAN_LY sửa hợp đồng DRAFT (startDate, endDate, rentAmount, depositAmount). rent_amount được chốt vào hợp đồng lúc ký và dùng cho mọi hóa đơn suốt thời hạn hợp đồng, dù room_price ngoài web đổi sau đó. Hợp đồng đã ACTIVE không sửa được rentAmount.
+Ký hợp đồng: QUAN_LY ký → ACTIVE; tạo contract_tenant đầu tiên (khách gốc, is_representative = true, joined_at = start_date); không cho ký nếu phòng đã có hợp đồng ACTIVE trùng khoảng thời gian; phát ContractSigned.
+Gia hạn: QUAN_LY kéo dài end_date; giá thuê giữ nguyên (muốn đổi giá thì chấm dứt và ký hợp đồng mới); phát ContractRenewed.
+Chấm dứt sớm: QUAN_LY đặt ngày chấm dứt (end_date = ngày đó) kèm lý do.
+Tự kết thúc theo ngày: scheduler chạy mỗi ngày lúc 00:10 (giờ Việt Nam); hợp đồng ACTIVE có end_date đã qua chuyển ENDED (hoặc TERMINATED nếu bị chấm dứt sớm), đặt left_at cho người còn ở, đánh dấu yêu cầu trả phòng COMPLETED, rồi phát ContractEnded (kèm nextContractExists).
+Quản lý người ở (contract_tenant): thêm người (QUAN_LY thủ công, hoặc tự động từ RoommateApplicationAccepted); đánh dấu người rời đi bằng left_at (không xóa dòng, để Billing tính tiền theo ngày); đổi người đại diện phòng. Không rời được nếu là đại diện (phải đổi đại diện trước) hoặc là người ở cuối cùng.
+Kiểm tra sức chứa khi thêm người: trong một giao dịch khóa dòng hợp đồng (PESSIMISTIC_WRITE), đếm người đang ở (left_at rỗng), gọi Property lấy maxCapacity (Feign số 1); nếu số người sau khi thêm vượt maxCapacity thì chặn: API trả 422 ROOM_CAPACITY_EXCEEDED, luồng event phát TenantAddRejected. Một khách không được thuộc hai hợp đồng ACTIVE cùng lúc.
+Trả phòng (move_out_request): chỉ người đại diện tạo, kèm ngày dọn đi dự kiến (từ hôm nay trở đi, không muộn hơn end_date); mỗi hợp đồng một yêu cầu PENDING. QUAN_LY duyệt hoặc từ chối. Duyệt thì end_date của hợp đồng = ngày dọn đi dự kiến và phát MoveOutApproved.
+Cung cấp API nội bộ cho Billing và Listing.
+Đối tượng:
+Contract {id, rentalRequestId, roomId, buildingId, status, startDate, endDate, rentAmount, depositAmount, terminationReason, createdAt, tenants[]}
+ContractTenant {id, contractId, customerId, joinedAt, leftAt, isRepresentative}
+MoveOutRequest {id, contractId, requestedBy, requestDate, expectedMoveOutDate, reason, status}
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+GET
+/api/v1/contracts?buildingId&amp;roomId&amp;status&amp;page&amp;size
+QUAN_LY, SALE
+–
+200 trang Contract (không kèm tenants)
+–
+GET
+/api/v1/contracts/mine
+CUSTOMER
+–
+200 [Contract] hợp đồng mình đang ở
+–
+GET
+/api/v1/contracts/{id}
+CUSTOMER* (là người ở), STAFF
+–
+200 Contract
+404, 403
+PUT
+/api/v1/contracts/{id}
+QUAN_LY
+{startDate, endDate, rentAmount, depositAmount}
+200 Contract
+422 INVALID_STATUS (chỉ DRAFT), 400
+POST
+/api/v1/contracts/{id}/sign
+QUAN_LY
+–
+200 Contract (ACTIVE)
+422 CONTRACT_INCOMPLETE, 409 ROOM_ALREADY_CONTRACTED, 422 INVALID_STATUS
+POST
+/api/v1/contracts/{id}/renew
+QUAN_LY
+{newEndDate}
+200 Contract
+422 INVALID_DATE, 422 INVALID_STATUS
+POST
+/api/v1/contracts/{id}/terminate
+QUAN_LY
+{terminationDate, reason}
+200 Contract
+422 INVALID_DATE, 422 INVALID_STATUS
+POST
+/api/v1/contracts/{id}/tenants
+QUAN_LY
+{customerId, joinedAt}
+201 ContractTenant
+422 ROOM_CAPACITY_EXCEEDED, 409 CUSTOMER_ALREADY_IN_ROOM, 503
+PUT
+/api/v1/contracts/{id}/tenants/{tenantId}/leave
+QUAN_LY
+{leftAt}
+200 ContractTenant
+422 CANNOT_REMOVE_REPRESENTATIVE, 422 LAST_TENANT
+PUT
+/api/v1/contracts/{id}/tenants/{tenantId}/representative
+QUAN_LY
+–
+204
+422 TENANT_NOT_ACTIVE
+POST
+/api/v1/move-out-requests
+CUSTOMER* (người đại diện)
+{contractId, expectedMoveOutDate, reason?}
+201 MoveOutRequest
+403 NOT_REPRESENTATIVE, 409 REQUEST_ALREADY_EXISTS, 422 INVALID_DATE
+GET
+/api/v1/move-out-requests?buildingId&amp;status&amp;page&amp;size
+QUAN_LY
+–
+200 trang MoveOutRequest
+–
+GET
+/api/v1/move-out-requests/mine
+CUSTOMER
+–
+200 [MoveOutRequest]
+–
+PUT
+/api/v1/move-out-requests/{id}/approve
+QUAN_LY
+–
+200 MoveOutRequest
+422 INVALID_STATUS
+PUT
+/api/v1/move-out-requests/{id}/reject
+QUAN_LY
+{reason?}
+200 MoveOutRequest
+422 INVALID_STATUS
+GET
+/internal/contracts/billing-data?month&amp;year
+nội bộ
+–
+200 [{contractId, roomId, buildingId, rentAmount, startDate, endDate, status, tenants:[{contractTenantId, customerId, joinedAt, leftAt, isRepresentative}]}] gồm hợp đồng có hiệu lực trong tháng đó (kể cả vừa kết thúc)
+–
+GET
+/internal/rooms/{roomId}/tenants/{customerId}
+nội bộ
+–
+200 {isTenant, contractId, buildingId} (xét hợp đồng ACTIVE)
+–
+Event phát (contract.events): ContractSigned, ContractRenewed, ContractEnded, TenantAdded, TenantAddRejected, TenantRemoved, MoveOutRequested, MoveOutApproved.
+Event nghe: RentalRequestAccepted, RoommateApplicationAccepted.
+Gọi Feign: số 1 (Property, lấy maxCapacity) và số 5 (User, kiểm tra phạm vi tòa nhà).
+Database: contract thêm building_id, room_id, rent_amount decimal(15,0), deposit_amount decimal(15,0), termination_reason, ràng buộc duy nhất rental_request_id; contract_tenant thêm joined_at date, left_at date, is_representative boolean; move_out_request thêm requested_by, reason.
+9.5 billing-utility-service – port 8086 – billing_db
+Quy tắc tính tiền chi tiết (theo ngày, làm tròn) nằm ở mục 11; phần này mô tả chức năng và API.
+Chức năng:
+Loại tiện ích (utility_type): Điện, Nước với đơn vị (kWh, m3) và một đơn giá cố định cho mỗi loại (giai đoạn đầu không có bậc thang). ADMIN sửa đơn giá; giá chỉ áp dụng cho chỉ số nhập sau thời điểm sửa.
+Đồng hồ (meter): đăng ký cho từng phòng theo loại tiện ích, kèm chỉ số đầu (initialIndex); mỗi phòng chỉ có một đồng hồ đang hoạt động cho mỗi loại tiện ích. Khi đăng ký, Billing gọi Property (Feign số 6) để lấy buildingId.
+Chỉ số điện nước (meter_reading): KY_THUAT hoặc QUAN_LY nhập chỉ số chốt từng tháng. Hệ thống tự lấy prevIndex (chỉ số tháng trước, hoặc initialIndex nếu là lần đầu), tính consumption = currentIndex - prevIndex (phải ≥ 0), ghi lại unit_price hiện hành và amount = consumption x unit_price. Mỗi đồng hồ mỗi tháng một dòng; sửa được cho đến khi tháng đó đã sinh hóa đơn.
+Dịch vụ của tòa nhà (service): bảng giá dịch vụ theo tòa nhà (Wifi, rác, vệ sinh, gửi xe...), đơn giá cố định theo tháng.
+Dịch vụ gắn hợp đồng (contract_service): gắn dịch vụ vào hợp đồng với usageType là SHARED (cả phòng dùng chung, chia theo đầu người) hoặc PERSONAL (ai đăng ký người đó trả, bắt buộc có contractTenantId, ví dụ gửi xe máy). Billing giữ bản sao nhỏ contract_info (hợp đồng, phòng, tòa nhà, trạng thái, ngày bắt đầu/kết thúc) cập nhật từ event ContractSigned, ContractRenewed, ContractEnded để kiểm tra và phân quyền theo tòa nhà.
+Sinh hóa đơn chia tiền (Split Billing Engine):
+Scheduler chạy lúc 02:00 ngày chốt sổ hằng tháng (mặc định ngày 1, cấu hình billing.closing-day), xử lý tháng trước. QUAN_LY/ADMIN cũng chạy tay được bằng API (chạy lại không sinh trùng).
+Gọi Contract (Feign số 2) lấy hợp đồng có hiệu lực trong tháng và danh sách người ở kèm ngày vào/ra.
+Phòng nào thiếu chỉ số của bất kỳ đồng hồ đang hoạt động thì bỏ qua và phát MeterReadingMissing cho staff tòa nhà; không sinh hóa đơn thiếu.
+Với mỗi phòng, sinh một invoice riêng cho từng người ở (contract_tenant) kèm các invoice_item (RENT, ELECTRIC, WATER, SERVICE_SHARED, SERVICE_PERSONAL).
+Tổng tiền hóa đơn làm tròn đến hàng nghìn đồng; hạn thanh toán = ngày phát hành + 7 ngày (cấu hình billing.due-days).
+Phát InvoiceIssued cho từng hóa đơn.
+Ràng buộc duy nhất (contract_tenant_id, month, year) chống sinh trùng khi chạy lại.
+Thanh toán: staff ghi nhận khoản tiền mặt của từng người (payment); hóa đơn chuyển UNPAID → PARTIALLY_PAID → PAID theo tổng đã trả; không cho trả quá số còn nợ. Scheduler hằng ngày 03:00 chuyển hóa đơn quá hạn chưa PAID sang OVERDUE và phát InvoiceOverdue một lần. Tích hợp VNPay/MoMo để giai đoạn sau.
+Khách chỉ xem hóa đơn của chính mình.
+Đối tượng:
+UtilityType {id, name, unit, unitPrice}; Meter {id, roomId, buildingId, utilityTypeId, utilityTypeName, meterCode, initialIndex, isActive}
+MeterReading {id, meterId, month, year, readingDate, prevIndex, currentIndex, consumption, unitPrice, amount}
+Service {id, buildingId, name, unit, unitPrice}; ContractService {id, contractId, serviceId, serviceName, quantity, usageType, contractTenantId}
+Invoice {id, contractId, roomId, buildingId, contractTenantId, customerId, month, year, totalAmount, paidAmount, status, issuedAt, dueDate, items[]}; InvoiceItem {id, itemType, description, amount, meterReadingId, contractServiceId}
+Payment {id, invoiceId, amountPaid, method, paidAt, note, recordedBy}
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+GET
+/api/v1/utility-types
+STAFF
+–
+200 [UtilityType]
+–
+POST
+/api/v1/utility-types
+ADMIN
+{name, unit, unitPrice}
+201 UtilityType
+400
+PUT
+/api/v1/utility-types/{id}
+ADMIN
+{name, unit, unitPrice}
+200 UtilityType
+404
+POST
+/api/v1/meters
+QUAN_LY
+{roomId, utilityTypeId, meterCode?, initialIndex}
+201 Meter
+409 METER_EXISTS, 503
+GET
+/api/v1/meters?roomId&amp;buildingId
+STAFF
+–
+200 [Meter]
+–
+POST
+/api/v1/meter-readings
+KY_THUAT, QUAN_LY
+{meterId, month, year, currentIndex, readingDate?}
+201 MeterReading
+422 INDEX_LOWER_THAN_PREVIOUS, 409 READING_EXISTS, 422 MONTH_ALREADY_INVOICED
+PUT
+/api/v1/meter-readings/{id}
+KY_THUAT, QUAN_LY
+{currentIndex}
+200 MeterReading
+422 INDEX_LOWER_THAN_PREVIOUS, 422 MONTH_ALREADY_INVOICED
+GET
+/api/v1/meter-readings?roomId&amp;meterId&amp;buildingId&amp;month&amp;year&amp;page&amp;size
+STAFF
+–
+200 trang MeterReading
+–
+GET
+/api/v1/services?buildingId
+STAFF
+–
+200 [Service]
+–
+POST
+/api/v1/services
+QUAN_LY
+{buildingId, name, unit, unitPrice}
+201 Service
+400
+PUT
+/api/v1/services/{id}
+QUAN_LY
+{name, unit, unitPrice}
+200 Service
+404
+POST
+/api/v1/contract-services
+QUAN_LY
+{contractId, serviceId, quantity, usageType, contractTenantId?}
+201 ContractService
+422 TENANT_REQUIRED_FOR_PERSONAL, 404
+GET
+/api/v1/contract-services?contractId
+STAFF
+–
+200 [ContractService]
+–
+DELETE
+/api/v1/contract-services/{id}
+QUAN_LY
+–
+204
+404
+POST
+/api/v1/invoices/generate
+QUAN_LY, ADMIN
+{month, year, buildingId?}
+200 {month, year, generatedCount, skipped:[{roomId, reason}]}
+503
+GET
+/api/v1/invoices?buildingId&amp;roomId&amp;month&amp;year&amp;status&amp;page&amp;size
+STAFF
+–
+200 trang Invoice (không kèm items)
+–
+GET
+/api/v1/invoices/mine?month&amp;year&amp;status&amp;page&amp;size
+CUSTOMER
+–
+200 trang Invoice
+–
+GET
+/api/v1/invoices/{id}
+CUSTOMER*, STAFF
+–
+200 Invoice kèm items[]
+404, 403
+POST
+/api/v1/payments
+QUAN_LY
+{invoiceId, amountPaid, paidAt?, note?} (method mặc định CASH)
+201 Payment
+422 AMOUNT_EXCEEDS_REMAINING, 422 INVOICE_ALREADY_PAID
+GET
+/api/v1/payments?invoiceId
+CUSTOMER*, STAFF
+–
+200 [Payment]
+403
+Event phát (billing.events): InvoiceIssued, PaymentReceived, InvoiceOverdue, MeterReadingMissing. Event nghe: ContractSigned, ContractRenewed, ContractEnded.
+Gọi Feign: số 2 (Contract, khi chốt sổ), số 5 (User, phạm vi tòa nhà), số 6 (Property, lấy buildingId khi đăng ký đồng hồ).
+Database: thêm contract_info(contract_id pk, room_id, building_id, status, start_date, end_date); service.building_id; meter thêm building_id, meter_code, initial_index, is_active, duy nhất (room_id, utility_type_id); meter_reading thêm month, year, unit_price decimal(15,2), amount decimal(15,2), entered_by, duy nhất (meter_id, month, year); contract_service.contract_tenant_id; invoice thêm contract_id, room_id, building_id, customer_id, paid_amount, issued_at, due_date, total_amount decimal(15,0), duy nhất (contract_tenant_id, month, year); invoice_item thêm item_type, contract_service_id, amount decimal(15,2), và meter_reading_id là quan hệ nhiều-một (một chỉ số điện xuất hiện trong hóa đơn của nhiều người); payment thêm method, paid_at, note, recorded_by.
+9.6 asset-maintenance-service – port 8087 – asset_db
+Chức năng:
+Thiết bị/nội thất (appliance): QUAN_LY quản lý danh sách thiết bị theo phòng (tủ lạnh, máy lạnh, máy giặt, giường...), trạng thái GOOD, NEEDS_REPAIR, BROKEN. Khi tạo, gọi Property (Feign số 4) để lấy buildingId của phòng.
+Bảo hành (warranty): mỗi thiết bị tối đa một bảo hành: nhà cung cấp/hãng, ngày bắt đầu, ngày hết hạn. API trả thêm active (còn hạn tính đến hôm nay) để kỹ thuật viên biết gọi hãng hay gọi thợ ngoài.
+Báo hư hỏng (report): khách đang ở phòng đó (xác nhận bằng Feign số 7 sang Contract, đồng thời lấy buildingId) gửi báo cáo kèm mô tả và tối đa 5 ảnh. Ảnh upload thẳng lên MinIO bằng presigned URL do service cấp; report chỉ lưu URL ảnh. Phát ReportCreated.
+Duyệt báo cáo: QUAN_LY xem danh sách báo cáo PENDING của tòa nhà mình. Duyệt = chuyển báo cáo thành maintenance_request: gắn thiết bị (nếu có), phân công kỹ thuật viên (phải được phân công tòa nhà, Feign số 5), đặt mức ưu tiên LOW/MEDIUM/HIGH/URGENT và ngày giờ thợ đến; phát MaintenanceRequestAssigned để báo khách. Từ chối cần nêu lý do.
+Xử lý phiếu sửa chữa: QUAN_LY đổi người phụ trách/ưu tiên/lịch; kỹ thuật viên được giao bắt đầu (IN_PROGRESS) rồi hoàn thành kèm maintenance_record (việc đã làm, chi phí); thiết bị cập nhật trạng thái (mặc định GOOD); phát MaintenanceCompleted. Kỹ thuật viên (không phải QUAN_LY/ADMIN) chỉ thấy phiếu giao cho mình.
+Bảo trì định kỳ (maintenance_schedule): QUAN_LY lập lịch theo tòa nhà (ví dụ rửa máy lạnh 6 tháng/lần) với intervalMonths, nextDate, người phụ trách. Scheduler mỗi ngày 06:00 phát MaintenanceScheduleDue cho lịch có nextDate là hôm nay hoặc ngày mai. Khi làm xong, gọi complete để ghi lastDoneDate và đẩy nextDate thêm intervalMonths tháng.
+Đối tượng:
+Appliance {id, roomId, buildingId, name, status, warranty:{provider, startDate, endDate, active}}
+Report {id, customerId, roomId, buildingId, title, description, imageUrls[], status, rejectReason, createdAt}
+MaintenanceRequest {id, reportId, applianceId, roomId, buildingId, staffId, priority, status, scheduledAt, createdAt, record}; MaintenanceRecord {id, maintenanceRequestId, actionTaken, cost, date, completedBy}
+MaintenanceSchedule {id, buildingId, staffId, title, description, intervalMonths, nextDate, lastDoneDate}
+API contract:
+Method
+Path
+Quyền
+Request
+Response thành công
+Lỗi
+POST
+/api/v1/appliances
+QUAN_LY
+{roomId, name, status?}
+201 Appliance
+503
+GET
+/api/v1/appliances?roomId&amp;buildingId&amp;status&amp;page&amp;size
+STAFF
+–
+200 trang Appliance
+–
+GET
+/api/v1/appliances/{id}
+STAFF
+–
+200 Appliance
+404
+PUT
+/api/v1/appliances/{id}
+QUAN_LY
+{name, status}
+200 Appliance
+404
+PUT
+/api/v1/appliances/{id}/warranty
+QUAN_LY
+{provider, startDate, endDate} (tạo mới hoặc ghi đè)
+200 Appliance
+400 (ngày hết hạn trước ngày bắt đầu)
+DELETE
+/api/v1/appliances/{id}
+QUAN_LY
+–
+204
+404
+POST
+/api/v1/reports/image-upload-url
+CUSTOMER
+{fileName, contentType} (chỉ ảnh jpg/png/webp)
+200 {uploadUrl, imageUrl, expiresInSeconds:600}
+400
+POST
+/api/v1/reports
+CUSTOMER
+{roomId, title, description, imageUrls[]}
+201 Report
+403 NOT_A_TENANT_OF_ROOM, 503
+GET
+/api/v1/reports/mine?status&amp;page&amp;size
+CUSTOMER
+–
+200 trang Report
+–
+GET
+/api/v1/reports?buildingId&amp;status&amp;page&amp;size
+QUAN_LY
+–
+200 trang Report
+–
+GET
+/api/v1/reports/{id}
+CUSTOMER*, STAFF
+–
+200 Report
+404, 403
+PUT
+/api/v1/reports/{id}/approve
+QUAN_LY
+{applianceId?, staffId, priority, scheduledAt}
+200 MaintenanceRequest
+422 INVALID_STATUS, 422 STAFF_NOT_IN_BUILDING
+PUT
+/api/v1/reports/{id}/reject
+QUAN_LY
+{reason}
+200 Report
+422 INVALID_STATUS
+GET
+/api/v1/maintenance-requests?buildingId&amp;staffId&amp;status&amp;priority&amp;page&amp;size
+STAFF
+–
+200 trang MaintenanceRequest (KY_THUAT chỉ thấy phiếu của mình)
+–
+GET
+/api/v1/maintenance-requests/mine?page&amp;size
+CUSTOMER
+–
+200 trang MaintenanceRequest từ báo cáo của mình
+–
+GET
+/api/v1/maintenance-requests/{id}
+CUSTOMER*, STAFF
+–
+200 MaintenanceRequest
+404, 403
+PUT
+/api/v1/maintenance-requests/{id}/assign
+QUAN_LY
+{staffId, priority, scheduledAt}
+200 MaintenanceRequest
+422 STAFF_NOT_IN_BUILDING, 422 INVALID_STATUS
+PUT
+/api/v1/maintenance-requests/{id}/start
+KY_THUAT (được giao)
+–
+200 MaintenanceRequest
+403, 422 INVALID_STATUS
+POST
+/api/v1/maintenance-requests/{id}/complete
+KY_THUAT (được giao), QUAN_LY
+{actionTaken, cost, applianceStatus?}
+200 MaintenanceRecord
+403, 422 INVALID_STATUS
+POST
+/api/v1/maintenance-schedules
+QUAN_LY
+{buildingId, staffId, title, description?, intervalMonths, firstDate}
+201 MaintenanceSchedule
+422 STAFF_NOT_IN_BUILDING
+GET
+/api/v1/maintenance-schedules?buildingId&amp;staffId
+STAFF
+–
+200 [MaintenanceSchedule]
+–
+PUT
+/api/v1/maintenance-schedules/{id}
+QUAN_LY
+{staffId, title, description?, intervalMonths, nextDate}
+200 MaintenanceSchedule
+404
+POST
+/api/v1/maintenance-schedules/{id}/complete
+KY_THUAT, QUAN_LY
+{note?}
+200 MaintenanceSchedule (nextDate đã đẩy lên)
+404
+DELETE
+/api/v1/maintenance-schedules/{id}
+QUAN_LY
+–
+204
+404
+Event phát (asset.events): ReportCreated, ReportRejected, MaintenanceRequestAssigned, MaintenanceCompleted, MaintenanceScheduleDue. Event nghe: không có.
+Gọi Feign: số 4 (Property, buildingId khi tạo thiết bị), số 5 (User, phạm vi tòa nhà), số 7 (Contract, xác nhận người báo hư đang ở phòng).
+Database: appliance.building_id; report thêm building_id, reject_reason, created_at và bỏ cột image_url, thay bằng bảng report_image(id, report_id, image_url); maintenance_request thêm building_id, room_id, scheduled_at, created_at; maintenance_record.completed_by; maintenance_schedule thêm building_id, description, interval_months, last_done_date và đổi cột date thành next_date.
+10. Danh mục Kafka event
+Mọi event dùng envelope ở mục 5.3; bảng dưới chỉ liệt kê payload. Mọi payload đều là JSON phẳng, ID là số, tenantIds[] là danh sách customerId đang ở phòng.
+Event (topic)
+Payload
+Bên nghe → hành động
+AccountRegistered (auth.events)
+accountId, accountType, username, fullName, email, phone
+User → tạo hồ sơ
+RoomStatusChanged (property.events)
+roomId, buildingId, buildingName, address, wardId, districtId, roomTypeId, roomTypeName, roomNumber, maxCapacity, status, previousStatus, price, latitude, longitude
+Listing → tạo/cập nhật/đóng listing
+RoomPriceChanged (property.events)
+roomId, price, effectiveFrom
+Listing → cập nhật giá. Phát vào ngày giá có hiệu lực (ngay khi tạo nếu là hôm nay; ngày khác thì scheduler 00:05 hằng ngày phát)
+BuildingUpdated (property.events)
+buildingId, name, address, wardId, districtId, latitude, longitude
+Listing → cập nhật bản sao
+RentalRequestCreated (listing.events)
+rentalRequestId, listingId, roomId, buildingId, customerId
+Notification
+RentalRequestAccepted
+rentalRequestId, listingId, roomId, buildingId, customerId, price, moveInDate
+Contract → tạo hợp đồng DRAFT; Notification
+RentalRequestRejected
+rentalRequestId, customerId, buildingId, reason
+Notification
+AppointmentScheduled
+appointmentId, rentalRequestId, customerId, staffId, buildingId, appointmentDate
+Notification
+AppointmentStatusChanged
+appointmentId, customerId, staffId, buildingId, status
+Notification
+RoommateApplicationCreated
+applicationId, postId, ownerCustomerId, applicantCustomerId
+Notification
+RoommateApplicationAccepted
+applicationId, postId, roomId, buildingId, ownerCustomerId, applicantCustomerId
+Contract → kiểm tra sức chứa, thêm người ở
+RoommateApplicationRejected
+applicationId, applicantCustomerId
+Notification
+ContractSigned (contract.events)
+contractId, roomId, buildingId, startDate, endDate, rentAmount, tenantIds[]
+Property → OCCUPIED; Listing → đóng listing, từ chối yêu cầu chờ, đóng bài ở ghép; Billing → lưu contract_info; Notification
+ContractRenewed
+contractId, roomId, buildingId, newEndDate, tenantIds[]
+Billing → cập nhật contract_info; Notification
+ContractEnded
+contractId, roomId, buildingId, endDate, status, nextContractExists, tenantIds[]
+Property → VACANT (trừ khi nextContractExists); Listing → đóng bài ở ghép; Billing → cập nhật contract_info
+TenantAdded
+contractId, roomId, buildingId, customerId, applicationId?, ownerCustomerId?
+Listing → đơn ở ghép ACCEPTED; Notification
+TenantAddRejected
+roomId, buildingId, applicationId, ownerCustomerId, applicantCustomerId, reason (ROOM_FULL, ALREADY_IN_ROOM, NO_ACTIVE_CONTRACT)
+Listing → đơn REJECTED_FULL; Notification
+TenantRemoved
+contractId, roomId, buildingId, customerId, leftAt
+Notification
+MoveOutRequested
+moveOutRequestId, contractId, roomId, buildingId, expectedMoveOutDate
+Notification
+MoveOutApproved
+moveOutRequestId, contractId, roomId, buildingId, expectedMoveOutDate, tenantIds[]
+Property → UPCOMING_VACANT (rồi phát RoomStatusChanged để Listing tạo bài mới); Notification
+InvoiceIssued (billing.events)
+invoiceId, customerId, contractId, roomId, buildingId, month, year, totalAmount, dueDate
+Notification
+PaymentReceived
+paymentId, invoiceId, customerId, amountPaid, invoiceStatus
+Notification
+InvoiceOverdue
+invoiceId, customerId, buildingId, month, year, totalAmount, dueDate
+Notification
+MeterReadingMissing
+roomId, buildingId, month, year, meterIds[]
+Notification
+ReportCreated (asset.events)
+reportId, customerId, roomId, buildingId, title
+Notification
+ReportRejected
+reportId, customerId, reason
+Notification
+MaintenanceRequestAssigned
+maintenanceRequestId, reportId, customerId, staffId, roomId, buildingId, priority, scheduledAt
+Notification
+MaintenanceCompleted
+maintenanceRequestId, reportId, customerId, staffId, roomId, buildingId, cost
+Notification
+MaintenanceScheduleDue
+scheduleId, buildingId, staffId, title, nextDate
+Notification
+Người nhận thông báo (do Notification Service xác định):
+Event
+Người nhận
+RentalRequestCreated, MoveOutRequested, ReportCreated, MeterReadingMissing
+Staff được phân công buildingId và mọi ADMIN
+InvoiceOverdue
+customerId, staff được phân công buildingId, mọi ADMIN
+RentalRequestAccepted, RentalRequestRejected, PaymentReceived, InvoiceIssued, ReportRejected, MaintenanceCompleted, TenantRemoved
+customerId
+AppointmentScheduled, AppointmentStatusChanged
+customerId và staffId
+RoommateApplicationCreated
+ownerCustomerId
+RoommateApplicationRejected
+applicantCustomerId
+TenantAdded
+customerId và ownerCustomerId (nếu có)
+TenantAddRejected
+ownerCustomerId và applicantCustomerId
+ContractSigned, ContractRenewed, MoveOutApproved
+mọi người trong tenantIds[]
+MaintenanceRequestAssigned
+customerId (kèm ngày giờ thợ đến) và staffId
+MaintenanceScheduleDue
+staffId
+Kênh gửi: in-app luôn luôn; email cho InvoiceIssued, InvoiceOverdue, ContractSigned, RentalRequestAccepted, RentalRequestRejected, MaintenanceRequestAssigned; push (FCM) cho mọi thông báo nếu người nhận có device token.
+11. Quy tắc tính tiền
+11.1 Tiền phòng lấy theo hợp đồng
+Billing dùng rent_amount chốt trong hợp đồng lúc ký (nhận qua billing-data), không đọc room_price. Hợp đồng ký giá 3 triệu/tháng thì suốt thời hạn hóa đơn luôn tính 3 triệu, dù giá niêm yết của phòng sau đó tăng lên 3,5 triệu. deposit_amount (tiền cọc) lưu trong hợp đồng, không tính vào hóa đơn hàng tháng.
+11.2 Bắt buộc tính theo ngày
+Với tháng có D ngày thực tế (28, 29, 30 hoặc 31):
+\text{Đơn giá/ngày} = \frac{\text{Tiền phòng cả tháng}}{D}\text{Tiền phòng thực thu} = \text{Đơn giá/ngày} \times \text{Số ngày ở thực tế}
+Quy ước đếm ngày: tính cả ngày vào ở và cả ngày chuyển đi. Ví dụ tháng 30 ngày, vào ngày 20 thì ở 11 ngày (20 đến 30); chuyển đi ngày 10 thì ở 10 ngày (1 đến 10).
+Số ngày ở thực tế của một người = số ngày thuộc tháng đó nằm trong cả ba khoảng: từ joined_at đến left_at (hoặc hết tháng nếu chưa rời), và từ start_date đến end_date của hợp đồng.
+11.3 Chia tiền khi ở ghép
+Mỗi ngày d của tháng, gọi n(d) là số người có mặt trong phòng ngày đó. Phần chi phí của ngày đó (tổng tiền cả tháng chia D) được chia đều cho n(d) người; mỗi người chỉ chịu những ngày mình có mặt:
+\text{Tiền của người } t = \sum_{d \in \text{ngày có mặt của } t} \frac{T / D}{n(d)}
+Trong đó T là tổng tiền cả tháng của khoản đang chia. Công thức này áp dụng cho tiền phòng (T = rent_amount), tiền điện nước (T = tổng tiêu thụ x đơn giá cố định của phòng trong tháng) và dịch vụ dùng chung (T = đơn giá x số lượng).
+Dịch vụ cá nhân (PERSONAL) tính đúng cho người đăng ký, bằng đơn giá x số lượng, không chia, không tính theo ngày (tính trọn tháng nếu người đó có mặt ít nhất một ngày trong tháng).
+Ví dụ: phòng 3.000.000 đ/tháng, tháng 30 ngày. A ở cả tháng, B vào ở ngày 21 (ở 10 ngày, từ 21 đến 30). Đơn giá/ngày = 100.000.
+Người
+Ngày 1–20 (n=1)
+Ngày 21–30 (n=2)
+Tiền phòng
+A
+20 x 100.000 = 2.000.000
+10 x 50.000 = 500.000
+2.500.000
+B
+–
+10 x 50.000 = 500.000
+500.000
+Tổng
+3.000.000
+11.4 Làm tròn
+Phép chia ra số thập phân thì giữ nguyên trong mọi phép tính trung gian (dùng BigDecimal, không dùng double).
+invoice_item.amount lưu số thập phân 2 chữ số; tổng cuối invoice.total_amount làm tròn đến hàng nghìn đồng: Math.round(total / 1000.0) * 1000 (khi cài đặt bằng BigDecimal: chia 1000, làm tròn HALF_UP về 0 chữ số thập phân, nhân lại 1000).
+Tổng các hóa đơn của một phòng có thể lệch vài trăm đồng so với tổng gốc; chấp nhận.
+11.5 Các giả định cần nhớ
+Tiêu thụ điện nước ngoài khoảng thời gian có hợp đồng trong tháng do chủ nhà chịu (giai đoạn đầu không chia).
+Hợp đồng luôn có ít nhất một người ở trong suốt thời hạn (Contract chặn người cuối cùng rời đi), nên n(d) luôn ≥ 1 trong ngày có hiệu lực của hợp đồng.
+12. Triển khai và quy trình làm việc
+Docker Compose (một file infra/docker-compose.yml): postgres (5432), kafka (9092), kafka-ui (8090), minio (9000, 9001), discovery-server (8761), api-gateway (8080), và 7 service nghiệp vụ. Chỉ api-gateway publish port ra máy host (cùng các công cụ dev: kafka-ui, minio console).
+Biến môi trường chính: JWT_SECRET (auth + gateway), DB_URL/DB_USER/DB_PASSWORD (mỗi service), KAFKA_BOOTSTRAP_SERVERS, EUREKA_URL, MINIO_ENDPOINT/MINIO_ACCESS_KEY/MINIO_SECRET_KEY (asset), SMTP_HOST/SMTP_USER/SMTP_PASSWORD và FCM_CREDENTIALS_FILE (user-notification), BILLING_CLOSING_DAY, BILLING_DUE_DAYS (billing). Lưu trong file .env không commit; commit .env.example.
+Cấu trúc repo (mono-repo): common-lib/, một thư mục cho mỗi service, infra/, docs/ (tài liệu này và file DBML).
+Quy trình:
+Nhánh main luôn chạy được; làm trên feature/&lt;service&gt;-&lt;mô tả&gt;; merge bằng pull request có ít nhất 1 người review và CI xanh.
+Mỗi chức năng xong khi: có API trong Swagger khớp tài liệu này, có migration Flyway (không sửa migration đã merge), có test cho luồng chính và trường hợp lỗi, event mới đã ghi vào mục 10.
+Lộ trình:
+Giai đoạn
+Nội dung
+Hoàn thành khi
+0
+Docker Compose hạ tầng, discovery, gateway, common-lib, Auth, User
+Đăng ký, đăng nhập, gọi API qua Gateway với JWT, tạo hồ sơ tự động qua Kafka
+1
+Property, Listing
+Tìm phòng theo bán kính và giá; listing tự tạo từ RoomStatusChanged
+2
+Contract (hợp đồng, người ở, trả phòng), ở ghép
+Ký hợp đồng làm phòng thành OCCUPIED; chặn đúng khi vượt sức chứa
+3
+Billing
+Chốt sổ sinh hóa đơn từng người đúng công thức mục 11; ghi nhận thanh toán
+4
+Asset &amp; Maintenance, Notification đầy đủ
+Từ báo hư đến hoàn thành sửa chữa; thông báo đúng người theo tòa nhà
+5
+Hoàn thiện
+Kiểm thử luồng end-to-end, sửa lỗi, tài liệu chạy hệ thống

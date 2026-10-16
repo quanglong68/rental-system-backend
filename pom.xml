@@ -18,6 +18,7 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>user-notification-service</module>
+        <module>contract-tenant-service</module>
     </modules>
 
     <properties>
