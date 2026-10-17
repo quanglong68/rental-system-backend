@@ -18,11 +18,12 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>user-notification-service</module>
+        <module>asset-maintenance-service</module>
         <module>contract-tenant-service</module>
     </modules>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>21 </java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
