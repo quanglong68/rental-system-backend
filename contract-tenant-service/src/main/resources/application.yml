@@ -19,6 +19,15 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  # Producer for the outbox relay (docs muc 5.3); same settings as auth-service.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
 
 eureka:
   client:
