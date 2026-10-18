@@ -42,6 +42,11 @@ public class FeignDefaultConfig {
         return new FeignErrorDecoder();
     }
 
+    @Bean
+    public FeignHeaderInterceptor feignHeaderInterceptor() {
+        return new FeignHeaderInterceptor();
+    }
+
     /** Mach ngat mac dinh: cua so 10 cuoc goi, nguong loi 50%, mo mach 10 giay (docs muc 5.2). */
     @Bean
     public Customizer<Resilience4JCircuitBreakerFactory> feignCircuitBreakerCustomizer() {

@@ -105,32 +105,45 @@ services:
       - rental-net
 
   minio:
-    image: elestio/minio:latest
+    image: quay.io/minio/aistor/minio:RELEASE.2026-09-19T17-05-25Z
     container_name: rental-minio
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    command: minio server /data --console-address ":9001" --license /run/minio-license/minio.license
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     volumes:
       - miniodata:/data
+      - minio-license:/run/minio-license:ro
+    depends_on:
+      minio-license-init:
+        condition: service_completed_successfully
     ports:
+      - "9000:9000"
       - "9001:9001"
     networks:
       - rental-net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+
+  minio-license-init:
+    image: alpine:3.22
+    container_name: rental-minio-license-init
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["set -eu; test -n \"$$MINIO_LICENSE_TOKEN\"; printf '%s' \"$$MINIO_LICENSE_TOKEN\" > /license/minio.license; chmod 0444 /license/minio.license"]
+    environment:
+      MINIO_LICENSE_TOKEN: ${MINIO_LICENSE_TOKEN:?MINIO_LICENSE_TOKEN is required in .env}
+    volumes:
+      - minio-license:/license
+    restart: "no"
 
   # Docs muc 4.3: bucket report-images (anh bao hu, upload bang presigned URL).
   minio-init:
-    image: drpsychick/minio-client:latest
+    image: quay.io/minio/aistor/mc:RELEASE.2026-09-06T02-44-40Z
     container_name: rental-minio-init
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
+      minio-license-init:
+        condition: service_completed_successfully
     networks:
       - rental-net
     entrypoint:
@@ -138,7 +151,11 @@ services:
       - -c
       - |
         mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" && \
-        mc mb --ignore-existing local/report-images
+        until mc ready local; do sleep 2; done && \
+        mc mb --ignore-existing local/report-images && \
+        mc cors set local/report-images /report-images-cors.xml
+    volumes:
+      - ./minio/report-images-cors.xml:/report-images-cors.xml:ro
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
@@ -232,6 +249,40 @@ services:
       timeout: 5s
       retries: 12
 
+  asset-maintenance-service:
+    build:
+      context: ..
+      dockerfile: asset-maintenance-service/Dockerfile
+    container_name: rental-asset-maintenance
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asset_db
+      SPRING_DATASOURCE_USERNAME: ${ASSET_DB_USER:-asset_svc}
+      SPRING_DATASOURCE_PASSWORD: ${ASSET_DB_PASSWORD:?ASSET_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://host.docker.internal:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      MINIO_BUCKET: report-images
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   api-gateway:
     # Build tu repo root de thay parent pom + common-lib (giong discovery/auth).
     build:
@@ -245,6 +296,8 @@ services:
       auth-service:
         condition: service_healthy
       user-notification-service:
+        condition: service_healthy
+      asset-maintenance-service:
         condition: service_healthy
     ports:
       - "8080:8080"
@@ -269,3 +322,4 @@ networks:
 volumes:
   pgdata:
   miniodata:
+  minio-license:

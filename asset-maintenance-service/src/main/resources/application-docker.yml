@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/asset_db}
+    username: ${SPRING_DATASOURCE_USERNAME:${ASSET_DB_USER:asset_svc}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${ASSET_DB_PASSWORD:changeit}}
+  kafka.bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+eureka.client.service-url.defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka/}

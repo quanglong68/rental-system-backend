@@ -1,0 +1,31 @@
+server:
+  port: 8087
+spring:
+  application:
+    name: asset-maintenance-service
+  datasource:
+    url: ${ASSET_DB_URL:jdbc:postgresql://localhost:5432/asset_db}
+    username: ${ASSET_DB_USER:asset_svc}
+    password: ${ASSET_DB_PASSWORD:changeit}
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+    properties.hibernate.time_zone: UTC
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties.enable.idempotence: true
+eureka.client.service-url.defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+asset:
+  minio:
+    endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT:http://localhost:9000}}
+    access-key: ${MINIO_ROOT_USER:minioadmin}
+    secret-key: ${MINIO_ROOT_PASSWORD:changeit}
+    bucket: ${MINIO_BUCKET:report-images}
+management:
+  endpoints.web.exposure.include: health,info
