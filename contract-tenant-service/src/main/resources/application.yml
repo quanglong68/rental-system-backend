@@ -22,6 +22,14 @@ spring:
   # Producer for the outbox relay (docs muc 5.3); same settings as auth-service.
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: contract-tenant-service
+      auto-offset-reset: earliest
+      # Spec 5.3: ack-mode RECORD is configured on the listener factory (KafkaConfig).
+      properties:
+        enable.auto.commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer

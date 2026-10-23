@@ -46,7 +46,8 @@ class ContractTenantMappingTest {
 
         assertThat(table.getName()).isEqualTo("contract_tenant");
         assertThat(table.getColumns()).extracting(Column::getName).containsExactlyInAnyOrder(
-                "id", "contract_id", "customer_id", "joined_at", "left_at", "is_representative", "created_at");
+                "id", "contract_id", "customer_id", "joined_at", "left_at", "is_representative",
+                "created_at", "updated_at");
     }
 
     @Test
@@ -57,6 +58,7 @@ class ContractTenantMappingTest {
         assertThat(binding.getProperty("joinedAt").getType().getReturnedClass()).isEqualTo(LocalDate.class);
         assertThat(binding.getProperty("leftAt").getType().getReturnedClass()).isEqualTo(LocalDate.class);
         assertThat(binding.getProperty("createdAt").getType().getReturnedClass()).isEqualTo(Instant.class);
+        assertThat(binding.getProperty("updatedAt").getType().getReturnedClass()).isEqualTo(Instant.class);
     }
 
     @Test

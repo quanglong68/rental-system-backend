@@ -18,49 +18,70 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-/**
- * Writes a {@code ContractSigned} row into the outbox <em>inside the caller's transaction</em>
- * (docs muc 5.3), so the contract status change, the first contract_tenant row and the event row
- * commit or roll back together. Kafka is never called here: a crash between commit and send would
- * lose the event, which the relay's retry exists to prevent.
- */
 @Service
 @RequiredArgsConstructor
 public class OutboxEventPublisher {
 
-    /** Topic contract-tenant-service owns; message key is contractId (docs muc 5.3). */
     public static final String CONTRACT_EVENTS_TOPIC = "contract.events";
 
-    /** Event name for a signed contract (docs muc 10). */
     public static final String EVENT_CONTRACT_SIGNED = "ContractSigned";
+    public static final String EVENT_CONTRACT_RENEWED = "ContractRenewed";
+    public static final String EVENT_CONTRACT_ENDED = "ContractEnded";
+    public static final String EVENT_TENANT_ADDED = "TenantAdded";
+    public static final String EVENT_TENANT_ADD_REJECTED = "TenantAddRejected";
+    public static final String EVENT_TENANT_REMOVED = "TenantRemoved";
+    public static final String EVENT_MOVE_OUT_REQUESTED = "MoveOutRequested";
+    public static final String EVENT_MOVE_OUT_APPROVED = "MoveOutApproved";
 
     private final OutboxEventRepository outbox;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    /**
-     * Enqueues one ContractSigned event. Must be called from inside the signing transaction.
-     *
-     * @param contract the signed contract, already ACTIVE with a start and end date
-     * @param tenantIds customer IDs currently occupying the contract (docs muc 10)
-     */
     public void publishContractSigned(Contract contract, List<Long> tenantIds) {
         ContractSignedPayload payload = ContractSignedPayload.of(contract, tenantIds);
-        EventEnvelope<ContractSignedPayload> envelope =
-                EventEnvelope.of(EVENT_CONTRACT_SIGNED, payload, correlationId());
+        saveOutboxEvent(EVENT_CONTRACT_SIGNED, String.valueOf(contract.getId()), payload);
+    }
 
+    public void publishContractRenewed(ContractRenewedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_RENEWED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishContractEnded(ContractEndedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_ENDED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishTenantAdded(TenantAddedPayload payload) {
+        saveOutboxEvent(EVENT_TENANT_ADDED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishTenantAddRejected(TenantAddRejectedPayload payload) {
+        saveOutboxEvent(EVENT_TENANT_ADD_REJECTED, String.valueOf(payload.getRoomId()), payload);
+    }
+
+    public void publishTenantRemoved(TenantRemovedPayload payload) {
+        saveOutboxEvent(EVENT_TENANT_REMOVED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishMoveOutRequested(MoveOutRequestedPayload payload) {
+        saveOutboxEvent(EVENT_MOVE_OUT_REQUESTED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishMoveOutApproved(MoveOutApprovedPayload payload) {
+        saveOutboxEvent(EVENT_MOVE_OUT_APPROVED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    private <T> void saveOutboxEvent(String eventType, String eventKey, T payload) {
+        EventEnvelope<T> envelope = EventEnvelope.of(eventType, payload, correlationId());
         OutboxEvent event = new OutboxEvent();
-        // eventId becomes the outbox primary key too: a retried relay send reuses the same event ID,
-        // so an idempotent consumer (processed_event) drops the duplicate.
         event.setId(envelope.getEventId());
         event.setTopic(CONTRACT_EVENTS_TOPIC);
-        event.setEventKey(String.valueOf(contract.getId()));
-        event.setEventType(EVENT_CONTRACT_SIGNED);
+        event.setEventKey(eventKey);
+        event.setEventType(eventType);
         try {
             event.setPayload(objectMapper.writeValueAsString(envelope));
         } catch (JsonProcessingException impossible) {
-            throw new IllegalStateException("Khong serialize duoc ContractSigned", impossible);
+            throw new IllegalStateException("Khong serialize duoc " + eventType, impossible);
         }
         outbox.save(event);
     }
@@ -76,7 +97,6 @@ public class OutboxEventPublisher {
                 fromHeader = servlet.getRequest().getHeader(Headers.X_CORRELATION_ID);
             }
         } catch (Exception ignored) {
-            // Tracing must not break the business call.
         }
         return fromHeader != null && !fromHeader.isBlank() ? fromHeader : UUID.randomUUID().toString();
     }

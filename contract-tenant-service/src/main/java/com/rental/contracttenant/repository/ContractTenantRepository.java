@@ -5,6 +5,7 @@ import com.rental.contracttenant.entity.ContractTenant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +22,37 @@ public interface ContractTenantRepository extends JpaRepository<ContractTenant, 
 
     /** Same as above without loading the row; for validation before inserting a new tenant. */
     boolean existsByContractIdAndCustomerIdAndLeftAtIsNull(Long contractId, Long customerId);
+
+    /**
+     * Occupants currently in the room: {@code left_at IS NULL}. This count is the only input to the
+     * capacity rule (spec 9.4), and it must be read <em>after</em> the contract row lock is held,
+     * otherwise two adders both see the old count (see {@code ContractService.addTenant}).
+     */
+    long countByContractIdAndLeftAtIsNull(Long contractId);
+
+    /**
+     * One row by its own id, scoped to the contract in the path. Scoping is the point: a tenant id
+     * belonging to another contract must not be reachable, and the caller cannot supply the pair
+     * independently (spec's {@code {tenantId}} is nested under {@code {id}}).
+     */
+    Optional<ContractTenant> findByIdAndContractId(Long id, Long contractId);
+
+    /**
+     * Clears the representative flag of every current row of the contract. Run <em>before</em>
+     * setting a new one: {@code uq_contract_tenant_representative} is a plain (non-deferred) partial
+     * unique index, so the set-first order would violate it immediately instead of swapping.
+     * <p>
+     * {@code flushAutomatically} forces this UPDATE out before the subsequent flagged UPDATE, which
+     * is what makes the ordering a property of the SQL rather than of Hibernate's action queue.
+     * {@code clearAutomatically} drops the stale in-memory copies of the rows this statement changed
+     * behind Hibernate's back, so the caller's reload reads what the database actually holds.
+     * <p>
+     * Its own transaction is required ({@code @Modifying} + bulk write).
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update ContractTenant t set t.isRepresentative = false "
+            + "where t.contractId = :contractId and t.isRepresentative = true")
+    void clearRepresentative(@Param("contractId") Long contractId);
 
     /**
      * Whether a customer currently occupies a contract in the given status — {@code ACTIVE} for the
