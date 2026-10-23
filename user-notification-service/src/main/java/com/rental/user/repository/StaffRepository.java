@@ -12,4 +12,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Query("select s from Staff s where (:buildingId is null or s.id in "
             + "(select b.id.staffId from StaffBuilding b where b.id.buildingId = :buildingId))")
     Page<Staff> findStaff(@Param("buildingId") Long buildingId, Pageable pageable);
+
+    @Query("select s from Staff s where s.id in "
+            + "(select b.id.staffId from StaffBuilding b where b.id.buildingId in :buildingIds)")
+    Page<Staff> findStaffInBuildings(@Param("buildingIds") java.util.Collection<Long> buildingIds, Pageable pageable);
 }

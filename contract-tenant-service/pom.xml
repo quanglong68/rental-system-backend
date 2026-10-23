@@ -60,6 +60,11 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Kafka producer for the Transactional Outbox relay (docs muc 5.3). -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.rental</groupId>
             <artifactId>common-lib</artifactId>
