@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.rental.contracttenant.entity.Contract;
-import com.rental.contracttenant.entity.Contract;
 import com.rental.contracttenant.entity.ContractStatus;
 import com.rental.contracttenant.entity.ContractTenant;
 import jakarta.persistence.LockModeType;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -170,5 +170,34 @@ class ContractTenantRepositoryTest {
         Query query = method.getAnnotation(Query.class);
         assertThat(query.nativeQuery()).isTrue();
         assertThat(query.value()).contains("pg_advisory_xact_lock");
+    }
+
+    // ---- Task 5A: representative swap (definitions only; execution needs PostgreSQL) ----
+
+    @Test
+    void scopedTenantLookupResolvesBothIdAndContractId() {
+        // The pair is the point: an unscoped findById would let a tenant of another contract be
+        // promoted. PropertyReferenceException here means the name no longer matches the entity.
+        assertThatCode(() -> new PartTree("findByIdAndContractId", ContractTenant.class))
+                .doesNotThrowAnyException();
+        assertThat(typesOf(new PartTree("findByIdAndContractId", ContractTenant.class)))
+                .containsExactly(Part.Type.SIMPLE_PROPERTY, Part.Type.SIMPLE_PROPERTY);
+    }
+
+    @Test
+    void clearRepresentativeIsAFlushingBulkUpdate() throws Exception {
+        var method = ContractTenantRepository.class.getMethod("clearRepresentative", Long.class);
+        Query query = method.getAnnotation(Query.class);
+        Modifying modifying = method.getAnnotation(Modifying.class);
+
+        // Clear-before-set only holds if the clear reaches the database before the flagged write:
+        // flushAutomatically is what turns "the action queue probably orders them" into a guarantee.
+        assertThat(modifying.flushAutomatically()).isTrue();
+        assertThat(modifying.clearAutomatically()).isTrue();
+        assertThat(query.value())
+                .contains("t.isRepresentative = false")
+                .contains("t.contractId = :contractId")
+                // Scoped to the currently flagged row; without this it would rewrite every row.
+                .contains("t.isRepresentative = true");
     }
 }
