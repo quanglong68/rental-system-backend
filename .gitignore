@@ -14,3 +14,5 @@ target/
 .env
 *.log
 logs/
+
+.m2/

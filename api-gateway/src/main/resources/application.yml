@@ -13,6 +13,15 @@ spring:
         locator:
           enabled: false
       routes:
+        # Swagger UI cua auth-service qua cong public duy nhat (8080).
+        - id: auth-swagger-ui
+          uri: lb://auth-service
+          predicates:
+            - Path=/swagger-ui.html,/swagger-ui/**
+        - id: auth-openapi-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs,/v3/api-docs/**
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -24,7 +33,7 @@ spring:
         - id: property-service
           uri: lb://property-service
           predicates:
-            - Path=/api/v1/locations/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**
+            - Path=/api/v1/locations/**,/api/v1/provinces/**,/api/v1/wards/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**
         - id: listing-booking-service
           uri: lb://listing-booking-service
           predicates:
