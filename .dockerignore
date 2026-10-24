@@ -1,6 +1,9 @@
 # Build context la repo root: loai file khong can thiet de build nhanh, anh nhe.
 target/
+**/target/
+**/bin/
 .git/
+.m2/
 .idea/
 docs/
 *.md
