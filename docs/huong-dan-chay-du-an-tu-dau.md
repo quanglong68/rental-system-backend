@@ -19,7 +19,7 @@ docker compose --env-file ..\.env -f ..\compose.yaml ps
 
 `config --quiet` kiểm tra `.env` và cấu hình Compose trước khi khởi động. Lệnh `up` sẽ chạy các dependency của gateway (Postgres, Kafka, Discovery Server và Auth Service); lần build đầu tiên có thể mất vài phút. Chờ `rental-postgres`, `rental-kafka`, `rental-discovery`, `rental-auth` và `rental-gateway` báo `healthy`.
 
-Mở [Swagger UI](http://localhost:8080/swagger-ui.html). Trang này hiển thị API của `auth-service`. OpenAPI JSON ở [đây](http://localhost:8080/v3/api-docs). Nếu trình duyệt trả lỗi, chạy lại lệnh `ps` ở trên và xem log gateway:
+Mở [Swagger UI](http://localhost:8080/swagger-ui.html), rồi chọn service ở danh sách phía trên. Gateway cung cấp OpenAPI JSON theo mẫu `http://localhost:8080/v3/api-docs/{service-name}`, ví dụ [`property-service`](http://localhost:8080/v3/api-docs/property-service). Chỉ những service đang chạy và đã đăng ký với Discovery Server mới tải được tài liệu. `properties-service` cần được khởi động từ dự án riêng của nó. Nếu trình duyệt trả lỗi, chạy lại lệnh `ps` ở trên và xem log gateway:
 
 ```powershell
 docker compose --env-file ..\.env -f ..\compose.yaml logs --tail 100 api-gateway

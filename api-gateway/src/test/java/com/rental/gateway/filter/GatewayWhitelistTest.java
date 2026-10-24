@@ -13,7 +13,8 @@ class GatewayWhitelistTest {
     @Test
     void swaggerUiVaOpenApiDocsChoPhepGetKhongCanToken() {
         for (String path : List.of("/swagger-ui.html", "/swagger-ui/index.html", "/swagger-ui/swagger-ui.css",
-                "/v3/api-docs", "/v3/api-docs/swagger-config")) {
+                "/v3/api-docs", "/v3/api-docs/swagger-config", "/v3/api-docs/property-service",
+                "/v3/api-docs/listing-booking-service")) {
             assertThat(whitelist.isPublic(HttpMethod.GET, path)).as(path).isTrue();
             assertThat(whitelist.isPublic(HttpMethod.POST, path)).as(path).isFalse();
         }

@@ -1,12 +1,6 @@
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY discovery-server/pom.xml discovery-server/pom.xml
-COPY api-gateway/pom.xml api-gateway/pom.xml
-COPY auth-service/pom.xml auth-service/pom.xml
-COPY user-notification-service/pom.xml user-notification-service/pom.xml
-COPY common-lib ./common-lib
-COPY asset-maintenance-service ./asset-maintenance-service
+COPY . .
 RUN mvn -q -pl asset-maintenance-service -am package -DskipTests
 FROM eclipse-temurin:21-jre
 RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
