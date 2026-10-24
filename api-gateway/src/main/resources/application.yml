@@ -13,15 +13,49 @@ spring:
         locator:
           enabled: false
       routes:
-        # Swagger UI cua auth-service qua cong public duy nhat (8080).
-        - id: auth-swagger-ui
-          uri: lb://auth-service
-          predicates:
-            - Path=/swagger-ui.html,/swagger-ui/**
+        # Moi service giu /v3/api-docs noi bo; gateway cung cap URL rieng cho Swagger UI.
         - id: auth-openapi-docs
           uri: lb://auth-service
           predicates:
-            - Path=/v3/api-docs,/v3/api-docs/**
+            - Path=/v3/api-docs/auth-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: user-notification-openapi-docs
+          uri: lb://user-notification-service
+          predicates:
+            - Path=/v3/api-docs/user-notification-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: property-openapi-docs
+          uri: lb://property-service
+          predicates:
+            - Path=/v3/api-docs/property-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: listing-booking-openapi-docs
+          uri: lb://listing-booking-service
+          predicates:
+            - Path=/v3/api-docs/listing-booking-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: contract-tenant-openapi-docs
+          uri: lb://contract-tenant-service
+          predicates:
+            - Path=/v3/api-docs/contract-tenant-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: billing-utility-openapi-docs
+          uri: lb://billing-utility-service
+          predicates:
+            - Path=/v3/api-docs/billing-utility-service
+          filters:
+            - SetPath=/v3/api-docs
+        - id: asset-maintenance-openapi-docs
+          uri: lb://asset-maintenance-service
+          predicates:
+            - Path=/v3/api-docs/asset-maintenance-service
+          filters:
+            - SetPath=/v3/api-docs
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -59,6 +93,25 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
             maxAge: 3600
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: auth-service
+        url: /v3/api-docs/auth-service
+      - name: user-notification-service
+        url: /v3/api-docs/user-notification-service
+      - name: property-service
+        url: /v3/api-docs/property-service
+      - name: listing-booking-service
+        url: /v3/api-docs/listing-booking-service
+      - name: contract-tenant-service
+        url: /v3/api-docs/contract-tenant-service
+      - name: billing-utility-service
+        url: /v3/api-docs/billing-utility-service
+      - name: asset-maintenance-service
+        url: /v3/api-docs/asset-maintenance-service
 
 eureka:
   client:
