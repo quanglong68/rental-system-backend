@@ -17,7 +17,7 @@ public class GatewayWhitelist {
 
     private static final List<String> PUBLIC_GET = List.of("/api/v1/locations/**", "/api/v1/buildings/nearby",
             "/api/v1/listings", "/api/v1/listings/*", "/swagger-ui.html", "/swagger-ui/**",
-            "/v3/api-docs", "/v3/api-docs/**");
+            "/v3/api-docs", "/v3/api-docs/**", "/swagger-config");
 
     private final AntPathMatcher matcher = new AntPathMatcher();
 
