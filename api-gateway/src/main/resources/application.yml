@@ -20,42 +20,42 @@ spring:
             - Path=/v3/api-docs/auth-service
           filters:
             - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: user-notification-openapi-docs
           uri: lb://user-notification-service
           predicates:
             - Path=/v3/api-docs/user-notification-service
           filters:
             - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: property-openapi-docs
           uri: lb://property-service
           predicates:
             - Path=/v3/api-docs/property-service
           filters:
             - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: listing-booking-openapi-docs
           uri: lb://listing-booking-service
           predicates:
             - Path=/v3/api-docs/listing-booking-service
           filters:
             - SetPath=/v3/api-docs
-        - id: contract-tenant-openapi-docs
-          uri: lb://contract-tenant-service
-          predicates:
-            - Path=/v3/api-docs/contract-tenant-service
-          filters:
-            - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: billing-utility-openapi-docs
           uri: lb://billing-utility-service
           predicates:
             - Path=/v3/api-docs/billing-utility-service
           filters:
             - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: asset-maintenance-openapi-docs
           uri: lb://asset-maintenance-service
           predicates:
             - Path=/v3/api-docs/asset-maintenance-service
           filters:
             - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -67,7 +67,7 @@ spring:
         - id: property-service
           uri: lb://property-service
           predicates:
-            - Path=/api/v1/locations/**,/api/v1/provinces/**,/api/v1/wards/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**
+            - Path=/api/v1/locations/**,/api/v1/provinces/**,/api/v1/wards/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**,/api/v1/images/**
         - id: listing-booking-service
           uri: lb://listing-booking-service
           predicates:
@@ -97,21 +97,7 @@ spring:
 springdoc:
   swagger-ui:
     disable-swagger-default-url: true
-    urls:
-      - name: auth-service
-        url: /v3/api-docs/auth-service
-      - name: user-notification-service
-        url: /v3/api-docs/user-notification-service
-      - name: property-service
-        url: /v3/api-docs/property-service
-      - name: listing-booking-service
-        url: /v3/api-docs/listing-booking-service
-      - name: contract-tenant-service
-        url: /v3/api-docs/contract-tenant-service
-      - name: billing-utility-service
-        url: /v3/api-docs/billing-utility-service
-      - name: asset-maintenance-service
-        url: /v3/api-docs/asset-maintenance-service
+    config-url: /swagger-config
 
 eureka:
   client:
