@@ -5,6 +5,7 @@ COPY discovery-server/pom.xml discovery-server/pom.xml
 COPY api-gateway/pom.xml api-gateway/pom.xml
 COPY auth-service/pom.xml auth-service/pom.xml
 COPY user-notification-service/pom.xml user-notification-service/pom.xml
+COPY contract-tenant-service/pom.xml contract-tenant-service/pom.xml
 COPY common-lib ./common-lib
 COPY asset-maintenance-service ./asset-maintenance-service
 RUN mvn -q -pl asset-maintenance-service -am package -DskipTests
