@@ -16,3 +16,5 @@ target/
 logs/
 
 .m2/
+.agents/
+.claude/
