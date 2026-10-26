@@ -1,0 +1,196 @@
+================================================================================
+TỔNG HỢP CHI TIẾT CÁC LỖI ĐÃ SỬA ĐỂ CHẠY DỰ ÁN (DOCKER COMPOSE & LOCAL DEV)
+================================================================================
+
+1. LỖI 1: KHÔNG PULL ĐƯỢC IMAGE MINIO & MINIO-CLIENT (401 UNAUTHORIZED)
+--------------------------------------------------------------------------------
+* Hiện tượng:
+  Khi chạy `docker compose up`, Docker báo lỗi:
+  - `Error pull access denied for minio/minio, repository does not exist or may require 'docker login'`
+  - `unexpected status from HEAD request to https://quay.io/v2/minio/mc/manifests/latest: 401 UNAUTHORIZED`
+
+* Nguyên nhân:
+  Registry chính thức của MinIO trên Docker Hub và Quay.io đã áp dụng chính sách giới hạn/chặn truy cập public không đăng nhập.
+
+* Chi tiết cách sửa:
+  Mở file `infra/docker-compose.yml`, sửa lại 2 service `minio` và `minio-init`:
+
+  [Đoạn code cũ]:
+    minio:
+      image: minio/minio:latest (hoặc quay.io/minio/minio:latest)
+      ...
+      healthcheck:
+        test: ["CMD", "mc", "ready", "local"]
+    minio-init:
+      image: minio/mc:RELEASE.2024-11-07T00-52-20Z (hoặc quay.io/minio/mc:latest)
+
+  [Đoạn code mới đã sửa]:
+    minio:
+      image: elestio/minio:latest
+      container_name: rental-minio
+      restart: unless-stopped
+      command: server /data --console-address ":9001"
+      environment:
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      volumes:
+        - miniodata:/data
+      ports:
+        - "9001:9001"
+      networks:
+        - rental-net
+      healthcheck:
+        test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+        interval: 5s
+        timeout: 3s
+        retries: 10
+
+    minio-init:
+      image: drpsychick/minio-client:latest
+      container_name: rental-minio-init
+      depends_on:
+        minio:
+          condition: service_healthy
+      networks:
+        - rental-net
+      entrypoint:
+        - /bin/sh
+        - -c
+        - |
+          mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" && \
+          mc mb --ignore-existing local/report-images
+      environment:
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      restart: "no"
+
+
+2. LỖI 2: LỖI ĐỊNH DẠNG XUỐNG DÒNG WINDOWS (CRLF) TẠI SCRIPT KHỞI TẠO POSTGRES
+--------------------------------------------------------------------------------
+* Hiện tượng:
+  - Container `rental-postgres` không khởi tạo được 7 database và các user riêng.
+  - Xem `docker logs rental-postgres` xuất hiện lỗi:
+    `/usr/local/bin/docker-entrypoint.sh: /docker-entrypoint-initdb.d/init-multiple-dbs.sh: /bin/bash^M: bad interpreter: No such file or directory`
+  - Kéo theo `auth-service` không kết nối được database và báo lỗi:
+    `FATAL: password authentication failed for user "auth_user"` (vì user và database chưa từng được tạo).
+
+* Nguyên nhân:
+  Trên hệ điều hành Windows, Git hoặc IDE tự động đổi ký tự xuống dòng của file shell script từ LF (`\n`) sang CRLF (`\r\n`). Khi mount file này vào Linux container, ký tự `\r` bị coi là tên lệnh không hợp lệ (`/bin/bash^M`).
+
+* Chi tiết cách sửa:
+  a) Chuyển định dạng file `infra/postgres/init-multiple-dbs.sh` về chuẩn LF:
+     - Dùng lệnh Git Bash / Linux:
+         sed -i 's/\r$//' infra/postgres/init-multiple-dbs.sh
+     - Hoặc mở file bằng VS Code / IntelliJ, nhìn góc dưới cùng bên phải, đổi từ `CRLF` thành `LF` rồi lưu lại.
+
+  b) Tạo file `.gitattributes` tại thư mục gốc dự án (`rental-system-backend/.gitattributes`) để ép Git luôn giữ chuẩn LF cho file `.sh` trên tất cả máy thành viên:
+     Nội dung file `.gitattributes`:
+     --------------------------------------------------
+     # Enforce LF line endings for shell scripts on Windows
+     *.sh text eol=lf
+     --------------------------------------------------
+
+
+3. LỖI 3: CÁC BIẾN MÔI TRƯỜNG CHƯA ĐƯỢC ĐIỀN TRONG FILE .env
+--------------------------------------------------------------------------------
+* Hiện tượng:
+  Khi chạy `docker compose` báo lỗi thiếu biến hoặc service không authenticate được do dính giá trị placeholder `change_me_in_dot_env`.
+
+* Chi tiết cách sửa:
+  Tạo/sửa file `.env` ở thư mục gốc dự án (ngang hàng `pom.xml` gốc). Đảm bảo các trường sau có giá trị thực:
+
+  --------------------------------------------------
+  # --- JWT (Bắt buộc tối thiểu 32 ký tự) ---
+  JWT_SECRET=local-dev-test-secret-min-32-chars-00
+  JWT_ISSUER=rental-auth
+
+  # --- PostgreSQL Superuser ---
+  POSTGRES_USER=postgres
+  POSTGRES_PASSWORD=postgres123
+  POSTGRES_DB=postgres
+  POSTGRES_MULTIPLE_DATABASES=auth_db,user_db,property_db,listing_db,contract_db,billing_db,asset_db
+
+  # --- Database Users cho từng Service ---
+  AUTH_DB_USER=auth_user
+  AUTH_DB_PASSWORD=auth123
+
+  USER_DB_USER=user_svc
+  USER_DB_PASSWORD=user123
+
+  PROPERTY_DB_USER=property_svc
+  PROPERTY_DB_PASSWORD=property123
+
+  LISTING_DB_USER=listing_svc
+  LISTING_DB_PASSWORD=listing123
+
+  CONTRACT_DB_USER=contract_svc
+  CONTRACT_DB_PASSWORD=contract123
+
+  BILLING_DB_USER=billing_svc
+  BILLING_DB_PASSWORD=billing123
+
+  ASSET_DB_USER=asset_svc
+  ASSET_DB_PASSWORD=asset123
+
+  # --- Kafka ---
+  KAFKA_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+  KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  # --- Eureka ---
+  EUREKA_URL=http://discovery-server:8761/eureka/
+
+  # --- MinIO ---
+  MINIO_ROOT_USER=minioadmin
+  MINIO_ROOT_PASSWORD=minio123
+  MINIO_ENDPOINT=http://minio:9000
+  MINIO_ACCESS_KEY=minioadmin
+  MINIO_SECRET_KEY=minio123
+
+  # --- Gateway CORS ---
+  CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8443
+  --------------------------------------------------
+
+
+4. HƯỚNG DẪN CÁC BƯỚC KHỞI ĐỘNG CHO THÀNH VIÊN TRONG TEAM
+--------------------------------------------------------------------------------
+(Dự án đã có file `compose.yaml` ở thư mục gốc, chỉ cần đứng tại thư mục root để chạy)
+
+BƯỚC 1: Xóa bỏ dữ liệu cũ (volume Docker cũ nếu đã lỡ tạo bị lỗi quyền/mật khẩu):
+  docker compose down -v
+
+BƯỚC 2: Build và chạy toàn bộ hệ thống (đứng ngay tại thư mục root):
+  docker compose up -d --build
+
+BƯỚC 3: Kiểm tra trạng thái các container:
+  docker compose ps
+
+  Tất cả các container sau phải ở trạng thái Up và (healthy):
+  - `rental-postgres`    : Port 5432 (Database PostGIS 16)
+  - `rental-kafka`       : Port 9092 (Kafka Broker)
+  - `rental-kafka-ui`    : Port 8090 -> Truy cập UI: http://localhost:8090
+  - `rental-minio`       : Port 9001 -> Truy cập Console: http://localhost:9001 (User: minioadmin / Pass: minio123)
+  - `rental-discovery`   : Port 8761 -> Truy cập Eureka: http://localhost:8761
+  - `rental-auth`        : Chạy ngầm nội bộ (Port 8081)
+  - `rental-gateway`     : Port 8080 -> Cổng gọi API chính của toàn hệ thống: http://localhost:8080
+
+BƯỚC 4: Kiểm tra nhanh API qua Gateway (bằng Postman hoặc cURL):
+  1) Đăng ký tài khoản:
+     POST http://localhost:8080/api/v1/auth/register
+     Body JSON:
+     {
+       "username": "user1@example.com",
+       "password": "Password123",
+       "fullName": "Nguyen Van A",
+       "email": "user1@example.com"
+     }
+     -> Kết quả trả về HTTP 201 Created.
+
+  2) Đăng nhập:
+     POST http://localhost:8080/api/v1/auth/login
+     Body JSON:
+     {
+       "username": "user1@example.com",
+       "password": "Password123"
+     }
+     -> Kết quả trả về HTTP 200 OK kèm accessToken và refreshToken.
+================================================================================

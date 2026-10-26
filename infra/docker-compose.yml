@@ -296,6 +296,10 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+      user-notification-service:
+        condition: service_healthy
+      asset-maintenance-service:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
