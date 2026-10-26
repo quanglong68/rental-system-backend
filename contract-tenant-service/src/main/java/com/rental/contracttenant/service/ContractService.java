@@ -3,12 +3,14 @@ package com.rental.contracttenant.service;
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.NotFoundException;
 import com.rental.common.security.HeaderUser;
+import com.rental.contracttenant.client.CustomerClient;
 import com.rental.contracttenant.client.PropertyClient;
 import com.rental.contracttenant.dto.AddTenantRequest;
 import com.rental.contracttenant.dto.BillingContractData;
 import com.rental.contracttenant.dto.ContractDetailResponse;
 import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
+import com.rental.contracttenant.dto.CreateDraftManualRequest;
 import com.rental.contracttenant.dto.CreateDraftContractRequest;
 import com.rental.contracttenant.dto.CreateMoveOutRequest;
 import com.rental.contracttenant.dto.MoveOutRequestResponse;
@@ -62,6 +64,7 @@ public class ContractService {
     private final MoveOutRequestRepository moveOutRequests;
     private final OutboxEventPublisher outbox;
     private final PropertyClient properties;
+    private final CustomerClient customers;
     private final BuildingScope buildingScope;
     private final PlatformTransactionManager transactionManager;
     private final Clock clock;
@@ -749,7 +752,7 @@ public class ContractService {
             List<ContractTenant> contractTenants = tenants.findByContractIdOrderByJoinedAtAsc(c.getId());
             List<BillingContractData.BillingTenantData> tenantDataList = contractTenants.stream()
                     .map(t -> new BillingContractData.BillingTenantData(
-                            t.getCustomerId(), t.getJoinedAt(), t.getLeftAt(), t.isRepresentative()
+                            t.getId(), t.getCustomerId(), t.getJoinedAt(), t.getLeftAt(), t.isRepresentative()
                     ))
                     .toList();
             return new BillingContractData(
@@ -897,6 +900,67 @@ public class ContractService {
 
     private static BigDecimal normalizeMoney(BigDecimal amount) {
         return amount.stripTrailingZeros().scale() < 0 ? amount.setScale(0) : amount;
+    }
+
+    /**
+     * Create DRAFT contract manually for SALE/QUAN_LY/ADMIN. No rental request involved.
+     * Validates customer existence, room existence, room-to-building relationship, and building scope.
+     */
+    public ContractResponse createDraftManual(CreateDraftManualRequest request) {
+        if (request == null) {
+            throw new BusinessException("VALIDATION_ERROR", "Request khong duoc rong", HttpStatus.BAD_REQUEST);
+        }
+
+        // Building scope: SALE/QUAN_LY must be assigned to building; ADMIN bypasses
+        buildingScope.assertAssigned(request.getBuildingId());
+
+        // Validate customer exists
+        try {
+            customers.checkExists(request.getCustomerId());
+        } catch (NotFoundException nf) {
+            throw nf; // 404 CUSTOMER_NOT_FOUND
+        } catch (RetryableException | CallNotPermittedException unavailable) {
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE",
+                    "Khong the xac thuc khach hang", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (Exception unavailable) {
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE",
+                    "Khong the xac thuc khach hang", HttpStatus.SERVICE_UNAVAILABLE);
+        }
+
+        // Validate room exists and belongs to building
+        PropertyClient.RoomInfo room;
+        try {
+            room = properties.getRoom(request.getRoomId());
+        } catch (NotFoundException nf) {
+            throw new NotFoundException("ROOM_NOT_FOUND", "Khong tim thay phong " + request.getRoomId());
+        } catch (RetryableException | CallNotPermittedException unavailable) {
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE",
+                    "Khong the xac thuc phong", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (Exception unavailable) {
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE",
+                    "Khong the xac thuc phong", HttpStatus.SERVICE_UNAVAILABLE);
+        }
+
+        if (room == null || room.buildingId() == null) {
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE",
+                    "Khong the xac thuc phong", HttpStatus.SERVICE_UNAVAILABLE);
+        }
+        if (!room.buildingId().equals(request.getBuildingId())) {
+            throw new BusinessException("ROOM_BUILDING_MISMATCH",
+                    "Phong khong thuoc toa nha da chon", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        // Create draft
+        Contract contract = new Contract();
+        contract.setRentalRequestId(null); // Manual draft, no rental request
+        contract.setRoomId(request.getRoomId());
+        contract.setBuildingId(request.getBuildingId());
+        contract.setCustomerId(request.getCustomerId());
+        contract.setStatus(ContractStatus.DRAFT);
+        contract.setStartDate(request.getStartDate());
+        contract.setRentAmount(normalizeMoney(request.getRentAmount()));
+
+        return ContractResponse.from(contracts.save(contract));
     }
 
     private static HeaderUser currentUser() {

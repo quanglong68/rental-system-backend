@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,21 +12,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.GlobalExceptionHandler;
+import com.rental.common.error.NotFoundException;
 import com.rental.contracttenant.config.SecurityConfig;
+import com.rental.contracttenant.dto.ContractDetailResponse;
 import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
 import com.rental.contracttenant.entity.ContractStatus;
 import com.rental.contracttenant.service.ContractService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @WebMvcTest(ContractLifecycleController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class})
@@ -125,6 +131,68 @@ class ContractLifecycleControllerWebTest {
                         .header("X-User-Roles", "CUSTOMER"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    // ---- SALE staff: read-only contract access ----
+
+    @Test
+    void saleRole_canSearchAndReadContracts() throws Exception {
+        when(contractService.searchContracts(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(activeResponse())));
+        when(contractService.getContractById(9L)).thenReturn(detailResponse());
+
+        mvc.perform(sale(get("/api/v1/contracts").param("buildingId", "3")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(9))
+                .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
+
+        mvc.perform(sale(get("/api/v1/contracts/9")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.buildingId").value(3))
+                .andExpect(jsonPath("$.tenants").isArray());
+    }
+
+    @Test
+    void saleRole_isForbiddenFromContractMutations() throws Exception {
+        expectForbidden(put("/api/v1/contracts/9")
+                .contentType(MediaType.APPLICATION_JSON).content(JSON_PAYLOAD));
+        expectForbidden(post("/api/v1/contracts/9/sign"));
+        expectForbidden(post("/api/v1/contracts/9/renew")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"newEndDate\":\"2027-12-31\"}"));
+        expectForbidden(post("/api/v1/contracts/9/terminate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"terminationDate\":\"2027-05-01\",\"reason\":\"Tra nha som\"}"));
+        expectForbidden(post("/api/v1/contracts/9/tenants")
+                .contentType(MediaType.APPLICATION_JSON).content(ADD_TENANT_PAYLOAD));
+        expectForbidden(put("/api/v1/contracts/9/tenants/32/representative"));
+        expectForbidden(put("/api/v1/contracts/9/tenants/32/leave")
+                .contentType(MediaType.APPLICATION_JSON).content(LEAVE_TENANT_PAYLOAD));
+    }
+
+    @Test
+    void saleRole_isForbiddenFromMoveOutApproval() throws Exception {
+        expectForbidden(get("/api/v1/move-out-requests"));
+        expectForbidden(put("/api/v1/move-out-requests/1/approve"));
+        expectForbidden(put("/api/v1/move-out-requests/1/reject")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Khong hop le\"}"));
+    }
+
+    private void expectForbidden(MockHttpServletRequestBuilder request) throws Exception {
+        mvc.perform(sale(request))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    private static MockHttpServletRequestBuilder sale(MockHttpServletRequestBuilder request) {
+        return request.header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                .header("X-User-Roles", "SALE");
+    }
+
+    private static ContractDetailResponse detailResponse() {
+        return new ContractDetailResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.ACTIVE,
+                LocalDate.of(2026, 12, 1), LocalDate.of(2027, 11, 30), new BigDecimal("4000000"),
+                new BigDecimal("1500000"), null, null, List.of());
     }
 
     private static ContractResponse response() {
@@ -787,5 +855,141 @@ class ContractLifecycleControllerWebTest {
                         .header("X-User-Roles", "QUAN_LY"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
+
+    // ---- SALE direct DRAFT creation ----
+
+    private static final String MANUAL_DRAFT_PAYLOAD =
+            "{\"customerId\":77,\"roomId\":12,\"buildingId\":3,\"startDate\":\"2026-12-01\",\"rentAmount\":4000000}";
+
+    @Test
+    void saleCreateDraftManual_validRequest_returns201() throws Exception {
+        when(contractService.createDraftManual(any())).thenReturn(response());
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
+    void quanLyCreateDraftManual_validRequest_returns201() throws Exception {
+        when(contractService.createDraftManual(any())).thenReturn(response());
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "QUAN_LY"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void adminCreateDraftManual_validRequest_returns201() throws Exception {
+        when(contractService.createDraftManual(any())).thenReturn(response());
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "900").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "ADMIN"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void customerCreateDraftManual_returns403() throws Exception {
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "600").header("X-User-Type", "CUSTOMER")
+                        .header("X-User-Roles", "CUSTOMER"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void kyThuatCreateDraftManual_returns403() throws Exception {
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "KY_THUAT"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void createDraftManual_missingCustomerId_returns400ValidationError() throws Exception {
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roomId\":12,\"buildingId\":3,\"startDate\":\"2026-12-01\",\"rentAmount\":4000000}")
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void createDraftManual_customerNotFound_returns404() throws Exception {
+        when(contractService.createDraftManual(any())).thenThrow(
+                new NotFoundException("CUSTOMER_NOT_FOUND", "Khong tim thay khach hang 77"));
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
+    }
+
+    @Test
+    void createDraftManual_roomNotFound_returns404() throws Exception {
+        when(contractService.createDraftManual(any())).thenThrow(
+                new NotFoundException("ROOM_NOT_FOUND", "Khong tim thay phong 12"));
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ROOM_NOT_FOUND"));
+    }
+
+    @Test
+    void createDraftManual_roomBuildingMismatch_returns422() throws Exception {
+        when(contractService.createDraftManual(any())).thenThrow(new BusinessException(
+                "ROOM_BUILDING_MISMATCH", "Phong khong thuoc toa nha da chon", HttpStatus.UNPROCESSABLE_ENTITY));
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("ROOM_BUILDING_MISMATCH"));
+    }
+
+    @Test
+    void createDraftManual_unassignedBuilding_returns403() throws Exception {
+        when(contractService.createDraftManual(any())).thenThrow(
+                new org.springframework.security.access.AccessDeniedException("Staff chua duoc phan cong"));
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void createDraftManual_customerValidationUnavailable_returns503() throws Exception {
+        when(contractService.createDraftManual(any())).thenThrow(new BusinessException(
+                "DEPENDENCY_UNAVAILABLE", "Khong the xac thuc khach hang", HttpStatus.SERVICE_UNAVAILABLE));
+
+        mvc.perform(post("/api/v1/contracts/drafts")
+                        .contentType(MediaType.APPLICATION_JSON).content(MANUAL_DRAFT_PAYLOAD)
+                        .header("X-User-Id", "501").header("X-User-Type", "STAFF")
+                        .header("X-User-Roles", "SALE"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("DEPENDENCY_UNAVAILABLE"));
     }
 }

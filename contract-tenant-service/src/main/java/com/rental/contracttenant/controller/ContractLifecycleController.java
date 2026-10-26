@@ -4,6 +4,7 @@ import com.rental.contracttenant.dto.AddTenantRequest;
 import com.rental.contracttenant.dto.ContractDetailResponse;
 import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
+import com.rental.contracttenant.dto.CreateDraftManualRequest;
 import com.rental.contracttenant.dto.CreateMoveOutRequest;
 import com.rental.contracttenant.dto.MoveOutRequestResponse;
 import com.rental.contracttenant.dto.RejectMoveOutRequest;
@@ -49,6 +50,14 @@ public class ContractLifecycleController {
             @PageableDefault(page = 0, size = 20) Pageable pageable) {
         Pageable capped = PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), 100), pageable.getSort());
         return contractService.searchContracts(buildingId, roomId, status, capped);
+    }
+
+    /** Direct DRAFT creation for SALE/QUAN_LY/ADMIN. Does not require rental request. */
+    @PostMapping("/contracts/drafts")
+    @PreAuthorize("hasAnyRole('QUAN_LY', 'SALE', 'ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ContractResponse createDraftManual(@Valid @RequestBody CreateDraftManualRequest request) {
+        return contractService.createDraftManual(request);
     }
 
     @GetMapping("/contracts/mine")

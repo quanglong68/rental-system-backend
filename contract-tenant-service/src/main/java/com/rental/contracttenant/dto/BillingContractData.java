@@ -21,6 +21,7 @@ public class BillingContractData {
 
     @Value
     public static class BillingTenantData {
+        Long contractTenantId;
         Long customerId;
         LocalDate joinedAt;
         LocalDate leftAt;

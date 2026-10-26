@@ -235,8 +235,8 @@ class AssetControllerSecurityTest {
     }
 
     @Test
-    @DisplayName("SALE: Đọc danh sách report trong scope, ngoài scope bị cấm")
-    void sale_listsReportsInScope_outOfScopeForbidden() throws Exception {
+    @DisplayName("SALE: Đọc danh sách report trong scope, 403 ngoài scope; mutation vẫn 403")
+    void sale_listsReports_inScope_onlyAndCannotMutate() throws Exception {
         when(users.staffBuildings(301L)).thenReturn(new UserClient.BuildingResponse(301L, List.of(10L)));
         when(reports.findByBuildingIdOrderByCreatedAtDesc(eq(10L), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
@@ -246,6 +246,23 @@ class AssetControllerSecurityTest {
                 .andExpect(status().isOk());
 
         mvc.perform(get("/api/v1/reports?buildingId=99")
+                        .header("X-User-Id", "301").header("X-User-Type", "STAFF").header("X-User-Roles", "SALE"))
+                .andExpect(status().isForbidden());
+
+        String approvePayload = """
+                {
+                    "staffId": 201,
+                    "priority": "HIGH",
+                    "scheduledAt": "2026-11-01T09:00:00Z"
+                }
+                """;
+        mvc.perform(put("/api/v1/reports/5/approve")
+                        .contentType(MediaType.APPLICATION_JSON).content(approvePayload)
+                        .header("X-User-Id", "301").header("X-User-Type", "STAFF").header("X-User-Roles", "SALE"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(put("/api/v1/reports/5/reject")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Không hợp lệ\"}")
                         .header("X-User-Id", "301").header("X-User-Type", "STAFF").header("X-User-Roles", "SALE"))
                 .andExpect(status().isForbidden());
     }

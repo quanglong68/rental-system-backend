@@ -169,6 +169,27 @@ class AccountServiceTest {
                 .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("ROLE_NOT_ALLOWED"));
     }
 
+    /**
+     * STAFF roles là cumulative, không loại trừ nhau. Account có cả SALE + QUAN_LY phải giữ
+     * nguyên cả hai trong DB/response; quyền ghi hợp đồng đến từ QUAN_LY thật, không phải
+     * do frontend tự suy ra từ role ưu tiên.
+     */
+    @Test
+    void updateRoles_saleVaQuanLy_giuNguyenCaHaiRole() {
+        Account staff = account(8L, "staff@mail.com", AccountType.STAFF);
+        when(accounts.findById(8L)).thenReturn(Optional.of(staff));
+        when(roles.existsByCode("SALE")).thenReturn(true);
+        when(roles.existsByCode("QUAN_LY")).thenReturn(true);
+        when(roles.findByCode("SALE")).thenReturn(Optional.of(role(4, "SALE")));
+        when(roles.findByCode("QUAN_LY")).thenReturn(Optional.of(role(2, "QUAN_LY")));
+
+        AccountResponse res = service.updateRoles(8L, List.of("SALE", "QUAN_LY"));
+
+        assertThat(res.getRoles()).containsExactly("SALE", "QUAN_LY");
+        verify(accountRoles).deleteByAccountId(8L);
+        verify(accountRoles, org.mockito.Mockito.times(2)).save(any(AccountRole.class));
+    }
+
     @Test
     void updateStatus_khongTonTai_404() {
         when(accounts.findById(404L)).thenReturn(Optional.empty());
