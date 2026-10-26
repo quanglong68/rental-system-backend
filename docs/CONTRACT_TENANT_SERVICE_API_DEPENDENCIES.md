@@ -1,92 +1,92 @@
-# Contract Tenant Service API Dependencies
+# API phối hợp với `contract-tenant-service`
 
-## Purpose
+Tài liệu này chỉ ghi những API đồng bộ mà `contract-tenant-service` thực sự cần gọi sang service khác, cùng các luồng đã dùng Kafka. Mục tiêu là để các team thống nhất đúng giao diện, tránh tạo endpoint trùng hoặc gọi qua lại gây vòng lặp.
 
-This is the minimal integration handoff for teams that provide or consume `contract-tenant-service`. It lists only synchronous APIs found in the service's actual Feign call sites, the internal APIs Contract exposes to peers, and the Kafka contracts used instead of more synchronous calls. It is not a complete API catalog for Property, Listing, or Billing.
+## 1. Property Service: lấy thông tin phòng
 
-The goal is to keep the dependency graph one-way where possible. Do not add REST calls from Contract to Listing or Billing for workflows already represented by Kafka events or Contract's internal read APIs.
-
-## Synchronous APIs Contract calls
-
-### 1. Property room capacity
-
-| Item | Contract |
+| Nội dung | Chi tiết |
 |---|---|
-| Caller → owner | `contract-tenant-service` → `property-service` |
-| Method and path | `GET /internal/rooms/{roomId}` |
-| Called for | Processing `RoommateApplicationAccepted`: read room capacity before adding a tenant |
-| Required response fields | `200 { "id": 42, "buildingId": 7, "roomNumber": "A.402", "maxCapacity": 3, "status": "OCCUPIED" }` |
-| Errors | `404 NOT_FOUND`; timeout, 5xx, or unavailable dependency becomes `503 DEPENDENCY_UNAVAILABLE` and the tenant addition fails closed |
-| Owner status | Property team already owns this room lookup. Do not create a duplicate endpoint or ask for another room-detail API. Contract only requires `maxCapacity` (and retains `id`/`buildingId` for compatibility). |
+| API | `GET /internal/rooms/{roomId}` |
+| Khi nào gọi | Khi xử lý sự kiện `RoommateApplicationAccepted`, để kiểm tra phòng còn chỗ trước khi thêm người thuê. |
+| Response cần có | `200 OK` kèm `id`, `buildingId`, `roomNumber`, `maxCapacity`, `status`. Ví dụ bên dưới. |
+| Không tìm thấy phòng | Trả `404 NOT_FOUND`. |
+| Service lỗi hoặc không gọi được | Contract trả lỗi `503 DEPENDENCY_UNAVAILABLE` và **không thêm người thuê**. |
 
-`ContractService.addTenant` uses `maxCapacity` to reject a full room. Do not return a default capacity when the room or capacity cannot be read.
-
-### 2. Staff building assignments
-
-| Item | Contract |
-|---|---|
-| Caller → owner | `contract-tenant-service` → `user-notification-service` |
-| Method and path | `GET /internal/staff/{staffId}/buildings` |
-| Called for | Building-scope authorization on staff contract and move-out operations; ADMIN skips this call |
-| Required response fields | `200 { "staffId": 101, "buildingIds": [7, 9] }` |
-| Errors | `404 NOT_FOUND` for unknown staff; timeout, 5xx, missing response, or missing `buildingIds` becomes `503 DEPENDENCY_UNAVAILABLE` and authorization fails closed |
-| Owner status | Already implemented in `user-notification-service`; no new endpoint is needed. Keep the response shape compatible with `asset-maintenance-service`'s User client. |
-
-The caller passes the current user's ID as `staffId`. For a staff list query with no `buildingId`, Contract uses this list to constrain the query. Never interpret an unavailable assignment list as unrestricted access.
-
-## Internal APIs Contract exposes to peers
-
-These endpoints are implemented by Contract and are the only synchronous reads other services need from it under the current specification.
-
-| Consumer | Method and path | Response / purpose |
-|---|---|---|
-| Billing | `GET /internal/contracts/billing-data?month={month}&year={year}` | `200 [BillingContractData]`; effective contracts with rent, dates, and each tenant's `joinedAt`, `leftAt`, and `isRepresentative`, for monthly proration/splitting |
-| Listing | `GET /internal/rooms/{roomId}/tenants/{customerId}` | `200 { "isTenant": true, "contractId": 15, "buildingId": 7 }`; check whether a customer is a tenant in an ACTIVE contract before creating a roommate post |
-
-Both are service-to-service endpoints. API Gateway must not expose `/internal/**` to clients. Consumers must not call these in a way that synchronously calls back into them as part of the same request chain.
-
-## Kafka instead of synchronous calls
-
-Contract consumes Listing events:
-
-| Topic | Event | Contract action |
-|---|---|---|
-| `listing.events` | `RentalRequestAccepted` | Create a DRAFT contract and representative tenant idempotently |
-| `listing.events` | `RoommateApplicationAccepted` | Validate active contract/capacity, then add tenant or publish rejection |
-
-Contract publishes on `contract.events`:
-
-| Event | Main consumers | Purpose |
-|---|---|---|
-| `ContractSigned` | Property, Listing, Billing, Notification | Mark room occupied, close listing and pending requests, update billing contract snapshot, notify tenants |
-| `ContractRenewed` | Billing, Notification | Update contract end date snapshot and notify tenants |
-| `ContractEnded` | Property, Listing, Billing, Notification | Release room/listing state and update billing snapshot |
-| `TenantAdded`, `TenantAddRejected` | Listing, Notification | Finalize roommate application result |
-| `TenantRemoved`, `MoveOutRequested`, `MoveOutApproved` | Notification; Property also consumes `MoveOutApproved` | Notify affected users and update room availability |
-
-All events use the shared envelope and outbox/idempotency rules in system-spec sections 5.3 and 10. Listing and Billing should consume Contract events rather than poll Contract endpoints for every state change. Billing's monthly job may call `billing-data` once per month/run to get the occupancy intervals it needs.
-
-## Dependency direction
-
-```text
-Contract --GET room capacity--> Property
-Contract --GET staff buildings--> User/Staff
-Listing --GET tenant check--> Contract
-Billing --GET monthly billing data--> Contract
-Listing --Kafka events--> Contract
-Contract --Kafka events--> Property, Listing, Billing, Notification
+```json
+{
+  "id": 42,
+  "buildingId": 7,
+  "roomNumber": "A.402",
+  "maxCapacity": 3,
+  "status": "OCCUPIED"
+}
 ```
 
-There is no synchronous Contract → Listing or Contract → Billing call in the current implementation. Do not add one for state that Contract already receives by Kafka or exposes through the two internal read endpoints above.
+Contract dùng `maxCapacity` để so với số người đang ở. Không trả sức chứa mặc định nếu không đọc được thông tin phòng. Theo giao diện hiện tại, Property đã có API tra cứu phòng này; vui lòng giữ response tương thích, không cần tạo thêm API chi tiết phòng khác.
 
-## Shared call requirements
+## 2. User/Staff Service: lấy các tòa nhân viên được phân công
 
-- Services discover each other by Eureka service name; use OpenFeign DTOs containing only fields the caller needs.
-- Propagate `X-User-Id`, `X-User-Type`, `X-User-Roles`, and `X-Correlation-Id`. Scheduler calls use `X-User-Type: SYSTEM`.
-- Use 2-second connect and 3-second read timeouts. Do not retry writes; GET may retry at most once.
-- Map 404 to not found, other 4xx to the business error, and timeout/5xx/open circuit to `503 DEPENDENCY_UNAVAILABLE`.
-- Internal APIs stay inside the service network and return the shared error shape. Do not return mock/default data on dependency failure.
+| Nội dung | Chi tiết |
+|---|---|
+| API | `GET /internal/staff/{staffId}/buildings` |
+| Khi nào gọi | Trước khi cho nhân viên xem hoặc xử lý hợp đồng/yêu cầu trả phòng, để kiểm tra nhân viên có quyền với tòa nhà đó không. `ADMIN` không cần gọi API này. |
+| Response cần có | `200 OK` kèm `staffId` và danh sách `buildingIds`. |
+| Không tìm thấy nhân viên | Trả `404 NOT_FOUND`. |
+| Service lỗi hoặc thiếu `buildingIds` | Contract trả `503 DEPENDENCY_UNAVAILABLE` và từ chối thao tác; không được hiểu là nhân viên có quyền trên mọi tòa. |
 
-## Source and ownership
+```json
+{
+  "staffId": 101,
+  "buildingIds": [7, 9]
+}
+```
 
-Source of truth: `docs/Đặc tả Hệ thống Microservices – Quản lý Cho thuê Phòng.docx`, sections 5.2, 5.3, 6.2, 9.2, 9.3, 9.4, and 10. Ownership/status above was checked against the current `contract-tenant-service` Feign clients and `user-notification-service` controller. Resolve any interface change with the owning team before changing the client contract.
+Theo giao diện hiện tại, API này đã có trong `user-notification-service`; không cần tạo endpoint khác có cùng chức năng. `staffId` là ID tài khoản của người đang đăng nhập.
+
+## 3. User Service: kiểm tra khách hàng tồn tại
+
+| Nội dung | Chi tiết |
+|---|---|
+| API | `GET /internal/customers/{customerId}/exists` |
+| Khi nào gọi | Trước khi tạo hợp đồng DRAFT thủ công (không qua Kafka), để xác nhận khách hàng có trong hệ thống. |
+| Response cần có | `204 No Content` nếu khách hàng tồn tại. |
+| Không tìm thấy khách hàng | Trả `404 NOT_FOUND` kèm mã `CUSTOMER_NOT_FOUND`. |
+| Service lỗi hoặc không gọi được | Contract trả `503 DEPENDENCY_UNAVAILABLE` và **không tạo hợp đồng**. |
+
+API này do `user-notification-service` cung cấp, dùng `CustomerRepository.existsById()`. Endpoint nội bộ, không mở qua API Gateway. Feign client dùng `contextId = "customerClient"` để phân biệt với `StaffClient` cùng service name.
+
+## 4. Các luồng không cần gọi REST qua lại
+
+Không tạo REST call từ Contract sang Listing hoặc Billing cho các luồng dưới đây. Dữ liệu đã được trao đổi bằng Kafka hoặc API nội bộ của Contract:
+
+| Luồng | Cách phối hợp |
+|---|---|
+| Listing báo khách đã được duyệt thuê | Listing phát `RentalRequestAccepted` trên topic `listing.events`; Contract nhận sự kiện và tạo hợp đồng DRAFT. |
+| Listing báo khách được duyệt ở ghép | Listing phát `RoommateApplicationAccepted` trên topic `listing.events`; Contract tìm hợp đồng **ACTIVE** của phòng, kiểm tra sức chứa rồi thêm applicant hoặc phát sự kiện từ chối. Contract **không tạo DRAFT** cho luồng này. |
+| Contract thay đổi trạng thái | Contract phát sự kiện trên `contract.events`; Property, Listing, Billing và Notification tự nhận sự kiện cần dùng. |
+| Billing cần dữ liệu hợp đồng tính tiền tháng | Billing gọi API đọc nội bộ ở mục 4, không cần Contract gọi ngược sang Billing. |
+
+Contract phát các sự kiện chính: `ContractSigned`, `ContractRenewed`, `ContractEnded`, `TenantAdded`, `TenantAddRejected`, `TenantRemoved`, `MoveOutRequested`, `MoveOutApproved`.
+
+## 5. API nội bộ Contract cung cấp cho service khác
+
+Các API dưới đây do `contract-tenant-service` cung cấp để service khác đọc dữ liệu. Chúng không phải API cần team khác tạo.
+
+| Service cần gọi | API | Dùng để làm gì |
+|---|---|---|
+| Billing | `GET /internal/contracts/billing-data?month={month}&year={year}` | Lấy hợp đồng có hiệu lực trong tháng, tiền thuê, ngày hợp đồng và thời gian ở của từng người (`joinedAt`, `leftAt`, `isRepresentative`) để tính tiền. |
+| Listing | `GET /internal/rooms/{roomId}/tenants/{customerId}` | Kiểm tra khách có đang là người thuê trong hợp đồng ACTIVE hay không. |
+
+Đây là API nội bộ giữa các service, không mở qua API Gateway cho người dùng cuối.
+
+## 6. Quy ước gọi API
+
+- Các service gọi nhau trong mạng nội bộ qua Eureka/OpenFeign.
+- Chuyển tiếp các header định danh và truy vết: `X-User-Id`, `X-User-Type`, `X-User-Roles`, `X-Correlation-Id`. Tác vụ chạy nền dùng `X-User-Type: SYSTEM`.
+- Timeout: kết nối 2 giây, đọc response 3 giây. Chỉ GET được retry tối đa 1 lần; không retry thao tác ghi.
+- Lỗi timeout, 5xx hoặc service không hoạt động được trả thành `503 DEPENDENCY_UNAVAILABLE`. Khi không xác minh được quyền hoặc sức chứa, Contract phải dừng thao tác an toàn.
+- Không gọi đồng bộ vòng lại service đang gọi mình trong cùng luồng xử lý. Dùng Kafka event hoặc API đọc nội bộ phù hợp ở trên.
+
+## Nguồn đối chiếu
+
+Đặc tả hệ thống: `docs/Đặc tả Hệ thống Microservices – Quản lý Cho thuê Phòng.docx` (mục 5.2, 5.3, 6.2, 9.2, 9.3, 9.4 và 10). Các đường dẫn API được đối chiếu với Feign client/controller hiện có của Contract và User/Staff.

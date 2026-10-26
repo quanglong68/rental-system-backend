@@ -62,6 +62,22 @@ class BuildingScopeTest {
     }
 
     @Test
+    void saleUsesTheSameAssignedBuildingScope() {
+        signInAs("502", List.of("SALE"));
+
+        assertThatCode(() -> new BuildingScope(new FakeStaff(List.of(3L, 4L), null)).assertAssigned(4L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void saleOutsideAssignedBuildingsIsForbidden() {
+        signInAs("502", List.of("SALE"));
+
+        assertThatThrownBy(() -> new BuildingScope(new FakeStaff(List.of(3L), null)).assertAssigned(4L))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
     void adminSkipsTheDependencyEntirely() {
         signInAs("900", List.of("ADMIN"));
 

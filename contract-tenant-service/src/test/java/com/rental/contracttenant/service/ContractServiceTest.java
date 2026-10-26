@@ -15,11 +15,14 @@ import static org.mockito.Mockito.when;
 
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.DependencyUnavailableException;
+import com.rental.common.error.NotFoundException;
 import com.rental.common.security.HeaderUser;
+import com.rental.contracttenant.client.CustomerClient;
 import com.rental.contracttenant.client.PropertyClient;
 import com.rental.contracttenant.dto.AddTenantRequest;
 import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
+import com.rental.contracttenant.dto.CreateDraftManualRequest;
 import com.rental.contracttenant.dto.CreateDraftContractRequest;
 import com.rental.contracttenant.dto.TenantLeaveRequest;
 import com.rental.contracttenant.dto.UpdateDraftContractRequest;
@@ -78,6 +81,9 @@ class ContractServiceTest {
     private PropertyClient properties;
 
     @Mock
+    private CustomerClient customers;
+
+    @Mock
     private BuildingScope buildingScope;
 
     @Mock
@@ -94,8 +100,8 @@ class ContractServiceTest {
         lenient().when(transactionManager.getTransaction(any(TransactionDefinition.class)))
                 .thenReturn(new SimpleTransactionStatus());
         lenient().when(contracts.findById(9L)).thenReturn(Optional.of(fixture()));
-        service = new ContractService(contracts, tenants, moveOutRequests, outbox, properties, buildingScope,
-                transactionManager, CLOCK);
+        service = new ContractService(contracts, tenants, moveOutRequests, outbox, properties, customers,
+                buildingScope, transactionManager, CLOCK);
     }
 
     @org.junit.jupiter.api.AfterEach
@@ -1587,6 +1593,57 @@ class ContractServiceTest {
     // ---- move-out: building scope on the listing -------------------------------------------
 
     @Test
+    void searchContracts_saleWithoutBuildingId_isRestrictedToAssignedBuildings() {
+        signInAs("502", List.of("SALE"));
+        when(buildingScope.getAssignedBuildingIds()).thenReturn(List.of(3L, 4L));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(contracts.findByFilters(null, null, null, List.of(3L, 4L), pageable))
+                .thenReturn(new PageImpl<>(List.of(fixture())));
+
+        var page = service.searchContracts(null, null, null, pageable);
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        verify(contracts).findByFilters(null, null, null, List.of(3L, 4L), pageable);
+    }
+
+    @Test
+    void searchContracts_explicitUnassignedBuilding_isRejected() {
+        signInAs("502", List.of("SALE"));
+        doThrow(new AccessDeniedException("Staff chua duoc phan cong tai toa nha nay"))
+                .when(buildingScope).assertAssigned(99L);
+
+        assertThatThrownBy(() -> service.searchContracts(99L, null, null, PageRequest.of(0, 20)))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(contracts, never()).findByFilters(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void getContractById_saleInAssignedBuilding_isAllowed() {
+        Contract contract = fixture();
+        when(contracts.findById(9L)).thenReturn(Optional.of(contract));
+        when(tenants.findByContractIdOrderByJoinedAtAsc(9L)).thenReturn(List.of());
+        signInAs("502", List.of("SALE"));
+
+        var detail = service.getContractById(9L);
+
+        assertThat(detail.getId()).isEqualTo(9L);
+        verify(buildingScope).assertAssigned(contract.getBuildingId());
+    }
+
+    @Test
+    void getContractById_saleOutsideAssignedBuilding_isDenied() {
+        Contract contract = fixture();
+        when(contracts.findById(9L)).thenReturn(Optional.of(contract));
+        doThrow(new AccessDeniedException("Staff chua duoc phan cong tai toa nha nay"))
+                .when(buildingScope).assertAssigned(contract.getBuildingId());
+        signInAs("502", List.of("SALE"));
+
+        assertThatThrownBy(() -> service.getContractById(9L))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(tenants, never()).findByContractIdOrderByJoinedAtAsc(any());
+    }
+
+    @Test
     void searchMoveOutRequests_staffWithoutBuildingId_isRestrictedToAssignedBuildings() {
         when(buildingScope.getAssignedBuildingIds()).thenReturn(List.of(3L, 4L));
         Pageable pageable = PageRequest.of(0, 20);
@@ -1957,5 +2014,141 @@ class ContractServiceTest {
         c.setStartDate(LocalDate.of(2026, 11, 1));
         c.setRentAmount(new BigDecimal("3500000"));
         return c;
+    }
+
+    // ---- Manual DRAFT creation (SALE/QUAN_LY/ADMIN) ----
+
+    @Test
+    void createDraftManual_validRequest_createsContractWithNullRentalRequestId() {
+        CreateDraftManualRequest request = manualRequest();
+        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 3L, 4));
+        when(contracts.save(any(Contract.class))).thenAnswer(invocation -> {
+            Contract saved = invocation.getArgument(0);
+            saved.setId(9L);
+            return saved;
+        });
+
+        ContractResponse response = service.createDraftManual(request);
+
+        ArgumentCaptor<Contract> captor = ArgumentCaptor.forClass(Contract.class);
+        verify(contracts).save(captor.capture());
+        Contract saved = captor.getValue();
+        assertThat(saved.getRentalRequestId()).isNull(); // Manual draft
+        assertThat(saved.getStatus()).isEqualTo(ContractStatus.DRAFT);
+        assertThat(saved.getRoomId()).isEqualTo(12L);
+        assertThat(saved.getBuildingId()).isEqualTo(3L);
+        assertThat(saved.getCustomerId()).isEqualTo(77L);
+        assertThat(saved.getStartDate()).isEqualTo(LocalDate.of(2026, 12, 1));
+        assertThat(saved.getRentAmount()).isEqualByComparingTo("4000000");
+        assertThat(response.getId()).isEqualTo(9L);
+        verify(buildingScope).assertAssigned(3L);
+        verify(customers).checkExists(77L);
+    }
+
+    @Test
+    void createDraftManual_customerNotFound_throwsNotFound() {
+        CreateDraftManualRequest request = manualRequest();
+        doThrow(new NotFoundException("CUSTOMER_NOT_FOUND", "Khong tim thay khach hang 77"))
+                .when(customers).checkExists(77L);
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(NotFoundException.class)
+                .satisfies(ex -> assertThat(((NotFoundException) ex).getCode())
+                        .isEqualTo("CUSTOMER_NOT_FOUND"));
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_customerValidationUnavailable_throws503() {
+        CreateDraftManualRequest request = manualRequest();
+        doThrow(new feign.RetryableException(-1, "timeout", null, (java.util.Date) null,
+                feign.Request.create(feign.Request.HttpMethod.GET, "/test",
+                java.util.Map.of(), (byte[]) null, java.nio.charset.StandardCharsets.UTF_8)))
+                .when(customers).checkExists(77L);
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> {
+                    BusinessException bex = (BusinessException) ex;
+                    assertThat(bex.getCode()).isEqualTo("DEPENDENCY_UNAVAILABLE");
+                    assertThat(bex.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                });
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_roomNotFound_throwsNotFound() {
+        CreateDraftManualRequest request = manualRequest();
+        when(properties.getRoom(12L)).thenThrow(
+                new NotFoundException("ROOM_NOT_FOUND", "Khong tim thay phong 12"));
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(NotFoundException.class)
+                .satisfies(ex -> assertThat(((NotFoundException) ex).getCode())
+                        .isEqualTo("ROOM_NOT_FOUND"));
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_roomBuildingMismatch_throws422() {
+        CreateDraftManualRequest request = manualRequest();
+        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 999L, 4)); // Wrong building
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> {
+                    BusinessException bex = (BusinessException) ex;
+                    assertThat(bex.getCode()).isEqualTo("ROOM_BUILDING_MISMATCH");
+                    assertThat(bex.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                });
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_propertyServiceUnavailable_throws503() {
+        CreateDraftManualRequest request = manualRequest();
+        when(properties.getRoom(12L)).thenThrow(
+                new feign.RetryableException(-1, "timeout", null, (java.util.Date) null,
+                feign.Request.create(feign.Request.HttpMethod.GET, "/test",
+                java.util.Map.of(), (byte[]) null, java.nio.charset.StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> {
+                    BusinessException bex = (BusinessException) ex;
+                    assertThat(bex.getCode()).isEqualTo("DEPENDENCY_UNAVAILABLE");
+                    assertThat(bex.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                });
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_unassignedBuilding_throws403() {
+        CreateDraftManualRequest request = manualRequest();
+        doThrow(new AccessDeniedException("Staff chua duoc phan cong"))
+                .when(buildingScope).assertAssigned(3L);
+
+        assertThatThrownBy(() -> service.createDraftManual(request))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(customers, never()).checkExists(any());
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createDraftManual_nullRequest_throwsValidationError() {
+        assertThatThrownBy(() -> service.createDraftManual(null))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getCode())
+                        .isEqualTo("VALIDATION_ERROR"));
+    }
+
+    private static CreateDraftManualRequest manualRequest() {
+        CreateDraftManualRequest req = new CreateDraftManualRequest();
+        req.setCustomerId(77L);
+        req.setRoomId(12L);
+        req.setBuildingId(3L);
+        req.setStartDate(LocalDate.of(2026, 12, 1));
+        req.setRentAmount(new BigDecimal("4000000"));
+        return req;
     }
 }

@@ -33,7 +33,7 @@ class InternalContractControllerWebTest {
     @Test
     void getBillingData_returns200() throws Exception {
         BillingContractData.BillingTenantData tenantData = new BillingContractData.BillingTenantData(
-                101L, LocalDate.of(2026, 10, 1), null, true
+                11L, 101L, LocalDate.of(2026, 10, 1), null, true
         );
         BillingContractData contractData = new BillingContractData(
                 1L, 10L, 100L, 101L, "ACTIVE",
@@ -48,6 +48,7 @@ class InternalContractControllerWebTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].contractId").value(1))
                 .andExpect(jsonPath("$[0].rentAmount").value(5000000))
+                .andExpect(jsonPath("$[0].tenants[0].contractTenantId").value(11))
                 .andExpect(jsonPath("$[0].tenants[0].customerId").value(101))
                 .andExpect(jsonPath("$[0].tenants[0].isRepresentative").value(true));
     }

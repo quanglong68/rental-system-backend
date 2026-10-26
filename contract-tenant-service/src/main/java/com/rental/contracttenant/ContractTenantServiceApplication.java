@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * {@code @EnableScheduling} drives the outbox relay (docs muc 5.3);
- * {@code @EnableFeignClients} registers the client package (Feign calls #1 and #5, docs muc 5.2).
+ * {@code @EnableFeignClients} registers the client package (Feign calls #1, #5, #8, docs muc 5.2).
  */
 @SpringBootApplication
 @EnableScheduling

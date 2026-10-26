@@ -1,5 +1,6 @@
 package com.rental.billingutilityservice.client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ public class BillingDataResponse {
         private Long customerId;
         private LocalDate joinedAt;
         private LocalDate leftAt;
+        @JsonProperty("isRepresentative")
         private Boolean representative;
     }
 }

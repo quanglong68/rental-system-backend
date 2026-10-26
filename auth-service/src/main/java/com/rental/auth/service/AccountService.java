@@ -118,7 +118,11 @@ public class AccountService {
         return response;
     }
 
-    /** Doi role cho STAFF (ADMIN) -> 200. Account khong phai STAFF thi 422. */
+    /**
+     * Doi role cho STAFF (ADMIN) -> 200. Account khong phai STAFF thi 422.
+     * STAFF roles la cumulative: QUAN_LY + SALE hop le va duoc giu ca hai; khong tu dong
+     * them/bot role hoac suy ra quyen tu accountType.
+     */
     @Transactional
     public AccountResponse updateRoles(Long id, List<String> roleCodes) {
         Account account = accounts.findById(id)

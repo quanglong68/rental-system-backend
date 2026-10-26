@@ -28,7 +28,8 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "rental_request_id", nullable = false, unique = true)
+    /** NULL for direct manual drafts; set for event-driven drafts. UNIQUE prevents duplicate events. */
+    @Column(name = "rental_request_id", unique = true)
     private Long rentalRequestId;
 
     @Column(name = "room_id", nullable = false)
