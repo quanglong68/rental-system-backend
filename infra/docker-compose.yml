@@ -130,7 +130,8 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command: ["set -eu; test -n \"$$MINIO_LICENSE_TOKEN\"; printf '%s' \"$$MINIO_LICENSE_TOKEN\" > /license/minio.license; chmod 0444 /license/minio.license"]
     environment:
-      MINIO_LICENSE_TOKEN: ${MINIO_LICENSE_TOKEN:?MINIO_LICENSE_TOKEN is required in .env}
+      # Chi can license khi khoi dong MinIO; khong chan viec chay rieng gateway/auth.
+      MINIO_LICENSE_TOKEN: ${MINIO_LICENSE_TOKEN:-}
     volumes:
       - minio-license:/license
     restart: "no"

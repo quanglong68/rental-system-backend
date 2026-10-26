@@ -63,8 +63,25 @@ public class UserProfileService {
 
     @Transactional(readOnly = true)
     public PageResponse<UserProfileResponse> listStaff(Long buildingId, int page, int size) {
-        return PageResponse.from(staff.findStaff(buildingId, pageable(page, size))
-                .map(this::profile));
+        HeaderUser user = CurrentUser.require();
+        Pageable pageable = pageable(page, size);
+        if (user.getRoles().contains("ADMIN")) {
+            return PageResponse.from(staff.findStaff(buildingId, pageable)
+                    .map(this::profile));
+        }
+        List<Long> managed = buildingIds(CurrentUser.id());
+        if (buildingId != null) {
+            if (!managed.contains(buildingId)) {
+                throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền quản lý tòa nhà này");
+            }
+            return PageResponse.from(staff.findStaff(buildingId, pageable)
+                    .map(s -> profile(s, managed)));
+        }
+        if (managed.isEmpty()) {
+            return PageResponse.from(org.springframework.data.domain.Page.empty(pageable));
+        }
+        return PageResponse.from(staff.findStaffInBuildings(managed, pageable)
+                .map(s -> profile(s, managed)));
     }
 
     public UserProfileResponse updateStaff(Long id, UpdateStaffRequest request) {
@@ -108,8 +125,15 @@ public class UserProfileService {
                 customer.getEmail(), null, null, null);
     }
     private UserProfileResponse profile(Staff person) {
+        return profile(person, null);
+    }
+    private UserProfileResponse profile(Staff person, List<Long> allowedBuildings) {
+        List<Long> bIds = buildingIds(person.getId());
+        if (allowedBuildings != null) {
+            bIds = bIds.stream().filter(allowedBuildings::contains).sorted().toList();
+        }
         return new UserProfileResponse(person.getId(), person.getFullName(), person.getPhone(), person.getEmail(),
-                person.getPosition(), person.isAdmin(), buildingIds(person.getId()));
+                person.getPosition(), person.isAdmin(), bIds);
     }
     private static Pageable pageable(int page, int size) {
         if (page < 0 || size < 1 || size > 100) throw new BusinessException(ErrorCode.VALIDATION_ERROR,

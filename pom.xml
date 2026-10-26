@@ -20,6 +20,7 @@
         <module>user-notification-service</module>
         <module>asset-maintenance-service</module>
         <module>contract-tenant-service</module>
+        <module>billing-utility-service</module>
     </modules>
 
     <properties>
@@ -115,8 +116,28 @@
     </dependencyManagement>
 
     <build>
+        <plugins>
+            <!-- Maven Dependency Plugin: giai quyet duong dan jar cua cac dependency thanh Maven property
+                 ${groupId:artifactId:type[:classifier]} de Surefire truyen Byte Buddy agent tren Java 21 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.7.0</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -172,9 +193,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
                     <configuration>
-                        <!-- Gio UTC + UTF-8 thong nhat theo docs muc 1 -->
-                        <argLine>-Duser.timezone=UTC -Dfile.encoding=UTF-8</argLine>
+                        <!-- Gio UTC + UTF-8 thong nhat theo docs muc 1; Byte Buddy agent cho Mockito inline tren Java 21 -->
+                        <argLine>-javaagent:${net.bytebuddy:byte-buddy-agent:jar} -Duser.timezone=UTC -Dfile.encoding=UTF-8</argLine>
+                        <!-- Docker Engine 29 can API >= 1.40; docker-java mac dinh 1.32. -->
+                        <systemPropertyVariables>
+                            <api.version>1.44</api.version>
+                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
                 <!-- Task E1: version dung chung cho integration test Testcontainers (*IT) -->
@@ -183,7 +209,11 @@
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>3.2.5</version>
                     <configuration>
-                        <argLine>-Duser.timezone=UTC -Dfile.encoding=UTF-8</argLine>
+                        <argLine>-javaagent:${net.bytebuddy:byte-buddy-agent:jar} -Duser.timezone=UTC -Dfile.encoding=UTF-8</argLine>
+                        <!-- Docker Engine 29 can API >= 1.40; docker-java mac dinh 1.32. -->
+                        <systemPropertyVariables>
+                            <api.version>1.44</api.version>
+                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
             </plugins>
