@@ -1,0 +1,10 @@
+{
+  "eventId": "f9d28cf6-124f-4ad0-bf02-6b404f6a154c",
+  "eventType": "ContractEnded",
+  "version": 1,
+  "occurredAt": "2026-10-21T00:00:00Z",
+  "payload": {
+    "contractId": 7, "roomId": 12, "buildingId": 34,
+    "endDate": "2026-10-20", "nextContractExists": false, "sourceRevision": 3
+  }
+}

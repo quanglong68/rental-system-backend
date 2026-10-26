@@ -1,0 +1,69 @@
+
+services:
+  # ---- PostgreSQL + PostGIS ----
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: properties-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-property_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the project .env file}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - properties_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Properties Service ----
+  properties-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: properties-service
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8083}:8083"
+    environment:
+      SERVER_PORT: 8083
+
+      # R2 Object Storage
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-r2}
+      R2_ENDPOINT: ${R2_ENDPOINT:?Set R2_ENDPOINT in .env}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?Set R2_ACCESS_KEY_ID in .env}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?Set R2_SECRET_ACCESS_KEY in .env}
+      R2_BUCKET: ${R2_BUCKET:?Set R2_BUCKET in .env}
+      R2_REGION: ${R2_REGION:-auto}
+      R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
+      STORAGE_IMAGE_MAX_SIZE: ${STORAGE_IMAGE_MAX_SIZE:-5242880}
+
+      SNOWFLAKE_GENERATOR_ID: ${SNOWFLAKE_GENERATOR_ID:-0}
+      OPENAPI_ENABLED: ${OPENAPI_ENABLED:-true}
+      SWAGGER_UI_ENABLED: ${SWAGGER_UI_ENABLED:-true}
+      ACTUATOR_EXPOSED_ENDPOINTS: ${ACTUATOR_EXPOSED_ENDPOINTS:-health,info}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-property_db}?currentSchema=${SCHEMA_NAME:-properties_service},public
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the project .env file}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_DOCKER_BOOTSTRAP_SERVERS:-kafka:9092}
+      EUREKA_CLIENT_ENABLED: ${EUREKA_CLIENT_ENABLED:-false}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
+    networks:
+      - default
+      - rental-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  rental-net:
+    external: true
+    name: rental-system_rental-net
+
+volumes:
+  properties_postgres_data:
+    driver: local

@@ -1,0 +1,17 @@
+{
+    "source":  "https://provinces.open-api.vn/api/v2",
+    "retrieved_at_utc":  "2026-10-10T07:17:40.9439836+00:00",
+    "uuid_version":  5,
+    "uuid_namespace":  "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+    "uuid_name_prefixes":  {
+                               "ward":  "vn-provinces-api-v2:ward:",
+                               "province":  "vn-provinces-api-v2:province:"
+                           },
+    "province_count":  34,
+    "ward_count":  3321,
+    "missing_province_relations":  0,
+    "duplicate_province_codes":  0,
+    "duplicate_ward_codes":  0,
+    "province_csv_sha256":  "5d2160636e217f84eeef63559e0bd1232e2aeabbaddaa5e727b75e097e6f4b6a",
+    "ward_csv_sha256":  "3e2fb17bcc8bff2003804d2c62960ec7c8bbbcbd2d5a111cf6e63907d2ab7780"
+}
