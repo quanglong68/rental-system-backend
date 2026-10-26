@@ -1,0 +1,11 @@
+{
+  "eventId": "e52ee1fd-68ac-4a0d-b50d-dd3d968d8391",
+  "eventType": "TenantAdded",
+  "version": 1,
+  "occurredAt": "2026-10-01T00:00:00Z",
+  "payload": {
+    "contractId": 7, "roomId": 12, "buildingId": 34,
+    "contractTenantId": 5001, "customerId": 77,
+    "joinedAt": "2026-10-01", "sourceRevision": 1
+  }
+}

@@ -1,0 +1,125 @@
+server:
+  port: ${SERVER_PORT:8083}
+  shutdown: graceful
+
+spring:
+  application:
+    name: property-service
+
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:20s}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:property_db}?currentSchema=${SCHEMA_NAME:properties_service},public
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    create-schemas: true
+    default-schema: ${SCHEMA_NAME:properties_service}
+    schemas: ${SCHEMA_NAME:properties_service}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 1
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:property-service}
+      auto-offset-reset: ${KAFKA_AUTO_OFFSET_RESET:earliest}
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      retries: ${KAFKA_PRODUCER_RETRIES:10}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        "[enable.idempotence]": true
+        "[max.in.flight.requests.per.connection]": 5
+    listener:
+      ack-mode: record
+      missing-topics-fatal: true
+
+property:
+  kafka:
+    property-topic: ${PROPERTY_EVENTS_TOPIC:property.events}
+    contract-topic: ${CONTRACT_EVENTS_TOPIC:contract.events}
+    retry-interval-ms: ${KAFKA_CONSUMER_RETRY_INTERVAL_MS:1000}
+    retry-count: ${KAFKA_CONSUMER_RETRY_COUNT:3}
+    send-timeout-seconds: ${KAFKA_SEND_TIMEOUT_SECONDS:10}
+  outbox:
+    poll-delay-ms: ${OUTBOX_POLL_DELAY_MS:1000}
+    batch-size: ${OUTBOX_BATCH_SIZE:100}
+    lease-seconds: ${OUTBOX_LEASE_SECONDS:30}
+    retry-delay-seconds: ${OUTBOX_RETRY_DELAY_SECONDS:5}
+    price-announcement-cron: ${ROOM_PRICE_ANNOUNCEMENT_CRON:0 5 0 * * *}
+
+snowflake:
+  generator-id: ${SNOWFLAKE_GENERATOR_ID:0}
+
+building:
+  search:
+    max-radius-meters: ${BUILDING_SEARCH_MAX_RADIUS_METERS:50000}
+
+springdoc:
+  api-docs:
+    enabled: ${OPENAPI_ENABLED:true}
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: ${SWAGGER_UI_ENABLED:true}
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+storage:
+  provider: ${STORAGE_PROVIDER:r2}
+  public-base-url: ${R2_PUBLIC_BASE_URL:}
+
+  image:
+    max-size: ${STORAGE_IMAGE_MAX_SIZE:5242880}
+
+cloudflare:
+  r2:
+    access-key-id: ${R2_ACCESS_KEY_ID:${R2_ACCESS_KEY:}}
+    secret-key-id: ${R2_SECRET_ACCESS_KEY:${R2_SECRET_KEY:}}
+    end-point: ${R2_ENDPOINT:}
+    bucket-name: ${R2_BUCKET:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_EXPOSED_ENDPOINTS:health,info}
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+  health:
+    kafka:
+      enabled: true
+  info:
+    env:
+      enabled: false
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}

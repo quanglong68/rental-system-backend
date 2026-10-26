@@ -1,0 +1,11 @@
+{
+  "eventId": "39db024b-04bd-4adb-903c-56483686a338",
+  "eventType": "TenantRemoved",
+  "version": 1,
+  "occurredAt": "2026-10-20T00:00:00Z",
+  "payload": {
+    "contractId": 7, "roomId": 12, "buildingId": 34,
+    "contractTenantId": 5001, "customerId": 77,
+    "leftAt": "2026-10-20", "sourceRevision": 2
+  }
+}

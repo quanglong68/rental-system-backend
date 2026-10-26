@@ -1,0 +1,54 @@
+# ===== Gradle =====
+.gradle/
+.gradle-user/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Build directories
+/bin/
+/target/
+/build/
+/out/
+/.gradle/
+.gradle-user-home/
+
+# ===== IDE =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.metadata/
+.settings/
+.project
+.classpath
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs & temp =====
+*.log
+*.tmp
+*.lock
+*.bin
+
+# ===== Artifacts =====
+**/*.jar
+**/*.war
+**/*.ear
+**/libs/
+**/distributions/
+
+# ===== Spring Boot =====
+application-local.yml
+application-dev.yml
+
+# ===== Test / coverage =====
+/out/
+target/
+
+# ===== Others =====
+file-system.probe
+
+*.env
