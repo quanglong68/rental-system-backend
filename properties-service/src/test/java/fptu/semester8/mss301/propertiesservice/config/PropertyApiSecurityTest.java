@@ -71,6 +71,8 @@ class PropertyApiSecurityTest {
                 .andExpect(status().isOk());
         mvc.perform(get("/api/v1/room-types"))
                 .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/buildings/12").header(PropertyGatewayTrustFilter.HEADER, KEY))
+                .andExpect(status().isOk());
         when(buildings.nearby(any(), any(), anyDouble(), any())).thenReturn(Page.empty());
         mvc.perform(get("/api/v1/buildings/nearby?latitude=10&longitude=106&radiusMeters=5000")
                         .header(PropertyGatewayTrustFilter.HEADER, KEY))

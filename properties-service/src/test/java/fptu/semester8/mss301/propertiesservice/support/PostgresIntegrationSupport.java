@@ -15,12 +15,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-import software.amazon.awssdk.services.s3.S3Client;
+import io.minio.MinioClient;
 import java.time.Clock;
 
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.kafka.listener.auto-startup=false", "spring.kafka.admin.auto-create=false",
+        "spring.kafka.listener.auto-startup=false", "spring.kafka.listener.missing-topics-fatal=false",
+        "spring.kafka.admin.auto-create=false",
         "eureka.client.enabled=false"
 })
 @AutoConfigureMockMvc
@@ -48,7 +49,7 @@ public abstract class PostgresIntegrationSupport {
         r.add("spring.datasource.password", POSTGRES::getPassword);
     }
     @MockitoBean protected Clock clock;
-    @MockitoBean protected S3Client s3Client;
+    @MockitoBean protected MinioClient minioClient;
     @MockitoBean protected OutboxRelay outboxRelay;
     @MockitoBean protected OccupancyDateRefreshJob occupancyDateRefreshJob;
     @MockitoBean protected RoomPriceAnnouncementJob roomPriceAnnouncementJob;

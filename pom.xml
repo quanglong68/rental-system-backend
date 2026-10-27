@@ -20,6 +20,7 @@
         <module>user-notification-service</module>
         <module>asset-maintenance-service</module>
         <module>contract-tenant-service</module>
+        <module>listing-service</module>
     </modules>
 
     <properties>

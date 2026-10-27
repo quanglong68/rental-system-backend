@@ -29,6 +29,9 @@ class PropertiesServiceApplicationTests extends PostgresIntegrationSupport {
     @Test
     void nonPositiveRequestIdsReturnBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/rooms")
+                        .header("X-User-Id", "1")
+                        .header("X-User-Type", "ADMIN")
+                        .header("X-User-Roles", "ADMIN")
                         .contentType("application/json")
                         .content("""
                                 {"buildingId":"-1","roomTypeId":"1","roomCode":"A-101",

@@ -1,6 +1,5 @@
 package fptu.semester8.mss301.propertiesservice.config;
 
-import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,10 +38,12 @@ public class PropertyApiSecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/internal/rooms/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/internal/rooms/*/listing-snapshot").permitAll()
                         .requestMatchers("/internal/**").denyAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/buildings/nearby", "/api/v1/room-types").permitAll()
                         .requestMatchers(request -> request.getMethod().equals("GET")
-                                && request.getServletPath().matches("/api/v1/buildings/[0-9]+"))
+                                && request.getRequestURI().substring(request.getContextPath().length())
+                                        .matches("/api/v1/buildings/[0-9]+"))
                             .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/buildings").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/buildings/*").hasRole("ADMIN")
@@ -114,6 +115,7 @@ public class PropertyApiSecurityConfig {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json.writeValueAsString(ApiResponse.error(status, message)));
+        response.getWriter().write(json.writeValueAsString(java.util.Map.of("status", status, "message", message)));
     }
 }
+

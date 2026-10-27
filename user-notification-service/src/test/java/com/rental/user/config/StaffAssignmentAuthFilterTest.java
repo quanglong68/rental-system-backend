@@ -17,6 +17,12 @@ class StaffAssignmentAuthFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         filter.doFilter(request, response, (req, res) -> { throw new AssertionError("forwarded"); });
         assertThat(response.getStatus()).isEqualTo(401);
+
+        request = new MockHttpServletRequest("GET", "/internal/staff/51/buildings");
+        request.addHeader(StaffAssignmentAuthFilter.HEADER, "wrong");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (req, res) -> { throw new AssertionError("forwarded"); });
+        assertThat(response.getStatus()).isEqualTo(401);
     }
 
     @Test

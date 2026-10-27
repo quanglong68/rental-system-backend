@@ -3,7 +3,6 @@ package fptu.semester8.mss301.propertiesservice.features.imagestorage.infrastruc
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,9 +38,5 @@ class ImageStoragePropertiesTest {
 
     @EnableConfigurationProperties(ImageStorageProperties.class)
     static class TestConfiguration {
-        @org.springframework.context.annotation.Bean
-        MethodValidationPostProcessor methodValidationPostProcessor() {
-            return new MethodValidationPostProcessor();
-        }
     }
 }

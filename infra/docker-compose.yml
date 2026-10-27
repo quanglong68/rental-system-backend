@@ -33,6 +33,8 @@ services:
       - ./postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
     networks:
       - rental-net
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -287,6 +289,36 @@ services:
       timeout: 5s
       retries: 12
 
+  listing-service:
+    build:
+      context: ..
+      dockerfile: listing-service/Dockerfile
+    container_name: rental-listing
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      LISTING_DB_URL: jdbc:postgresql://postgres:5432/listing_db
+      LISTING_DB_USER: ${LISTING_DB_USER:-listing_svc}
+      LISTING_DB_PASSWORD: ${LISTING_DB_PASSWORD:?LISTING_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      STAFF_ASSIGNMENT_SECRET: ${STAFF_ASSIGNMENT_SECRET:-}
+      PROPERTY_INTERNAL_SECRET: ${PROPERTY_INTERNAL_SECRET:-}
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   api-gateway:
     # Build tu repo root de thay parent pom + common-lib (giong discovery/auth).
     build:
@@ -324,3 +356,4 @@ volumes:
   pgdata:
   miniodata:
   minio-license:
+

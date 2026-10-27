@@ -77,11 +77,12 @@ class KafkaEventFlowIntegrationTest {
                 KafkaTemplate<String, String> failedKafka = mock(KafkaTemplate.class);
                 when(failedKafka.send(anyString(), anyString(), anyString()))
                         .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("broker unavailable")));
-                new OutboxRelay(jdbc, tx, failedKafka, new JsonMapper(), 100, 30, 0, 10).relay();
+                new OutboxRelay(jdbc, tx, failedKafka, new JsonMapper(), 100, 30, 1, 10).relay();
                 assertNull(jdbc.queryForObject("SELECT published_at FROM outbox_event WHERE outbox_event_id = ?",
                         Object.class, eventId));
                 assertEquals(1, jdbc.queryForObject("SELECT attempt_count FROM outbox_event WHERE outbox_event_id = ?",
                         Integer.class, eventId));
+                Thread.sleep(1200);
                 new OutboxRelay(jdbc, tx, template, new JsonMapper(), 100, 30, 0, 10).relay();
                 assertNotNull(jdbc.queryForObject("SELECT published_at FROM outbox_event WHERE outbox_event_id = ?",
                         Object.class, eventId));

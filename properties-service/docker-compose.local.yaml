@@ -6,3 +6,9 @@ services:
       - "127.0.0.1:${SERVER_PORT:-8083}:8083"
     environment:
       EUREKA_CLIENT_ENABLED: "false"
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://host.docker.internal:8082}
+
+networks:
+  rental-net: !override
+    name: properties-local-net
+    driver: bridge

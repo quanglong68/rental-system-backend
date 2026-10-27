@@ -1,6 +1,5 @@
 package fptu.semester8.mss301.propertiesservice.config;
 
-import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,7 +47,8 @@ public class PropertyGatewayTrustFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(json.writeValueAsString(ApiResponse.error(401, "Authentication required")));
+            response.getWriter().write(json.writeValueAsString(
+                    java.util.Map.of("status", 401, "message", "Authentication required")));
             return;
         }
         chain.doFilter(request, response);

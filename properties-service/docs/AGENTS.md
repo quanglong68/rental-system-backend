@@ -4,26 +4,25 @@ Before making any changes, read `ARCHITECTURE.md` and follow its architectural g
 
 ## Project identity
 
-- Project: `properties-service`
-- Base package: `fptu.semester8.mss301.propertiesservice`
+- Project: `listing-service`
+- Base package: `com.rental.listingservice`
 - Java: 21
 - Framework: Spring Boot
-- Build: Gradle Kotlin DSL
+- Build: Maven
 - Database: PostgreSQL
 - Migration tool: Flyway
 
 ## Mandatory rules
 
 1. Follow Feature-based Architecture with clear API, Application, Domain, and Infrastructure responsibilities.
-2. Treat Signify BE as an architectural reference only. Never copy unrelated Signify business features into this project.
-3. Inspect the current source code before creating packages, classes, or features.
-4. Preserve existing API contracts, business behavior, database schema, and Flyway migration history unless explicitly instructed otherwise.
-5. Use the existing dependencies and conventions whenever appropriate.
-6. Do not create unnecessary abstractions, speculative packages, or empty classes.
-7. Add `.gitkeep` only when an intentionally empty directory needs to be tracked.
-8. Add or update tests for meaningful behavior changes.
-9. Run relevant Gradle build and test commands when possible.
-10. Report actual changes and test results honestly.
+2. Inspect the current source code before creating packages, classes, or features.
+3. Preserve existing API contracts, business behavior, database schema, and Flyway migration history unless explicitly instructed otherwise.
+4. Use the existing dependencies and conventions whenever appropriate.
+5. Do not create unnecessary abstractions, speculative packages, or empty classes.
+6. Add `.gitkeep` only when an intentionally empty directory needs to be tracked.
+7. Add or update tests for meaningful behavior changes.
+8. Run relevant Gradle build and test commands when possible.
+9. Report actual changes and test results honestly.
 
 ## Before implementing a task
 

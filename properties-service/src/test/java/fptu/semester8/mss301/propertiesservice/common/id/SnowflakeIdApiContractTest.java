@@ -12,8 +12,6 @@ import fptu.semester8.mss301.propertiesservice.features.roomtype.api.dto.RoomTyp
 import fptu.semester8.mss301.propertiesservice.features.ward.api.dto.WardResponse;
 import jakarta.validation.Validation;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import tools.jackson.databind.JsonNode;
@@ -24,12 +22,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 class SnowflakeIdApiContractTest {
     private static final String LARGE_ID = "898785309339156480";
 
-    @Autowired
-    private ObjectMapper json;
+    private final ObjectMapper json = new ObjectMapper();
 
     @Test
     void mapsAndSerializesLargeIdsAsStringsForSingleAndCollectionResponses() {

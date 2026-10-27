@@ -1,6 +1,5 @@
 package fptu.semester8.mss301.propertiesservice.features.roomprice.api;
 
-import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import fptu.semester8.mss301.propertiesservice.features.roomprice.api.dto.RoomPriceResponse;
 import fptu.semester8.mss301.propertiesservice.features.roomprice.api.dto.SetRoomPriceRequest;
 import fptu.semester8.mss301.propertiesservice.features.roomprice.application.RoomPriceService;
@@ -12,7 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,43 +26,40 @@ import java.util.List;
 public class RoomPriceController {
 
     RoomPriceService service;
-
     RoomPriceMapper mapper;
     PropertyScope scope;
 
     @PostMapping
-    @Operation(
-            summary = "Đặt giá phòng mới",
+    @Operation(summary = "Đặt giá phòng mới",
             description = "Đặt giá niêm yết từ ngày hiệu lực. Ngày hiệu lực không được trong quá khứ; khoảng giá trước đó sẽ tự kết thúc vào ngày liền trước.")
-    public ApiResponse<RoomPriceResponse> setPrice(
-            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long roomId,
-            @Valid @RequestBody SetRoomPriceRequest request
-    ) {
+    public ResponseEntity<RoomPriceResponse> setPrice(
+            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480"))
+            @PathVariable @Positive long roomId,
+            @Valid @RequestBody SetRoomPriceRequest request) {
         scope.requireRoom(roomId);
-        return ApiResponse.success("Room price set", mapper.toResponse(service.setPrice(roomId, request)));
+        var created = mapper.toResponse(service.setPrice(roomId, request));
+        var location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/current").build().toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @GetMapping("/current")
-    @Operation(
-            summary = "Xem giá tại ngày",
-            description = "Trả về giá niêm yết có hiệu lực tại ngày chỉ định; nếu không truyền date thì dùng ngày hiện tại."
-    )
-    public ApiResponse<RoomPriceResponse> getPrice(
-            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long roomId,
-            @RequestParam(required = false) LocalDate date
-    ) {
-        LocalDate targetDate = date == null ? LocalDate.now() : date;
-        return ApiResponse.success(mapper.toResponse(service.getPriceForDate(roomId, targetDate)));
+    @Operation(summary = "Xem giá tại ngày",
+            description = "Trả về giá niêm yết có hiệu lực tại ngày chỉ định; nếu không truyền date thì dùng ngày hiện tại.")
+    public RoomPriceResponse getPrice(
+            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480"))
+            @PathVariable @Positive long roomId,
+            @RequestParam(required = false) LocalDate date) {
+        return mapper.toResponse(service.getPriceForDate(roomId, date == null ? LocalDate.now() : date));
     }
 
     @GetMapping("/history")
-    @Operation(
-            summary = "Lịch sử giá phòng",
+    @Operation(summary = "Lịch sử giá phòng",
             description = "Liệt kê các khoảng giá niêm yết theo ngày hiệu lực giảm dần.")
-    public ApiResponse<List<RoomPriceResponse>> history(
-            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long roomId
-    ) {
+    public List<RoomPriceResponse> history(
+            @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480"))
+            @PathVariable @Positive long roomId) {
         scope.requireRoom(roomId);
-        return ApiResponse.success(service.history(roomId).stream().map(mapper::toResponse).toList());
+        return service.history(roomId).stream().map(mapper::toResponse).toList();
     }
 }

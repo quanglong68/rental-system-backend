@@ -1,6 +1,5 @@
 package fptu.semester8.mss301.propertiesservice.config;
 
-import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.context.annotation.*;
@@ -34,10 +33,9 @@ public class OccupantSecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain occupantSecurity(HttpSecurity http, ObjectMapper json) throws Exception {
-        http.securityMatcher(request -> ROOM_READ.matcher(request.getServletPath()).matches()
-                        || USER_READ.matcher(request.getServletPath()).matches()
-                        || "/api/v1/rooms/statistics".equals(
-                                request.getRequestURI().substring(request.getContextPath().length())))
+        http.securityMatcher(request -> ROOM_READ.matcher(path(request)).matches()
+                        || USER_READ.matcher(path(request)).matches()
+                        || "/api/v1/rooms/statistics".equals(path(request)))
                 .csrf(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -46,7 +44,7 @@ public class OccupantSecurityConfig {
                     var auth = authentication.get();
                     if (!"GET".equals(context.getRequest().getMethod())) return new AuthorizationDecision(false);
                     boolean admin = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("ROLE_ADMIN"));
-                    var own = USER_READ.matcher(context.getRequest().getServletPath());
+                    var own = USER_READ.matcher(path(context.getRequest()));
                     boolean customer = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("ROLE_CUSTOMER"));
                     return new AuthorizationDecision(admin || (customer && own.matches() && own.group(1).equals(auth.getName())));
                 }))
@@ -80,6 +78,10 @@ public class OccupantSecurityConfig {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json.writeValueAsString(ApiResponse.error(status, message)));
+        response.getWriter().write(json.writeValueAsString(java.util.Map.of("status", status, "message", message)));
+    }
+
+    private static String path(HttpServletRequest request) {
+        return request.getRequestURI().substring(request.getContextPath().length());
     }
 }

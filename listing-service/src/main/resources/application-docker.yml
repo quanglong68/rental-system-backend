@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${LISTING_DB_URL:jdbc:postgresql://postgres:5432/listing_db}
+    username: ${LISTING_DB_USER:listing_svc}
+    password: ${LISTING_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka/}
+
+management:
+  health:
+    db:
+      enabled: true

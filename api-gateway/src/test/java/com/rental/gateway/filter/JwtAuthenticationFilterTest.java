@@ -152,6 +152,8 @@ class JwtAuthenticationFilterTest {
         }
         if (fakeUserId != null) {
             builder.header(Headers.X_USER_ID, fakeUserId);
+            builder.header(Headers.X_USER_TYPE, "ADMIN");
+            builder.header(Headers.X_USER_ROLES, "ADMIN");
             builder.header("X-Property-Gateway-Key", "forged-client-key");
         }
         return MockServerWebExchange.from(builder.build());

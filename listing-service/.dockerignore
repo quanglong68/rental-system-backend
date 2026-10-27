@@ -1,0 +1,13 @@
+target/
+*.jar
+.mvn/
+mvnw
+mvnw.cmd
+.idea/
+.git/
+.gitignore
+*.iml
+.env
+.dockerignore
+Dockerfile
+bin/

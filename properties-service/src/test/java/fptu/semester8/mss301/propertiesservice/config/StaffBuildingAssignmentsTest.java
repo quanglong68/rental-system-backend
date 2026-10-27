@@ -29,6 +29,16 @@ class StaffBuildingAssignmentsTest {
         assertTrue(client("missing").forStaff(51).isEmpty());
     }
 
+    @Test
+    void downstreamHttpErrorAndMalformedAssignmentGrantNothing() throws Exception {
+        start(500, "{}");
+        assertTrue(client(KEY).forStaff(51).isEmpty());
+        server.stop(0);
+        server = null;
+        start(200, "{\"staffId\":51,\"buildingIds\":[10,\"bad\"]}");
+        assertTrue(client(KEY).forStaff(51).isEmpty());
+    }
+
     private void start(int status, String body) throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/internal/staff/51/buildings", exchange -> {
