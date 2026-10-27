@@ -58,6 +58,10 @@ notifications:
   push:
     enabled: ${NOTIFICATION_PUSH_ENABLED:false}
 
+staff:
+  assignment:
+    internal-key: ${STAFF_ASSIGNMENT_SECRET:}
+
 management:
   endpoints:
     web:

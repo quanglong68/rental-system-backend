@@ -19,4 +19,18 @@ class GatewayWhitelistTest {
             assertThat(whitelist.isPublic(HttpMethod.POST, path)).as(path).isFalse();
         }
     }
+
+    @Test
+    void propertyPublicContractIsLimitedToDetailsAndRoomTypes() {
+        for (String path : List.of("/api/v1/provinces", "/api/v1/provinces/1", "/api/v1/wards",
+                "/api/v1/wards/province/1", "/api/v1/buildings/nearby", "/api/v1/buildings/123",
+                "/api/v1/room-types")) {
+            assertThat(whitelist.isPublic(HttpMethod.GET, path)).as(path).isTrue();
+            assertThat(whitelist.isPublic(HttpMethod.POST, path)).as(path).isFalse();
+        }
+        for (String path : List.of("/api/v1/buildings", "/api/v1/buildings/search", "/api/v1/buildings/abc",
+                "/api/v1/room-types/1")) {
+            assertThat(whitelist.isPublic(HttpMethod.GET, path)).as(path).isFalse();
+        }
+    }
 }

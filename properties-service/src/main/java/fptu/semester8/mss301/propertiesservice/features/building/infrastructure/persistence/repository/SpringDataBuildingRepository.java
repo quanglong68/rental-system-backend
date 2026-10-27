@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface SpringDataBuildingRepository extends JpaRepository<Building, Long> {
     Optional<Building> findByBuildingIdAndDeletedFalse(Long buildingId);
@@ -15,4 +16,8 @@ public interface SpringDataBuildingRepository extends JpaRepository<Building, Lo
     Page<Building> findAllByDeletedFalse(Pageable pageable);
 
     Page<Building> findAllByWardIdAndDeletedFalse(Long wardId, Pageable pageable);
+
+    Page<Building> findAllByBuildingIdInAndDeletedFalse(Set<Long> buildingIds, Pageable pageable);
+
+    Page<Building> findAllByWardIdAndBuildingIdInAndDeletedFalse(Long wardId, Set<Long> buildingIds, Pageable pageable);
 }

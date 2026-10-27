@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -38,5 +39,15 @@ public class JpaBuildingRepositoryAdapter implements BuildingRepository {
     @Override
     public Page<Building> findActiveByWardId(long wardId, Pageable pageable) {
         return repository.findAllByWardIdAndDeletedFalse(wardId, pageable);
+    }
+
+    @Override
+    public Page<Building> findActiveIn(Set<Long> buildingIds, Pageable pageable) {
+        return repository.findAllByBuildingIdInAndDeletedFalse(buildingIds, pageable);
+    }
+
+    @Override
+    public Page<Building> findActiveByWardIdIn(long wardId, Set<Long> buildingIds, Pageable pageable) {
+        return repository.findAllByWardIdAndBuildingIdInAndDeletedFalse(wardId, buildingIds, pageable);
     }
 }

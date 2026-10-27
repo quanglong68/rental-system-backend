@@ -1,0 +1,5 @@
+property:
+  security:
+    # Test fixture only; production always reads PROPERTY_GATEWAY_SECRET.
+    gateway-key: test-only-property-gateway-key-32-bytes-minimum
+    internal-key: test-only-property-internal-key-32-bytes-minimum

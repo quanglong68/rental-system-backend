@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import fptu.exe202.signify.apiresponse.exception.BadRequestException;
 import java.math.BigDecimal;
+import java.util.Set;
 import fptu.semester8.mss301.propertiesservice.features.building.domain.BuildingStatus;
 import fptu.exe202.signify.apiresponse.exception.ConflictException;
 
@@ -83,6 +84,23 @@ public class BuildingService {
         return wardId == null
                 ? buildingRepository.findActive(pageable)
                 : buildingRepository.findActiveByWardId(wardId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Building> listScoped(Long wardId, Set<Long> buildingIds, Pageable pageable) {
+        if (buildingIds.isEmpty()) return Page.empty(pageable);
+        return wardId == null ? buildingRepository.findActiveIn(buildingIds, pageable)
+                : buildingRepository.findActiveByWardIdIn(wardId, buildingIds, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BuildingSearchItem> searchScoped(String keyword, Long provinceId, Long wardId,
+                                                 Set<Long> buildingIds, Pageable pageable) {
+        if (buildingIds.isEmpty()) return Page.empty(pageable);
+        if (provinceId != null) validateProvince(provinceId);
+        if (wardId != null) validateWard(wardId);
+        if (wardId != null && provinceId != null) validateWardProvince(wardId, provinceId);
+        return searchRepository.searchScoped(keyword, provinceId, wardId, buildingIds, pageable);
     }
 
     @Transactional

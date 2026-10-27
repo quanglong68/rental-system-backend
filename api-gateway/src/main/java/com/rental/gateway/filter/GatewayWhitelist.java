@@ -15,7 +15,9 @@ public class GatewayWhitelist {
     private static final Set<String> PUBLIC_POST = Set.of("/api/v1/auth/register", "/api/v1/auth/login",
             "/api/v1/auth/refresh");
 
-    private static final List<String> PUBLIC_GET = List.of("/api/v1/locations/**", "/api/v1/buildings/nearby",
+    private static final List<String> PUBLIC_GET = List.of("/api/v1/locations/**", "/api/v1/provinces/**",
+            "/api/v1/wards/**", "/api/v1/buildings/nearby",
+            "/api/v1/room-types",
             "/api/v1/listings", "/api/v1/listings/*", "/swagger-ui.html", "/swagger-ui/**",
             "/v3/api-docs", "/v3/api-docs/**", "/swagger-config");
 
@@ -26,6 +28,9 @@ public class GatewayWhitelist {
             return true;
         }
         if (method == HttpMethod.GET) {
+            if (path.matches("/api/v1/buildings/[0-9]+")) {
+                return true;
+            }
             return PUBLIC_GET.stream().anyMatch(pattern -> matcher.match(pattern, path));
         }
         return false;

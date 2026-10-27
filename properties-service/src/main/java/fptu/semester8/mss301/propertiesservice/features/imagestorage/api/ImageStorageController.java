@@ -4,6 +4,7 @@ import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import fptu.semester8.mss301.propertiesservice.features.imagestorage.application.ImageStorageService;
 import fptu.semester8.mss301.propertiesservice.features.imagestorage.application.PropertyImageService;
 import fptu.semester8.mss301.propertiesservice.features.imagestorage.application.ImageRecord;
+import fptu.semester8.mss301.propertiesservice.config.PropertyScope;
 import static fptu.semester8.mss301.propertiesservice.features.imagestorage.application.PropertyImageService.Owner.*;
 import jakarta.validation.constraints.Positive;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,7 @@ public class ImageStorageController {
 
     ImageStorageService imageStorageService;
     PropertyImageService propertyImages;
+    PropertyScope scope;
 
     public record ImageUpdate(Integer displayOrder, Boolean primaryImage) {}
 
@@ -47,6 +49,7 @@ public class ImageStorageController {
             @Parameter(description = "Tệp ảnh gửi dưới dạng multipart part tên file", required = true)
             @RequestPart("file") MultipartFile file
     ) {
+        scope.requireBuilding(buildingId);
         return ApiResponse.success("Building image uploaded", propertyImages.upload(BUILDING, buildingId, file));
     }
 
@@ -60,6 +63,7 @@ public class ImageStorageController {
             @Parameter(description = "Tệp ảnh gửi dưới dạng multipart part tên file", required = true)
             @RequestPart("file") MultipartFile file
     ) {
+        scope.requireRoom(roomId);
         return ApiResponse.success("Room image uploaded", propertyImages.upload(ROOM, roomId, file));
     }
 
@@ -75,22 +79,26 @@ public class ImageStorageController {
 
     @PatchMapping("/buildings/{buildingId}/{imageId}")
     public ApiResponse<ImageRecord> updateBuildingImage(@PathVariable long buildingId, @PathVariable long imageId, @RequestBody ImageUpdate request) {
+        scope.requireBuilding(buildingId);
         return ApiResponse.success("Building image updated", propertyImages.update(BUILDING, buildingId, imageId, request.displayOrder(), request.primaryImage()));
     }
 
     @PatchMapping("/rooms/{roomId}/{imageId}")
     public ApiResponse<ImageRecord> updateRoomImage(@PathVariable long roomId, @PathVariable long imageId, @RequestBody ImageUpdate request) {
+        scope.requireRoom(roomId);
         return ApiResponse.success("Room image updated", propertyImages.update(ROOM, roomId, imageId, request.displayOrder(), request.primaryImage()));
     }
 
     @DeleteMapping("/buildings/{buildingId}/{imageId}")
     public ApiResponse<Void> deleteBuildingImage(@PathVariable long buildingId, @PathVariable long imageId) {
+        scope.requireBuilding(buildingId);
         propertyImages.delete(BUILDING, buildingId, imageId);
         return ApiResponse.success("Building image deleted", null);
     }
 
     @DeleteMapping("/rooms/{roomId}/{imageId}")
     public ApiResponse<Void> deleteRoomImage(@PathVariable long roomId, @PathVariable long imageId) {
+        scope.requireRoom(roomId);
         propertyImages.delete(ROOM, roomId, imageId);
         return ApiResponse.success("Room image deleted", null);
     }

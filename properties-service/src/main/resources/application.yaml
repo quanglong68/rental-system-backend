@@ -55,6 +55,11 @@ spring:
       missing-topics-fatal: true
 
 property:
+  security:
+    gateway-key: ${PROPERTY_GATEWAY_SECRET:}
+    user-service-url: ${USER_SERVICE_URL:http://localhost:8082}
+    staff-assignment-key: ${STAFF_ASSIGNMENT_SECRET:}
+    internal-key: ${PROPERTY_INTERNAL_SECRET:}
   kafka:
     property-topic: ${PROPERTY_EVENTS_TOPIC:property.events}
     contract-topic: ${CONTRACT_EVENTS_TOPIC:contract.events}

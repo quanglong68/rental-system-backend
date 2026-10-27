@@ -5,6 +5,7 @@ import fptu.semester8.mss301.propertiesservice.features.roomprice.api.dto.RoomPr
 import fptu.semester8.mss301.propertiesservice.features.roomprice.api.dto.SetRoomPriceRequest;
 import fptu.semester8.mss301.propertiesservice.features.roomprice.application.RoomPriceService;
 import fptu.semester8.mss301.propertiesservice.features.roomprice.mapper.RoomPriceMapper;
+import fptu.semester8.mss301.propertiesservice.config.PropertyScope;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class RoomPriceController {
     RoomPriceService service;
 
     RoomPriceMapper mapper;
+    PropertyScope scope;
 
     @PostMapping
     @Operation(
@@ -35,6 +37,7 @@ public class RoomPriceController {
             @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long roomId,
             @Valid @RequestBody SetRoomPriceRequest request
     ) {
+        scope.requireRoom(roomId);
         return ApiResponse.success("Room price set", mapper.toResponse(service.setPrice(roomId, request)));
     }
 
@@ -58,6 +61,7 @@ public class RoomPriceController {
     public ApiResponse<List<RoomPriceResponse>> history(
             @io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long roomId
     ) {
+        scope.requireRoom(roomId);
         return ApiResponse.success(service.history(roomId).stream().map(mapper::toResponse).toList());
     }
 }

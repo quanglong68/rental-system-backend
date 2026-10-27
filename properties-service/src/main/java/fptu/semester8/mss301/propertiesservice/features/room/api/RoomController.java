@@ -5,6 +5,7 @@ import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import fptu.semester8.mss301.propertiesservice.features.room.api.dto.*;
 import fptu.semester8.mss301.propertiesservice.features.room.application.RoomService;
 import fptu.semester8.mss301.propertiesservice.features.room.mapper.RoomMapper;
+import fptu.semester8.mss301.propertiesservice.config.PropertyScope;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,10 +24,12 @@ public class RoomController {
 
     RoomService service;
     RoomMapper mapper;
+    PropertyScope scope;
 
     @PostMapping
     @Operation(summary = "Tạo phòng", description = "Tạo phòng với tòa nhà, loại phòng, mã, sức chứa, diện tích, số phòng ngủ/tắm, giá cơ bản và trạng thái. Trường bắt buộc được kiểm tra theo RoomRequest.")
     public ApiResponse<RoomResponse> create(@Valid @RequestBody RoomRequest r) {
+        scope.requireBuilding(r.buildingId());
         return ApiResponse.success("Room created", mapper.toResponse(service.create(r)));
     }
 
@@ -43,18 +46,24 @@ public class RoomController {
         String[] s = sort.split(",", 2);
         if (!s[0].matches("createdAt|updatedAt|roomCode|status|basePrice"))
             throw new BadRequestException("invalid sort", "INVALID_SORT");
-        return ApiResponse.success(service.list(buildingId, PageRequest.of(page, size, Sort.by(s.length > 1 && s[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, s[0]))).map(mapper::toResponse));
+        var pageable = PageRequest.of(page, size, Sort.by(s.length > 1 && s[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, s[0]));
+        var results = scope.isAdmin() ? service.list(buildingId, pageable)
+                : service.listScoped(buildingId, scope.assignedBuildings(), pageable);
+        return ApiResponse.success(results.map(mapper::toResponse));
     }
 
     @GetMapping("/building/{buildingId}")
     @Operation(summary = "Liệt kê phòng theo tòa nhà", description = "Trả về phòng thuộc tòa nhà chỉ định, phân trang với page mặc định 0 và size mặc định 20.")
     public ApiResponse<Page<RoomResponse>> byBuilding(@io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long buildingId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        scope.requireBuilding(buildingId);
         return ApiResponse.success(service.list(buildingId, PageRequest.of(page, size)).map(mapper::toResponse));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật phòng", description = "Cập nhật thông tin phòng theo ID bằng RoomRequest.")
     public ApiResponse<RoomResponse> update(@io.swagger.v3.oas.annotations.Parameter(schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", example = "898785309339156480")) @PathVariable @Positive long id, @Valid @RequestBody RoomRequest r) {
+        scope.requireRoom(id);
+        scope.requireBuilding(r.buildingId());
         return ApiResponse.success("Room updated", mapper.toResponse(service.update(id, r)));
     }
 

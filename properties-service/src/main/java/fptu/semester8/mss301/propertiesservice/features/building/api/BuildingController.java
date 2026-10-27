@@ -7,6 +7,7 @@ import fptu.semester8.mss301.propertiesservice.features.building.api.dto.Buildin
 import fptu.semester8.mss301.propertiesservice.features.building.api.dto.BuildingSearchResponse;
 import fptu.semester8.mss301.propertiesservice.features.building.application.BuildingService;
 import fptu.semester8.mss301.propertiesservice.features.building.mapper.BuildingMapper;
+import fptu.semester8.mss301.propertiesservice.config.PropertyScope;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -47,6 +48,7 @@ public class BuildingController {
     BuildingService buildingService;
 
     BuildingMapper buildingMapper;
+    PropertyScope scope;
 
     @GetMapping("/search")
     @Operation(summary = "Tìm kiếm tòa nhà", description = "Tìm theo từ khóa trong tên/địa chỉ và lọc tùy chọn theo tỉnh, phường. Mặc định page=0, size=20, sort=createdAt,desc; size tối đa 100. sort hỗ trợ createdAt, updatedAt, name và hướng asc/desc.")
@@ -59,7 +61,9 @@ public class BuildingController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt,desc") String sort) {
         Pageable pageable = searchPageable(page, size, sort, false);
-        return ApiResponse.success(buildingService.search(keyword, provinceId, wardId, pageable)
+        var results = scope.isAdmin() ? buildingService.search(keyword, provinceId, wardId, pageable)
+                : buildingService.searchScoped(keyword, provinceId, wardId, scope.assignedBuildings(), pageable);
+        return ApiResponse.success(results
                 .map(buildingMapper::toSearchResponse));
     }
 
@@ -111,7 +115,9 @@ public class BuildingController {
             throw new BadRequestException("page must be >= 0 and size must be between 1 and 100", "INVALID_PAGE");
         }
         Pageable pageable = PageRequest.of(page, size, parseSort(sort));
-        return ApiResponse.success(buildingService.list(wardId, pageable).map(buildingMapper::toResponse));
+        var results = scope.isAdmin() ? buildingService.list(wardId, pageable)
+                : buildingService.listScoped(wardId, scope.assignedBuildings(), pageable);
+        return ApiResponse.success(results.map(buildingMapper::toResponse));
     }
 
     @PutMapping("/{buildingId}")

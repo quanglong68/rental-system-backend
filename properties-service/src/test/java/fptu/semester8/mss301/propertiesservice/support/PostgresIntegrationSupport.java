@@ -6,6 +6,12 @@ import fptu.semester8.mss301.propertiesservice.features.roomprice.application.Ro
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.*;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.MockMvcBuilderCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import fptu.semester8.mss301.propertiesservice.config.PropertyGatewayTrustFilter;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -18,7 +24,17 @@ import java.time.Clock;
         "eureka.client.enabled=false"
 })
 @AutoConfigureMockMvc
+@Import(PostgresIntegrationSupport.GatewayRequestFixture.class)
 public abstract class PostgresIntegrationSupport {
+    @TestConfiguration(proxyBeanMethods = false)
+    static class GatewayRequestFixture {
+        @Bean
+        MockMvcBuilderCustomizer trustedGatewayRequest() {
+            return builder -> builder.defaultRequest(get("/")
+                    .header(PropertyGatewayTrustFilter.HEADER,
+                            "test-only-property-gateway-key-32-bytes-minimum"));
+        }
+    }
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
             DockerImageName.parse("postgis/postgis:17-3.5").asCompatibleSubstituteFor("postgres"));
     static { POSTGRES.start(); }

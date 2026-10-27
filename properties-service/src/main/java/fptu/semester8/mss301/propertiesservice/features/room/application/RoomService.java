@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +55,15 @@ public class RoomService {
     @Transactional(readOnly = true)
     public Page<Room> list(Long buildingId, Pageable p) {
         return buildingId == null ? rooms.findAll(p) : rooms.findAllByBuildingId(buildingId, p);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Room> listScoped(Long buildingId, Set<Long> buildingIds, Pageable pageable) {
+        if (buildingIds.isEmpty() || buildingId != null && !buildingIds.contains(buildingId)) {
+            return Page.empty(pageable);
+        }
+        return buildingId == null ? rooms.findAllByBuildingIdIn(buildingIds, pageable)
+                : rooms.findAllByBuildingId(buildingId, pageable);
     }
 
     @Transactional

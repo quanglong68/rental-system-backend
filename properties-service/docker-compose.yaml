@@ -26,10 +26,12 @@ services:
       dockerfile: Dockerfile
     container_name: properties-service
     restart: unless-stopped
-    ports:
-      - "${SERVER_PORT:-8083}:8083"
     environment:
       SERVER_PORT: 8083
+      PROPERTY_GATEWAY_SECRET: ${PROPERTY_GATEWAY_SECRET:?PROPERTY_GATEWAY_SECRET is required (min 32 chars)}
+      STAFF_ASSIGNMENT_SECRET: ${STAFF_ASSIGNMENT_SECRET:?STAFF_ASSIGNMENT_SECRET is required (min 32 chars)}
+      PROPERTY_INTERNAL_SECRET: ${PROPERTY_INTERNAL_SECRET:?PROPERTY_INTERNAL_SECRET is required (min 32 chars)}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-notification-service:8082}
 
       # R2 Object Storage
       STORAGE_PROVIDER: ${STORAGE_PROVIDER:-r2}
@@ -50,7 +52,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the project .env file}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_DOCKER_BOOTSTRAP_SERVERS:-kafka:9092}
-      EUREKA_CLIENT_ENABLED: ${EUREKA_CLIENT_ENABLED:-false}
+      EUREKA_CLIENT_ENABLED: ${EUREKA_CLIENT_ENABLED:-true}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL:-http://discovery-server:8761/eureka/}
     networks:
       - default

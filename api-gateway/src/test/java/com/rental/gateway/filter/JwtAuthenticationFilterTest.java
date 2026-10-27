@@ -94,6 +94,7 @@ class JwtAuthenticationFilterTest {
         assertThat(headers.getFirst(Headers.X_USER_ID)).isEqualTo("7");
         assertThat(headers.getFirst(Headers.X_USER_TYPE)).isEqualTo("CUSTOMER");
         assertThat(headers.getFirst(Headers.X_USER_ROLES)).isEqualTo("CUSTOMER");
+        assertThat(headers.getFirst("X-Property-Gateway-Key")).isNull();
     }
 
     @Test
@@ -151,6 +152,7 @@ class JwtAuthenticationFilterTest {
         }
         if (fakeUserId != null) {
             builder.header(Headers.X_USER_ID, fakeUserId);
+            builder.header("X-Property-Gateway-Key", "forged-client-key");
         }
         return MockServerWebExchange.from(builder.build());
     }

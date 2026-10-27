@@ -4,6 +4,7 @@ import fptu.exe202.signify.apiresponse.response.ApiResponse;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.context.annotation.*;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +32,7 @@ public class OccupantSecurityConfig {
     private static final Pattern USER_READ = Pattern.compile("/api/v1/rooms/occupancies/users/([^/]+)");
 
     @Bean
+    @Order(1)
     public SecurityFilterChain occupantSecurity(HttpSecurity http, ObjectMapper json) throws Exception {
         http.securityMatcher(request -> ROOM_READ.matcher(request.getServletPath()).matches()
                         || USER_READ.matcher(request.getServletPath()).matches()

@@ -68,6 +68,8 @@ spring:
           uri: lb://property-service
           predicates:
             - Path=/api/v1/locations/**,/api/v1/provinces/**,/api/v1/wards/**,/api/v1/buildings/**,/api/v1/room-types/**,/api/v1/rooms/**,/api/v1/images/**
+          filters:
+            - SetRequestHeader=X-Property-Gateway-Key, ${PROPERTY_GATEWAY_SECRET:}
         - id: listing-booking-service
           uri: lb://listing-booking-service
           predicates:

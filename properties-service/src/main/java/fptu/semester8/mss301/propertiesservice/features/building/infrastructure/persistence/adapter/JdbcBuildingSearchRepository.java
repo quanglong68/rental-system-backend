@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,8 +22,19 @@ public class JdbcBuildingSearchRepository implements BuildingSearchRepository {
 
     @Override
     public Page<BuildingSearchItem> search(String keyword, Long provinceId, Long wardId, Pageable pageable) {
+        return searchScoped(keyword, provinceId, wardId, null, pageable);
+    }
+
+    @Override
+    public Page<BuildingSearchItem> searchScoped(String keyword, Long provinceId, Long wardId,
+                                                  Set<Long> buildingIds, Pageable pageable) {
+        if (buildingIds != null && buildingIds.isEmpty()) return Page.empty(pageable);
         StringBuilder where = new StringBuilder(" WHERE b.is_deleted = false");
         MapSqlParameterSource params = new MapSqlParameterSource();
+        if (buildingIds != null) {
+            where.append(" AND b.building_id IN (:buildingIds)");
+            params.addValue("buildingIds", buildingIds);
+        }
         if (keyword != null && !keyword.isBlank()) {
             where.append(" AND (b.name ILIKE :keyword ESCAPE '!' OR b.address ILIKE :keyword ESCAPE '!')");
             String escaped = keyword.trim().replace("!", "!!").replace("%", "!%").replace("_", "!_");

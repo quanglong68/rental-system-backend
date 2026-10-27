@@ -73,6 +73,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             headers.remove(Headers.X_USER_ID);
             headers.remove(Headers.X_USER_TYPE);
             headers.remove(Headers.X_USER_ROLES);
+            headers.remove("X-Property-Gateway-Key");
         }).build();
         if (whitelist.isPublic(request.getMethod(), path)) {
             return chain.filter(exchange.mutate().request(mutated).build());

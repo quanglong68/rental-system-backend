@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface BuildingRepository {
     Building save(Building building);
@@ -16,4 +17,8 @@ public interface BuildingRepository {
     Page<Building> findActive(Pageable pageable);
 
     Page<Building> findActiveByWardId(long wardId, Pageable pageable);
+
+    Page<Building> findActiveIn(Set<Long> buildingIds, Pageable pageable);
+
+    Page<Building> findActiveByWardIdIn(long wardId, Set<Long> buildingIds, Pageable pageable);
 }
