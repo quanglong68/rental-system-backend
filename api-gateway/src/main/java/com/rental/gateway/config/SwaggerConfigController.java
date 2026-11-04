@@ -17,7 +17,8 @@ public class SwaggerConfigController {
 
     private static final List<String> PUBLIC_API_SERVICES = List.of(
             "auth-service", "user-notification-service", "property-service",
-            "listing-booking-service", "billing-utility-service", "asset-maintenance-service");
+            "listing-booking-service", "contract-tenant-service", "billing-utility-service",
+            "asset-maintenance-service");
 
     private final DiscoveryClient discovery;
 

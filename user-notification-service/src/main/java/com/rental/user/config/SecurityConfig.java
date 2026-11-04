@@ -39,9 +39,9 @@ public class SecurityConfig {
                     }
                 }, AuthorizationFilter.class)
                 .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> writeError(req, res, 401,
-                                ErrorCode.UNAUTHENTICATED.name(), "Chua dang nhap", mapper))
+                                ErrorCode.UNAUTHENTICATED.name(), "Chưa đăng nhập", mapper))
                         .accessDeniedHandler((req, res, ex) -> writeError(req, res, 403,
-                                ErrorCode.FORBIDDEN.name(), "Khong du quyen", mapper)))
+                                ErrorCode.FORBIDDEN.name(), "Không đủ quyền", mapper)))
                 .httpBasic(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable).build();
     }
 

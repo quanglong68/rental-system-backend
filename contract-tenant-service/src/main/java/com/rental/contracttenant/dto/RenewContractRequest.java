@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RenewContractRequest {
 
-    @NotNull(message = "newEndDate is required")
+    @NotNull(message = "newEndDate là bắt buộc")
     private LocalDate newEndDate;
 }

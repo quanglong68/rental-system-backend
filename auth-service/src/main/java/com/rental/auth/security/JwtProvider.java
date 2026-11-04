@@ -33,7 +33,7 @@ public class JwtProvider {
             @Value("${jwt.access-expiration:900}") long accessExpirationSeconds) {
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (secretBytes.length < 32) {
-            throw new IllegalStateException("jwt.secret phai toi thieu 32 ky tu (HS256 can khoa 256-bit)");
+            throw new IllegalStateException("jwt.secret phải tối thiểu 32 ký tự (HS256 cần khóa 256-bit)");
         }
         this.key = Keys.hmacShaKeyFor(secretBytes);
         this.issuer = issuer;
@@ -58,9 +58,9 @@ public class JwtProvider {
             payload = Jwts.parser().verifyWith(key).requireIssuer(issuer).clockSkewSeconds(30).build()
                     .parseSignedClaims(token).getPayload();
         } catch (ExpiredJwtException expired) {
-            throw new BusinessException(ErrorCode.TOKEN_EXPIRED, "Token da het han");
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED, "Token đã hết hạn");
         } catch (JwtException | IllegalArgumentException invalid) {
-            throw new BusinessException(ErrorCode.UNAUTHENTICATED, "Token khong hop le");
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED, "Token không hợp lệ");
         }
         List<String> roles = payload.get("roles", List.class);
         return new JwtClaims(Long.valueOf(payload.getSubject()), payload.get("typ", String.class),

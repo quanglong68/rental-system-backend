@@ -63,4 +63,43 @@ public class CreateDraftContractRequest {
     @DecimalMin(value = "0", inclusive = false)
     @Digits(integer = 15, fraction = 0)
     private BigDecimal price;
+
+    @DecimalMin(value = "0", inclusive = true)
+    @Digits(integer = 15, fraction = 0)
+    private BigDecimal depositAmount;
+
+    @Positive
+    private Integer minTermMonths;
+
+    // ---- Snapshot used to render the PDF; all optional so older events stay valid. ----
+    private String roomNumber;
+    private String buildingName;
+    private String roomAddress;
+    private BigDecimal electricityPrice;
+    private BigDecimal waterPrice;
+    private String waterUnit;
+    private String paymentMethod;
+    private Integer paymentDueDay;
+    private LocalDate availableFrom;
+
+    private String lessorName;
+    private LocalDate lessorDateOfBirth;
+    private String lessorIdNumber;
+    private LocalDate lessorIdIssueDate;
+    private String lessorIdIssuePlace;
+    private String lessorPhone;
+    private String lessorAddress;
+
+    private String tenantFullName;
+    private LocalDate tenantDateOfBirth;
+    private String tenantGender;
+    private String tenantPhone;
+    private String tenantEmail;
+    private String tenantPermanentAddress;
+    private String tenantOccupation;
+    private String tenantCccdNumber;
+    private LocalDate tenantCccdIssueDate;
+    private String tenantCccdIssuePlace;
+    private String tenantCccdFrontKey;
+    private String tenantCccdBackKey;
 }

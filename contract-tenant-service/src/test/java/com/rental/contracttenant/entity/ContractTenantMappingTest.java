@@ -47,7 +47,10 @@ class ContractTenantMappingTest {
         assertThat(table.getName()).isEqualTo("contract_tenant");
         assertThat(table.getColumns()).extracting(Column::getName).containsExactlyInAnyOrder(
                 "id", "contract_id", "customer_id", "joined_at", "left_at", "is_representative",
-                "created_at", "updated_at");
+                "created_at", "updated_at",
+                "full_name", "date_of_birth", "gender", "phone", "email", "permanent_address",
+                "occupation", "cccd_number", "cccd_issue_date", "cccd_issue_place",
+                "cccd_front_key", "cccd_back_key");
     }
 
     @Test

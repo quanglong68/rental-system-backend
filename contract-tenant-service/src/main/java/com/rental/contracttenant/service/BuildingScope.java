@@ -37,7 +37,7 @@ public class BuildingScope {
         }
         List<Long> assigned = getAssignedBuildingIds(user);
         if (buildingId == null || !assigned.contains(buildingId)) {
-            throw new AccessDeniedException("Staff chua duoc phan cong tai toa nha nay");
+            throw new AccessDeniedException("Staff chưa được phân công tại tòa nhà này");
         }
     }
 
@@ -55,11 +55,11 @@ public class BuildingScope {
             StaffClient.StaffBuildings response = staff.staffBuildings(Long.valueOf(user.getUserId()));
             assigned = response == null ? null : response.buildingIds();
         } catch (BusinessException | CallNotPermittedException | RetryableException unavailable) {
-            throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Khong kiem tra duoc phan cong toa nha",
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Không kiểm tra được phân công tòa nhà",
                     HttpStatus.SERVICE_UNAVAILABLE);
         }
         if (assigned == null) {
-            throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Khong kiem tra duoc phan cong toa nha",
+            throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Không kiểm tra được phân công tòa nhà",
                     HttpStatus.SERVICE_UNAVAILABLE);
         }
         return assigned;
@@ -68,7 +68,7 @@ public class BuildingScope {
     private static HeaderUser currentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof HeaderUser user)) {
-            throw new AccessDeniedException("Khong xac dinh duoc nguoi dung");
+            throw new AccessDeniedException("Không xác định được người dùng");
         }
         return user;
     }

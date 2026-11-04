@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             @Value("${jwt.issuer:rental-auth}") String issuer, GatewayWhitelist whitelist) {
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (secretBytes.length < 32) {
-            throw new IllegalStateException("jwt.secret phai toi thieu 32 ky tu (HS256 can khoa 256-bit)");
+            throw new IllegalStateException("jwt.secret phải tối thiểu 32 ký tự (HS256 cần khóa 256-bit)");
         }
         this.key = Keys.hmacShaKeyFor(secretBytes);
         this.issuer = issuer;
@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         var request = exchange.getRequest();
         String path = request.getPath().value();
         if (path.equals("/internal") || path.startsWith("/internal/")) {
-            return writeError(exchange, HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "Khong tim thay");
+            return writeError(exchange, HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "Không tìm thấy");
         }
         var mutated = request.mutate().headers(headers -> {
             headers.remove(Headers.X_USER_ID);
@@ -79,16 +79,16 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         }
         String authorization = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
-            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED, "Chua dang nhap");
+            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED, "Chưa đăng nhập");
         }
         Claims claims;
         try {
             claims = Jwts.parser().verifyWith(key).requireIssuer(issuer).clockSkewSeconds(30).build()
                     .parseSignedClaims(authorization.substring(BEARER_PREFIX.length())).getPayload();
         } catch (ExpiredJwtException expired) {
-            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED, "Token da het han");
+            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED, "Token đã hết hạn");
         } catch (JwtException | IllegalArgumentException invalid) {
-            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED, "Token khong hop le");
+            return writeError(exchange, HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED, "Token không hợp lệ");
         }
         List<?> roles = claims.get("roles", List.class);
         String rolesHeader = roles == null ? ""

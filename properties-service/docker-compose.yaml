@@ -21,9 +21,11 @@ services:
 
   # ---- Properties Service ----
   properties-service:
+    # Build tu backend root (can parent pom + common-lib); jar phai duoc package truoc:
+    #   mvn -pl properties-service -am package -DskipTests
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: properties-service/Dockerfile
     container_name: properties-service
     restart: unless-stopped
     ports:

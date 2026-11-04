@@ -45,6 +45,27 @@ class GatewayErrorHandlerTest {
     }
 
     @Test
+    void responseDaSet200_vanTra500ChuKhongNuotLoiThanh2xx() {
+        MockServerWebExchange exchange = exchange("/v3/api-docs/auth-service");
+        exchange.getResponse().setStatusCode(HttpStatus.OK);
+
+        handler.handle(exchange, new RuntimeException("upstream body rewrite failed")).block();
+
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(500);
+        assertThat(body(exchange)).contains("INTERNAL_ERROR");
+    }
+
+    @Test
+    void upstreamKhongMoDuocCong_503DependencyUnavailable() {
+        MockServerWebExchange exchange = exchange("/api/v1/auth/login");
+
+        handler.handle(exchange, new java.net.ConnectException("Connection refused")).block();
+
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(503);
+        assertThat(body(exchange)).contains("DEPENDENCY_UNAVAILABLE");
+    }
+
+    @Test
     void traceId_layTuCorrelationId() {
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest
                 .method(HttpMethod.GET, "http://localhost/api/v1/auth/me").header("X-Correlation-Id", "cid-123"));

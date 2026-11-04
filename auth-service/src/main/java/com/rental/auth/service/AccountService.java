@@ -2,7 +2,7 @@ package com.rental.auth.service;
 
 import com.rental.auth.dto.AccountResponse;
 import com.rental.auth.dto.CreateAccountRequest;
-import com.rental.auth.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.auth.dto.RegisterRequest;
 import com.rental.auth.dto.RegisterResponse;
 import com.rental.auth.entity.Account;
@@ -66,7 +66,7 @@ public class AccountService {
         assignRoles(saved.getId(), List.of("CUSTOMER"));
         // Ghi outbox cung giao dich tao account (docs muc 5.3, Task C6).
         outboxPublisher.publishAccountRegistered(saved.getId(), saved.getAccountType(), saved.getUsername(),
-                req.getFullName(), req.getEmail(), req.getPhone());
+                req.getFullName(), req.getEmail(), req.getPhone(), List.of("CUSTOMER"));
         return new RegisterResponse(saved.getId(), saved.getUsername(), saved.getAccountType());
     }
 
@@ -82,7 +82,7 @@ public class AccountService {
         assignRoles(saved.getId(), roleCodes);
         // Ghi outbox cung giao dich tao account (docs muc 5.3, Task C6).
         outboxPublisher.publishAccountRegistered(saved.getId(), saved.getAccountType(), saved.getUsername(),
-                req.getFullName(), req.getEmail(), req.getPhone());
+                req.getFullName(), req.getEmail(), req.getPhone(), roleCodes);
         return toResponse(saved, roleCodes);
     }
 
@@ -108,7 +108,7 @@ public class AccountService {
     @Transactional
     public AccountResponse updateStatus(Long id, boolean active) {
         Account account = accounts.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay account"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản"));
         account.setActive(active);
         AccountResponse response = toResponse(accounts.save(account), roleCodesOf(id));
         if (!active) {
@@ -126,9 +126,9 @@ public class AccountService {
     @Transactional
     public AccountResponse updateRoles(Long id, List<String> roleCodes) {
         Account account = accounts.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay account"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản"));
         if (account.getAccountType() != AccountType.STAFF) {
-            throw new BusinessException(ErrorCode.ROLE_NOT_ALLOWED, "Chi doi role cho STAFF");
+            throw new BusinessException(ErrorCode.ROLE_NOT_ALLOWED, "Chỉ đổi role cho STAFF");
         }
         List<String> validated = validateStaffRoles(roleCodes);
         accountRoles.deleteByAccountId(id);
@@ -168,29 +168,29 @@ public class AccountService {
 
     private void checkUsernameAvailable(String username) {
         if (accounts.existsByUsername(username)) {
-            throw new BusinessException(ErrorCode.USERNAME_EXISTS, "Username da ton tai");
+            throw new BusinessException(ErrorCode.USERNAME_EXISTS, "Username đã tồn tại");
         }
     }
 
     private List<String> validateStaffRoles(List<String> roleCodes) {
         if (roleCodes == null || roleCodes.isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "STAFF phai co it nhat 1 role");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "STAFF phải có ít nhất 1 role");
         }
         for (String code : roleCodes) {
             if (!roles.existsByCode(code)) {
-                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Role khong ton tai: " + code);
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Role không tồn tại: " + code);
             }
             if (!STAFF_ROLES.contains(code)) {
-                throw new BusinessException(ErrorCode.ROLE_NOT_ALLOWED, "Role khong duoc phep cho STAFF: " + code);
+                throw new BusinessException(ErrorCode.ROLE_NOT_ALLOWED, "Role không được phép cho STAFF: " + code);
             }
         }
         return List.copyOf(new LinkedHashSet<>(roleCodes));
     }
 
     private AccountType parseAccountType(String raw) {
-        AccountType type = parseAnyAccountType(raw, "accountType chi nhan STAFF|ADMIN");
+        AccountType type = parseAnyAccountType(raw, "accountType chỉ nhận STAFF|ADMIN");
         if (type == AccountType.CUSTOMER) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "accountType chi nhan STAFF|ADMIN");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "accountType chỉ nhận STAFF|ADMIN");
         }
         return type;
     }
@@ -213,13 +213,18 @@ public class AccountService {
 
     private void validateUsername(String username, String email, String phone) {
         if (!EMAIL.matcher(username).matches() && !PHONE_VN.matcher(username).matches()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Username phai la email hoac so dien thoai");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Username phải là email hoặc số điện thoại");
         }
-        if (email != null && !email.isBlank() && !username.equals(email.trim().toLowerCase())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Username phai trung email khai bao");
+        boolean hasEmail = email != null && !email.isBlank();
+        boolean hasPhone = phone != null && !phone.isBlank();
+        if (!hasEmail && !hasPhone) {
+            return;
         }
-        if (phone != null && !phone.isBlank() && !username.equals(phone.trim())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Username phai trung phone khai bao");
+        // Username chi can khop MOT trong hai thong tin khai bao (docs muc 7.1).
+        boolean matchesEmail = hasEmail && username.equals(email.trim().toLowerCase());
+        boolean matchesPhone = hasPhone && username.equals(phone.trim());
+        if (!matchesEmail && !matchesPhone) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Username phải trùng email hoặc số điện thoại khai báo");
         }
     }
 

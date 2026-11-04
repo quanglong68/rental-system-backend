@@ -86,7 +86,7 @@ class ContractControllerWebTest {
     }
 
     private static ContractResponse response() {
-        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.DRAFT, LocalDate.of(2026, 11, 1),
-                null, new BigDecimal("3500000"), null, null, null);
+        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.DRAFT, null, null,
+                LocalDate.of(2026, 11, 1), null, new BigDecimal("3500000"), null, null, null, null, null);
     }
 }

@@ -36,7 +36,7 @@ public class RefreshTokenService {
                     .digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("Thieu SHA-256", impossible);
+            throw new IllegalStateException("Thiếu SHA-256", impossible);
         }
     }
 

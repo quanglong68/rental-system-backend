@@ -12,6 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RejectMoveOutRequest {
 
-    @NotBlank(message = "reason is required")
+    @NotBlank(message = "reason là bắt buộc")
     private String reason;
 }

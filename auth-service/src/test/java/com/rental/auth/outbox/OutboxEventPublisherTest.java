@@ -30,7 +30,7 @@ class OutboxEventPublisherTest {
     @Test
     void publish_ghiDungEnvelopeAccountRegistered() throws Exception {
         publisher.publishAccountRegistered(42L, AccountType.CUSTOMER, "khach@mail.com", "Khach Hang",
-                "khach@mail.com", null);
+                "khach@mail.com", null, java.util.List.of("CUSTOMER"));
 
         ArgumentCaptor<OutboxEvent> saved = ArgumentCaptor.forClass(OutboxEvent.class);
         verify(outbox).save(saved.capture());
@@ -56,8 +56,10 @@ class OutboxEventPublisherTest {
 
     @Test
     void publish_moiLanSinhEventIdKhacNhau() {
-        publisher.publishAccountRegistered(1L, AccountType.STAFF, "a@b.com", "A", null, "0912345678");
-        publisher.publishAccountRegistered(1L, AccountType.STAFF, "a@b.com", "A", null, "0912345678");
+        publisher.publishAccountRegistered(1L, AccountType.STAFF, "a@b.com", "A", null, "0912345678",
+                java.util.List.of("KY_THUAT"));
+        publisher.publishAccountRegistered(1L, AccountType.STAFF, "a@b.com", "A", null, "0912345678",
+                java.util.List.of("KY_THUAT"));
 
         ArgumentCaptor<OutboxEvent> saved = ArgumentCaptor.forClass(OutboxEvent.class);
         verify(outbox, org.mockito.Mockito.times(2)).save(saved.capture());

@@ -12,7 +12,7 @@ import java.util.Map;
  * Split Billing Engine — cong thuc muc 11 (tinh theo ngay, chia theo dau nguoi).
  * Moi ngay d, n(d) = so nguoi co mat; phan chi phi ngay do (T/D) chia deu cho n(d) nguoi.
  * Tien nguoi t = sum((T/D)/n(d)) tren cac ngay t co mat.
- * So ngay o = giao cua [joinedAt, leftAt] + [startDate, endDate] + thang (tinh ca 2 dau).
+ * Số ngày ở = giao của [joinedAt, leftAt] + [startDate, endDate] + tháng (tính cả 2 đầu).
  * Trung gian dung BigDecimal (khong double); item scale 2; tong lam tron den hang nghin.
  */
 public final class BillingCalculator {
@@ -20,16 +20,16 @@ public final class BillingCalculator {
     private BillingCalculator() {
     }
 
-    /** Khoang hien dien cua mot nguoi trong thang (da giao voi hop dong + thang). */
+    /** Khoảng hiện diện của một người trong tháng (đã giao với hợp đồng + tháng). */
     public record StayInterval(Long contractTenantId, LocalDate from, LocalDate to) {
     }
 
     /**
      * Chia tong T cho cac khoang hien dien trong thang.
      *
-     * @param monthlyTotal tong ca thang (rent_amount, tieu thu x don gia, gia DV x SL)
+     * @param monthlyTotal tổng cả tháng (rent_amount, tiêu thụ x đơn giá, giá DV x SL)
      * @param stays khoang hien dien (from/to inclusive, nam trong thang)
-     * @param month thang tinh tien
+     * @param month tháng tính tiền
      * @return tien moi contractTenantId (chua lam tron hang nghin)
      */
     public static Map<Long, BigDecimal> split(BigDecimal monthlyTotal, List<StayInterval> stays, YearMonth month) {
@@ -57,7 +57,7 @@ public final class BillingCalculator {
         return result;
     }
 
-    /** Giao [joinedAt, leftAt?] + [contractStart, contractEnd] + thang (inclusive). Null neu khong giao. */
+    /** Giao [joinedAt, leftAt?] + [contractStart, contractEnd] + tháng (inclusive). Null nếu không giao. */
     public static StayInterval intersect(Long contractTenantId, LocalDate joinedAt, LocalDate leftAt,
             LocalDate contractStart, LocalDate contractEnd, YearMonth month) {
         LocalDate from = max(joinedAt, contractStart, month.atDay(1));

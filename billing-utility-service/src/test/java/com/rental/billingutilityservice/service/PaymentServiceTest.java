@@ -34,6 +34,8 @@ class PaymentServiceTest {
     @Mock
     private PaymentRepository payments;
     @Mock
+    private RoomInvoiceService roomInvoices;
+    @Mock
     private BillingEventPublisher events;
     @Mock
     private AuthSupport auth;
@@ -114,5 +116,21 @@ class PaymentServiceTest {
         request.setAmountPaid(new BigDecimal("1000"));
         BusinessException ex = assertThrows(BusinessException.class, () -> service.create(request));
         assertEquals("INVOICE_ALREADY_PAID", ex.getCode());
+    }
+
+    @Test
+    void paymentRecomputesRoomInvoice() {
+        Invoice invoice = invoice(new BigDecimal("2500000"), BigDecimal.ZERO, InvoiceStatus.UNPAID);
+        invoice.setRoomInvoiceId(77L);
+        when(invoices.findById(1L)).thenReturn(Optional.of(invoice));
+        when(payments.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(auth.currentUserId()).thenReturn(9L);
+
+        CreatePaymentRequest request = new CreatePaymentRequest();
+        request.setInvoiceId(1L);
+        request.setAmountPaid(new BigDecimal("500000"));
+        service.create(request);
+
+        verify(roomInvoices).recomputeForShare(invoice);
     }
 }

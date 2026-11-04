@@ -19,4 +19,11 @@ public interface CustomerClient {
 
     @GetMapping("/internal/customers/{id}/exists")
     void checkExists(@PathVariable("id") Long id);
+
+    /** Contact snapshot used to fill the tenant section of manually created contracts. */
+    @GetMapping("/internal/customers/{id}")
+    CustomerProfile getCustomer(@PathVariable("id") Long id);
+
+    record CustomerProfile(Long id, String fullName, String phone, String email) {
+    }
 }

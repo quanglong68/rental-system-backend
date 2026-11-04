@@ -2,11 +2,10 @@ package com.rental.asset.controller;
 
 import com.rental.asset.dto.MaintenanceCompletionRequest;
 import com.rental.asset.dto.MaintenanceRequestAssignRequest;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.entity.MaintenanceRequest;
 import com.rental.asset.service.MaintenanceRequestService;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,23 +25,27 @@ public class MaintenanceRequestController {
     }
 
     @GetMapping("/api/v1/maintenance-requests")
-    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','ADMIN')")
+    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','SALE','ADMIN')")
     public PageResponse<MaintenanceRequest> findRequests(
             @RequestParam(required = false) Long buildingId,
             @RequestParam(required = false) Long staffId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
             @RequestParam(name = "page", defaultValue = "0") int pageNumber,
             @RequestParam(name = "size", defaultValue = "20") int pageSize) {
-        return maintenanceRequestService.findRequests(buildingId, staffId, pageNumber, pageSize);
+        return maintenanceRequestService.findRequests(buildingId, staffId, status, priority, pageNumber, pageSize);
     }
 
     @GetMapping("/api/v1/maintenance-requests/mine")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<MaintenanceRequest> findMyRequests() {
-        return maintenanceRequestService.findCurrentCustomerRequests();
+    public PageResponse<MaintenanceRequest> findMyRequests(
+            @RequestParam(name = "page", defaultValue = "0") int pageNumber,
+            @RequestParam(name = "size", defaultValue = "20") int pageSize) {
+        return maintenanceRequestService.findCurrentCustomerRequests(pageNumber, pageSize);
     }
 
     @GetMapping("/api/v1/maintenance-requests/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER','QUAN_LY','KY_THUAT','ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','QUAN_LY','KY_THUAT','SALE','ADMIN')")
     public MaintenanceRequest getRequest(@PathVariable("id") Long maintenanceRequestId) {
         return maintenanceRequestService.getRequest(maintenanceRequestId);
     }

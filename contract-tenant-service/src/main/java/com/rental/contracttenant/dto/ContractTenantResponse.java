@@ -13,6 +13,10 @@ public class ContractTenantResponse {
     Long id;
     Long contractId;
     Long customerId;
+    String fullName;
+    String phone;
+    String cccdNumber;
+    LocalDate dateOfBirth;
     LocalDate joinedAt;
     LocalDate leftAt;
     @JsonProperty("isRepresentative")
@@ -21,6 +25,7 @@ public class ContractTenantResponse {
 
     public static ContractTenantResponse from(ContractTenant tenant) {
         return new ContractTenantResponse(tenant.getId(), tenant.getContractId(), tenant.getCustomerId(),
+                tenant.getFullName(), tenant.getPhone(), tenant.getCccdNumber(), tenant.getDateOfBirth(),
                 tenant.getJoinedAt(), tenant.getLeftAt(), tenant.isRepresentative(), tenant.getCreatedAt());
     }
 }

@@ -5,6 +5,7 @@ import com.rental.common.error.GlobalExceptionHandler;
 import com.rental.common.feign.FeignHeaderInterceptor;
 import feign.RequestInterceptor;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
  * error handler Kafka (thu lai 3 lan / 1s, loi day sang DLT - muc 5.3).
  */
 @Configuration
+@EnableCaching
 @Import(GlobalExceptionHandler.class)
 public class AppConfig {
 

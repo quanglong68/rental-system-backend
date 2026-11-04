@@ -1,7 +1,7 @@
 package com.rental.common.error;
 
 /**
- * Service phu thuoc khong phan hoi (Feign 5xx/timeout/mach mo) -&gt; 503
+ * Dịch vụ phụ thuộc không phản hồi (Feign 5xx/timeout/mach mo) -&gt; 503
  * voi code DEPENDENCY_UNAVAILABLE (docs muc 5.2, Table 8).
  */
 public class DependencyUnavailableException extends BusinessException {

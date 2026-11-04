@@ -28,7 +28,7 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter;
  * (khong verify JWT lai), phan quyen bang @PreAuthorize (can @EnableMethodSecurity).
  * Whitelist PUBLIC theo Table 7: register, login, refresh (+ health, swagger cho dev).
  * Loi 401/403 tra JSON dung format ErrorResponse (filter chay truoc controller
- * nen @RestControllerAdvice khong bat duoc, phai viet thang o entryPoint/handler).
+ * nên @RestControllerAdvice không bắt được, phải viết thẳng ở entryPoint/handler).
  */
 @Configuration
 @EnableWebSecurity
@@ -52,14 +52,17 @@ public class SecurityConfig {
                         // thay vi entryPoint 401 gay hieu lam.
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, PublicPaths.POST).permitAll()
-                        .requestMatchers(HttpMethod.GET, PublicPaths.GET).permitAll().anyRequest().authenticated())
+                        .requestMatchers(HttpMethod.GET, PublicPaths.GET).permitAll()
+                        // Service-to-service only; the API Gateway never routes /internal/**.
+                        .requestMatchers("/internal/**").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(new AuthHeaderAuthenticationFilter(), AuthorizationFilter.class)
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, ex) -> writeError(request, response,
                                 HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.UNAUTHENTICATED.name(),
-                                "Chua dang nhap", objectMapper))
+                                "Chưa đăng nhập", objectMapper))
                         .accessDeniedHandler((request, response, ex) -> writeError(request, response,
-                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Khong du quyen",
+                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Không đủ quyền",
                                 objectMapper)))
                 .httpBasic(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable);
         return http.build();

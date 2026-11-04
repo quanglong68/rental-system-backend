@@ -49,10 +49,10 @@ public class CatalogService {
     @Transactional
     public BuildingServiceResponse updateService(Long id, BuildingServiceRequest request) {
         BuildingService entity = services.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay dich vu"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy dịch vụ"));
         auth.requireBuildingScope(entity.getBuildingId());
         if (request.getBuildingId() != null && !request.getBuildingId().equals(entity.getBuildingId())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Khong duoc chuyen dich vu sang toa nha khac");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Không được chuyển dịch vụ sang tòa nhà khác");
         }
         entity.setName(request.getName().trim());
         entity.setUnit(request.getUnit() == null || request.getUnit().isBlank() ? "month" : request.getUnit().trim());
@@ -69,36 +69,32 @@ public class CatalogService {
         if (auth.isAdmin()) {
             return services.findAll().stream().map(this::toServiceResponse).toList();
         }
-        List<Long> allowedIds;
-        try {
-            allowedIds = auth.staffBuildingIds(auth.currentUserId());
-        } catch (RuntimeException e) {
-            allowedIds = List.of();
+        List<Long> allowed = auth.staffBuildingIds(auth.currentUserId());
+        if (allowed.isEmpty()) {
+            return List.of();
         }
-        final List<Long> allowed = allowedIds;
-        return services.findAll().stream().filter(s -> allowed.contains(s.getBuildingId()))
-                .map(this::toServiceResponse).toList();
+        return services.findByBuildingIdIn(allowed).stream().map(this::toServiceResponse).toList();
     }
 
     @Transactional
     public ContractServiceResponse attach(AttachServiceRequest request) {
         BuildingService service = services.findById(request.getServiceId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay dich vu"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy dịch vụ"));
         ContractInfo contract = contractInfos.findById(request.getContractId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay hop dong"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy hợp đồng"));
         auth.requireBuildingScope(contract.getBuildingId());
         if (!service.getBuildingId().equals(contract.getBuildingId())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Dich vu khong thuoc toa nha cua hop dong");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Dịch vụ không thuộc tòa nhà của hợp đồng");
         }
         UsageType usageType;
         try {
             usageType = UsageType.valueOf(request.getUsageType());
         } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "usageType phai la SHARED hoac PERSONAL");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "usageType phải là SHARED hoặc PERSONAL");
         }
         if (usageType == UsageType.PERSONAL && request.getContractTenantId() == null) {
             throw new BusinessException("TENANT_REQUIRED_FOR_PERSONAL",
-                    "Dich vu ca nhan bat buoc co contractTenantId", HttpStatus.UNPROCESSABLE_ENTITY);
+                    "Dịch vụ cá nhân bắt buộc có contractTenantId", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         ContractService entity = new ContractService();
         entity.setContractId(request.getContractId());
@@ -113,7 +109,7 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<ContractServiceResponse> listByContract(Long contractId) {
         ContractInfo contract = contractInfos.findById(contractId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay hop dong"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy hợp đồng"));
         auth.requireBuildingScope(contract.getBuildingId());
         return contractServices.findByContractId(contractId).stream().map(this::toContractServiceResponse).toList();
     }
@@ -121,7 +117,7 @@ public class CatalogService {
     @Transactional
     public void detach(Long id) {
         ContractService entity = contractServices.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay dich vu gan hop dong"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy dịch vụ gắn hợp đồng"));
         contractInfos.findById(entity.getContractId()).ifPresent(c -> auth.requireBuildingScope(c.getBuildingId()));
         contractServices.delete(entity);
     }

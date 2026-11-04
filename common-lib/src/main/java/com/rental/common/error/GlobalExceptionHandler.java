@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
@@ -43,7 +45,7 @@ public class GlobalExceptionHandler {
                         ? new FieldViolation(fieldError.getField(), messageOf(fieldError))
                         : new FieldViolation(err.getObjectName(), messageOf(err)))
                 .collect(Collectors.toList());
-        return build(ErrorCode.VALIDATION_ERROR.name(), "Du lieu vao sai", ErrorCode.VALIDATION_ERROR.getHttpStatus(),
+        return build(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu vào không hợp lệ", ErrorCode.VALIDATION_ERROR.getHttpStatus(),
                 details);
     }
 
@@ -53,7 +55,22 @@ public class GlobalExceptionHandler {
         List<FieldViolation> details = ex.getConstraintViolations().stream()
                 .map(v -> new FieldViolation(v.getPropertyPath().toString(), v.getMessage()))
                 .collect(Collectors.toList());
-        return build(ErrorCode.VALIDATION_ERROR.name(), "Du lieu vao sai", ErrorCode.VALIDATION_ERROR.getHttpStatus(),
+        return build(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu vào không hợp lệ", ErrorCode.VALIDATION_ERROR.getHttpStatus(),
+                details);
+    }
+
+    /**
+     * Spring MVC 6.1 kiem tra rang buoc tren tham so controller ({@code @Positive} cho
+     * {@code @PathVariable}/{@code @RequestParam}) bang {@link HandlerMethodValidationException}.
+     * Neu khong bat o day, request sai tham so se thanh 500 thay vi 400.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleHandlerMethodValidation(HandlerMethodValidationException ex) {
+        List<FieldViolation> details = ex.getAllValidationResults().stream()
+                .flatMap(result -> result.getResolvableErrors().stream()
+                        .map(error -> new FieldViolation(parameterName(result), messageOf(error))))
+                .collect(Collectors.toList());
+        return build(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu vào không hợp lệ", ErrorCode.VALIDATION_ERROR.getHttpStatus(),
                 details);
     }
 
@@ -61,41 +78,41 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class,
             HttpMessageNotReadableException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
-        return build(ErrorCode.VALIDATION_ERROR.name(), "Du lieu vao sai",
+        return build(ErrorCode.VALIDATION_ERROR.name(), "Dữ liệu vào không hợp lệ",
                 ErrorCode.VALIDATION_ERROR.getHttpStatus(), null);
     }
 
-    /** Khong du quyen (@PreAuthorize) -> 403 FORBIDDEN (docs Table 8). */
+    /** Không đủ quyền (@PreAuthorize) -> 403 FORBIDDEN (docs Table 8). */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(AccessDeniedException ex) {
-        return build(ErrorCode.FORBIDDEN.name(), "Khong du quyen", ErrorCode.FORBIDDEN.getHttpStatus(), null);
+        return build(ErrorCode.FORBIDDEN.name(), "Không đủ quyền", ErrorCode.FORBIDDEN.getHttpStatus(), null);
     }
 
-    /** Chua dang nhap / thieu Authentication trong service -> 401 UNAUTHENTICATED. */
+    /** Chưa đăng nhập / thieu Authentication trong service -> 401 UNAUTHENTICATED. */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleUnauthenticated(AuthenticationException ex) {
-        return build(ErrorCode.UNAUTHENTICATED.name(), "Chua dang nhap", ErrorCode.UNAUTHENTICATED.getHttpStatus(),
+        return build(ErrorCode.UNAUTHENTICATED.name(), "Chưa đăng nhập", ErrorCode.UNAUTHENTICATED.getHttpStatus(),
                 null);
     }
 
     /** Loi mang/timeout Feign (RetryableException) -> 503 DEPENDENCY_UNAVAILABLE (docs muc 5.2). */
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ErrorResponse> handleFeign(FeignException ex) {
-        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Service phu thuoc khong phan hoi",
+        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Dịch vụ phụ thuộc không phản hồi",
                 ErrorCode.DEPENDENCY_UNAVAILABLE.getHttpStatus(), null);
     }
 
     /** Mach ngat dang mo -> 503 DEPENDENCY_UNAVAILABLE (docs muc 5.2). */
     @ExceptionHandler(CallNotPermittedException.class)
     public ResponseEntity<ErrorResponse> handleCircuitOpen(CallNotPermittedException ex) {
-        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Service phu thuoc khong phan hoi",
+        return build(ErrorCode.DEPENDENCY_UNAVAILABLE.name(), "Dịch vụ phụ thuộc không phản hồi",
                 ErrorCode.DEPENDENCY_UNAVAILABLE.getHttpStatus(), null);
     }
 
     /** Loi khong luong truoc -> 500 INTERNAL_ERROR, khong lo thong tin noi bo. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
-        return build(ErrorCode.INTERNAL_ERROR.name(), "Loi he thong, vui long thu lai sau",
+        return build(ErrorCode.INTERNAL_ERROR.name(), "Lỗi hệ thống, vui lòng thử lại sau",
                 ErrorCode.INTERNAL_ERROR.getHttpStatus(), null);
     }
 
@@ -125,7 +142,12 @@ public class GlobalExceptionHandler {
         return UUID.randomUUID().toString();
     }
 
-    private static String messageOf(org.springframework.validation.ObjectError err) {
-        return err.getDefaultMessage() != null ? err.getDefaultMessage() : "Gia tri khong hop le";
+    private static String messageOf(org.springframework.context.MessageSourceResolvable err) {
+        return err.getDefaultMessage() != null ? err.getDefaultMessage() : "Giá trị không hợp lệ";
+    }
+
+    private static String parameterName(ParameterValidationResult result) {
+        String name = result.getMethodParameter().getParameterName();
+        return name != null ? name : "parameter";
     }
 }

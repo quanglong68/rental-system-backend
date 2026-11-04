@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.rental.auth.config.SecurityConfig;
 import com.rental.auth.dto.AccountResponse;
-import com.rental.auth.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.auth.dto.RegisterResponse;
 import com.rental.auth.entity.AccountType;
 import com.rental.auth.service.AccountService;

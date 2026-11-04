@@ -62,6 +62,12 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
+        <!-- Spring Data Commons: Page cho PageResponse chuan (docs muc 8); service web tu cung cap -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- Jackson: serialize EventEnvelope (outbox payload JSON, docs muc 5.3) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

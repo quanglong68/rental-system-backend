@@ -4,11 +4,11 @@ Base path: `/api/v1/wards`
 
 | Method | Path | Data payload |
 |---|---|---|
-| POST | `/api/v1/wards` | `WardResponse` |
+| POST | `/api/v1/wards` | `WardResponse`, HTTP 201 |
 | GET | `/api/v1/wards` | `WardResponse[]` |
 | GET | `/api/v1/wards/{id}` | `WardResponse` |
 | PUT | `/api/v1/wards/{id}` | `WardResponse` |
-| DELETE | `/api/v1/wards/{id}` | `null` |
+| DELETE | `/api/v1/wards/{id}` | `204 No Content` |
 | GET | `/api/v1/wards/province/{provinceId}` | `WardResponse[]` |
 
 `id` và `provinceId` là số dương. POST/PUT dùng JSON.

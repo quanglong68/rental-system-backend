@@ -16,9 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * Executes the move-out repository queries against a real PostgreSQL, which the offline Hibernate
@@ -26,14 +27,8 @@ import org.springframework.test.context.DynamicPropertySource;
  * column to string literals; this test proves the replacement (a derived query binding a collection
  * of {@link MoveOutStatus}) actually runs, and that V7's {@code updated_at} columns are in place.
  *
- * <p>Skipped unless {@code CONTRACT_TEST_DB_URL} (plus the matching user/password env vars) points at
- * a PostgreSQL database this test may migrate and write to. Testcontainers is preferred when Docker
- * is available; with Docker down, point the variables at a local server:
- * <pre>
- * CONTRACT_TEST_DB_URL=jdbc:postgresql://localhost:5432/contract_tenant_verify \
- * CONTRACT_TEST_DB_USER=postgres CONTRACT_TEST_DB_PASSWORD=... \
- * mvnw -pl contract-tenant-service test -Dtest=MoveOutRequestRepositoryDbTest
- * </pre>
+ * <p>Starts its own PostgreSQL via Testcontainers so the query runs in CI and locally alike. Set
+ * {@code CONTRACT_TEST_DB_URL} (plus user/password) to reuse an existing throwaway database instead.
  */
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -41,8 +36,27 @@ import org.springframework.test.context.DynamicPropertySource;
         "eureka.client.enabled=false"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "CONTRACT_TEST_DB_URL", matches = ".+")
 class MoveOutRequestRepositoryDbTest {
+
+    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
+            DockerImageName.parse("postgres:16-alpine"));
+    private static final String URL;
+    private static final String USER;
+    private static final String PASSWORD;
+
+    static {
+        String configuredUrl = System.getenv("CONTRACT_TEST_DB_URL");
+        if (configuredUrl != null && !configuredUrl.isBlank()) {
+            URL = configuredUrl;
+            USER = System.getenv().getOrDefault("CONTRACT_TEST_DB_USER", "postgres");
+            PASSWORD = System.getenv().getOrDefault("CONTRACT_TEST_DB_PASSWORD", "");
+        } else {
+            POSTGRES.start();
+            URL = POSTGRES.getJdbcUrl();
+            USER = POSTGRES.getUsername();
+            PASSWORD = POSTGRES.getPassword();
+        }
+    }
 
     @Autowired
     private MoveOutRequestRepository moveOutRequests;
@@ -53,23 +67,16 @@ class MoveOutRequestRepositoryDbTest {
     /** Runs the real migrations, then points the slice at the same database. */
     @DynamicPropertySource
     static void migrate(DynamicPropertyRegistry registry) {
-        String url = System.getenv("CONTRACT_TEST_DB_URL");
-        if (url == null || url.isBlank()) {
-            return; // class-level @EnabledIfEnvironmentVariable skips the test when this is unset.
-        }
-        String user = System.getenv().getOrDefault("CONTRACT_TEST_DB_USER", "postgres");
-        String password = System.getenv().getOrDefault("CONTRACT_TEST_DB_PASSWORD", "");
-
         Flyway.configure()
-                .dataSource(url, user, password)
+                .dataSource(URL, USER, PASSWORD)
                 .locations("classpath:db/migration")
                 .cleanDisabled(false)
                 .load()
                 .migrate();
 
-        registry.add("spring.datasource.url", () -> url);
-        registry.add("spring.datasource.username", () -> user);
-        registry.add("spring.datasource.password", () -> password);
+        registry.add("spring.datasource.url", () -> URL);
+        registry.add("spring.datasource.username", () -> USER);
+        registry.add("spring.datasource.password", () -> PASSWORD);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
     }
 

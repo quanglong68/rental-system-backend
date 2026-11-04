@@ -31,7 +31,7 @@ public class OutboxRelay {
     @Scheduled(fixedDelay = 1000)
     @Transactional
     public void relay() {
-        List<OutboxEvent> pending = outbox.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+        List<OutboxEvent> pending = outbox.findPendingInOrder();
         for (OutboxEvent event : pending) {
             try {
                 kafka.send(event.getTopic(), event.getEventKey(), event.getPayload()).get(10, TimeUnit.SECONDS);

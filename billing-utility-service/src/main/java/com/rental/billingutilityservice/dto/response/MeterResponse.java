@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /** Response dong ho (docs muc 9.5). */
 @Value
@@ -16,5 +17,6 @@ public class MeterResponse {
     String utilityTypeName;
     String meterCode;
     BigDecimal initialIndex;
+    LocalDate initialIndexDate;
     boolean active;
 }

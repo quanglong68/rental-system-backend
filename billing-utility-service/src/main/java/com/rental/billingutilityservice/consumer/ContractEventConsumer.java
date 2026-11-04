@@ -38,8 +38,8 @@ public class ContractEventConsumer {
         try {
             envelope = objectMapper.readTree(message);
         } catch (Exception e) {
-            log.warn("Bo qua message khong phai JSON: {}", e.toString());
-            throw new IllegalStateException("Xu ly contract.events that bai", e);
+            log.warn("Bỏ qua message không phải JSON: {}", e.toString());
+            throw new IllegalStateException("Xử lý contract.events thất bại", e);
         }
         String eventIdText = envelope.path("eventId").asText(null);
         try {
@@ -94,8 +94,8 @@ public class ContractEventConsumer {
             markProcessed(eventId);
         } catch (Exception e) {
             // Nem lai de error handler thu lai 3 lan roi day DLT (docs muc 5.3).
-            log.warn("Xu ly contract.events that bai: {}", e.toString());
-            throw new IllegalStateException("Xu ly contract.events that bai", e);
+            log.warn("Xử lý contract.events thất bại: {}", e.toString());
+            throw new IllegalStateException("Xử lý contract.events thất bại", e);
         }
     }
 
@@ -125,7 +125,7 @@ public class ContractEventConsumer {
         try {
             return LocalDate.parse(text.length() >= 10 ? text.substring(0, 10) : text);
         } catch (Exception e) {
-            log.warn("Ngay {} khong hop le '{}', bo qua", field, text);
+            log.warn("Ngày {} không hợp lệ '{}', bỏ qua", field, text);
             return null;
         }
     }
@@ -137,7 +137,7 @@ public class ContractEventConsumer {
             processed.save(event);
         } catch (org.springframework.dao.DataIntegrityViolationException duplicate) {
             // Race idempotent: consumer khac da xu ly truoc (docs 5.3), coi nhu da xong.
-            log.info("Event {} da duoc xu ly boi consumer khac", eventId);
+            log.info("Event {} đã được xử lý bởi consumer khác", eventId);
         }
     }
 }

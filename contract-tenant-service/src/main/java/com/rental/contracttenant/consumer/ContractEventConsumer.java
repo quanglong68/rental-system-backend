@@ -44,13 +44,13 @@ public class ContractEventConsumer {
         try {
             root = objectMapper.readTree(message);
         } catch (Exception malformed) {
-            throw new IllegalArgumentException("Event khong phai JSON hop le", malformed);
+            throw new IllegalArgumentException("Sự kiện không phải JSON hợp lệ", malformed);
         }
 
         String eventType = text(root, "eventType");
         String eventIdStr = text(root, "eventId");
         if (eventType == null || eventIdStr == null) {
-            throw new IllegalArgumentException("Event thieu eventType hoac eventId");
+            throw new IllegalArgumentException("Sự kiện thiếu eventType hoặc eventId");
         }
 
         UUID eventId = UUID.fromString(eventIdStr);
@@ -59,7 +59,7 @@ public class ContractEventConsumer {
         switch (eventType) {
             case "RentalRequestAccepted" -> handleRentalRequestAccepted(eventId, payload);
             case "RoommateApplicationAccepted" -> handleRoommateApplicationAccepted(eventId, payload);
-            default -> log.debug("Bo qua eventType khong quan tam: {}", eventType);
+            default -> log.debug("Bỏ qua eventType không quan tâm: {}", eventType);
         }
     }
 
@@ -67,7 +67,7 @@ public class ContractEventConsumer {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.executeWithoutResult(status -> {
             if (processedEvents.existsById(eventId)) {
-                log.info("Event {} da duoc xu ly, bo qua (idempotent)", eventId);
+                log.info("Event {} đã được xử lý, bỏ qua (idempotent)", eventId);
                 return;
             }
 
@@ -78,6 +78,15 @@ public class ContractEventConsumer {
             request.setCustomerId(requiredLong(payload, "customerId"));
             request.setPrice(new BigDecimal(requiredText(payload, "price")));
             request.setMoveInDate(LocalDate.parse(requiredText(payload, "moveInDate")));
+            String deposit = text(payload, "depositAmount");
+            if (deposit != null && !deposit.isBlank()) {
+                request.setDepositAmount(new BigDecimal(deposit));
+            }
+            String minTermMonths = text(payload, "minTermMonths");
+            if (minTermMonths != null && !minTermMonths.isBlank()) {
+                request.setMinTermMonths(Integer.valueOf(minTermMonths));
+            }
+            applySnapshots(payload, request);
 
             contractService.createDraft(request);
 
@@ -89,7 +98,7 @@ public class ContractEventConsumer {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.executeWithoutResult(status -> {
             if (processedEvents.existsById(eventId)) {
-                log.info("Event {} da duoc xu ly, bo qua (idempotent)", eventId);
+                log.info("Event {} đã được xử lý, bỏ qua (idempotent)", eventId);
                 return;
             }
 
@@ -99,7 +108,11 @@ public class ContractEventConsumer {
                     requiredLong(payload, "roomId"),
                     requiredLong(payload, "buildingId"),
                     requiredLong(payload, "ownerCustomerId"),
-                    requiredLong(payload, "applicantCustomerId")
+                    requiredLong(payload, "applicantCustomerId"),
+                    text(payload, "fullName"),
+                    text(payload, "phone"),
+                    text(payload, "cccdNumber"),
+                    date(payload, "moveInDate")
             );
 
             contractService.processRoommateAccepted(event);
@@ -113,10 +126,59 @@ public class ContractEventConsumer {
         return value.isMissingNode() || value.isNull() ? null : value.asText();
     }
 
+    /** Contract terms and identity snapshots are optional so events published before Phase C stay valid. */
+    private static void applySnapshots(JsonNode payload, CreateDraftContractRequest request) {
+        request.setRoomNumber(text(payload, "roomNumber"));
+        request.setBuildingName(text(payload, "buildingName"));
+        request.setRoomAddress(text(payload, "roomAddress"));
+        request.setElectricityPrice(decimal(payload, "electricityPrice"));
+        request.setWaterPrice(decimal(payload, "waterPrice"));
+        request.setWaterUnit(text(payload, "waterUnit"));
+        request.setPaymentMethod(text(payload, "paymentMethod"));
+        request.setPaymentDueDay(integer(payload, "paymentDueDay"));
+        request.setAvailableFrom(date(payload, "availableFrom"));
+
+        request.setLessorName(text(payload, "lessorName"));
+        request.setLessorDateOfBirth(date(payload, "lessorDateOfBirth"));
+        request.setLessorIdNumber(text(payload, "lessorIdNumber"));
+        request.setLessorIdIssueDate(date(payload, "lessorIdIssueDate"));
+        request.setLessorIdIssuePlace(text(payload, "lessorIdIssuePlace"));
+        request.setLessorPhone(text(payload, "lessorPhone"));
+        request.setLessorAddress(text(payload, "lessorAddress"));
+
+        request.setTenantFullName(text(payload, "tenantFullName"));
+        request.setTenantDateOfBirth(date(payload, "tenantDateOfBirth"));
+        request.setTenantGender(text(payload, "tenantGender"));
+        request.setTenantPhone(text(payload, "tenantPhone"));
+        request.setTenantEmail(text(payload, "tenantEmail"));
+        request.setTenantPermanentAddress(text(payload, "tenantPermanentAddress"));
+        request.setTenantOccupation(text(payload, "tenantOccupation"));
+        request.setTenantCccdNumber(text(payload, "tenantCccdNumber"));
+        request.setTenantCccdIssueDate(date(payload, "tenantCccdIssueDate"));
+        request.setTenantCccdIssuePlace(text(payload, "tenantCccdIssuePlace"));
+        request.setTenantCccdFrontKey(text(payload, "tenantCccdFrontKey"));
+        request.setTenantCccdBackKey(text(payload, "tenantCccdBackKey"));
+    }
+
+    private static BigDecimal decimal(JsonNode payload, String field) {
+        String value = text(payload, field);
+        return value == null || value.isBlank() ? null : new BigDecimal(value);
+    }
+
+    private static Integer integer(JsonNode payload, String field) {
+        String value = text(payload, field);
+        return value == null || value.isBlank() ? null : Integer.valueOf(value);
+    }
+
+    private static LocalDate date(JsonNode payload, String field) {
+        String value = text(payload, field);
+        return value == null || value.isBlank() ? null : LocalDate.parse(value);
+    }
+
     private static String requiredText(JsonNode payload, String field) {
         String value = text(payload, field);
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Payload thieu " + field);
+            throw new IllegalArgumentException("Payload thiếu " + field);
         }
         return value;
     }

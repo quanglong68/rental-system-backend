@@ -18,4 +18,5 @@ public class MoveOutApprovedPayload {
     private Long buildingId;
     private LocalDate expectedMoveOutDate;
     private List<Long> tenantIds;
+    private Long sourceRevision;
 }

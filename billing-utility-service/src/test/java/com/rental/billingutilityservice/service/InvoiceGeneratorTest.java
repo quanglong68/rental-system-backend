@@ -1,6 +1,7 @@
 package com.rental.billingutilityservice.service;
 
 import com.rental.billingutilityservice.client.BillingDataResponse;
+import com.rental.billingutilityservice.client.PropertyClient;
 import com.rental.billingutilityservice.dto.response.GenerateInvoiceResult;
 import com.rental.billingutilityservice.entity.Invoice;
 import com.rental.billingutilityservice.entity.InvoiceItem;
@@ -44,7 +45,11 @@ class InvoiceGeneratorTest {
     @Mock
     private InvoiceItemRepository items;
     @Mock
+    private RoomInvoiceService roomInvoices;
+    @Mock
     private BillingEventPublisher events;
+    @Mock
+    private PropertyClient propertyClient;
 
     @InjectMocks
     private InvoiceGenerator generator;
@@ -76,17 +81,24 @@ class InvoiceGeneratorTest {
         when(meters.findByRoomIdAndIsActiveTrue(10L)).thenReturn(List.of());
         when(contractServices.findByContractId(1L)).thenReturn(List.of());
         when(invoices.save(any())).thenAnswer(call -> call.getArgument(0));
+        com.rental.billingutilityservice.entity.RoomInvoice master =
+                new com.rental.billingutilityservice.entity.RoomInvoice();
+        master.setId(99L);
+        when(roomInvoices.getOrCreate(eq(10L), eq(7L), eq(9), eq(2026), any())).thenReturn(master);
 
         int count = generator.generateForContract(contract(), 9, 2026, new ArrayList<>());
 
         assertEquals(2, count);
         ArgumentCaptor<Invoice> captor = ArgumentCaptor.forClass(Invoice.class);
         verify(invoices, org.mockito.Mockito.times(2)).save(captor.capture());
-        // save goi 2 lan (moi nguoi 1 hoa don): A 2.5tr, B 500k.
+        // save goi 2 lan (moi nguoi 1 hoa don): A 2.5tr, B 500k, cung tro ve hoa don tong.
         assertEquals(2, captor.getAllValues().size());
         assertEquals(new BigDecimal("2500000"), captor.getAllValues().get(0).getTotalAmount());
         assertEquals(new BigDecimal("500000"), captor.getAllValues().get(1).getTotalAmount());
-        verify(events, never()).publishMeterReadingMissing(anyLong(), anyLong(), anyInt(), anyInt(), any());
+        assertEquals(99L, captor.getAllValues().get(0).getRoomInvoiceId());
+        assertEquals(99L, captor.getAllValues().get(1).getRoomInvoiceId());
+        verify(roomInvoices).recompute(master);
+        verify(events, never()).publishMeterReadingMissing(anyLong(), anyLong(), any(), anyInt(), anyInt(), any());
     }
 
     @Test
@@ -106,7 +118,7 @@ class InvoiceGeneratorTest {
         assertEquals(0, count);
         assertEquals(1, skipped.size());
         assertEquals(10L, skipped.get(0).getRoomId());
-        verify(events).publishMeterReadingMissing(anyLong(), anyLong(), anyInt(), anyInt(), any());
+        verify(events).publishMeterReadingMissing(anyLong(), anyLong(), any(), anyInt(), anyInt(), any());
         verify(invoices, never()).save(any(Invoice.class));
         verify(items, never()).save(any(InvoiceItem.class));
     }

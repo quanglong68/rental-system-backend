@@ -11,12 +11,12 @@ public final class CurrentUser {
     public static HeaderUser require() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof HeaderUser user)) {
-            throw new BusinessException(ErrorCode.UNAUTHENTICATED, "Chua dang nhap");
+            throw new BusinessException(ErrorCode.UNAUTHENTICATED, "Chưa đăng nhập");
         }
         return user;
     }
     public static Long id() {
         try { return Long.valueOf(require().getUserId()); }
-        catch (NumberFormatException ex) { throw new BusinessException(ErrorCode.UNAUTHENTICATED, "User ID khong hop le"); }
+        catch (NumberFormatException ex) { throw new BusinessException(ErrorCode.UNAUTHENTICATED, "User ID không hợp lệ"); }
     }
 }

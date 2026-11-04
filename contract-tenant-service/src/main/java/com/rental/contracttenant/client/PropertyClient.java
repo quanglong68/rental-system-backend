@@ -1,6 +1,7 @@
 package com.rental.contracttenant.client;
 
 import com.rental.common.feign.FeignDefaultConfig;
+import java.time.LocalDate;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,10 @@ public interface PropertyClient {
     RoomInfo getRoom(@PathVariable("roomId") Long roomId);
 
     /** The subset of the documented room payload this service consumes. */
-    record RoomInfo(Long id, Long buildingId, Integer maxCapacity) {
+    record RoomInfo(Long id, Long buildingId, Integer maxCapacity, String roomNumber,
+                    String buildingName, String buildingAddress,
+                    String lessorName, LocalDate lessorDateOfBirth, String lessorIdNumber,
+                    LocalDate lessorIdIssueDate, String lessorIdIssuePlace,
+                    String lessorPhone, String lessorAddress) {
     }
 }

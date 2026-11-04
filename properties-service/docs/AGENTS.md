@@ -5,10 +5,10 @@ Before making any changes, read `ARCHITECTURE.md` and follow its architectural g
 ## Project identity
 
 - Project: `properties-service`
-- Base package: `fptu.semester8.mss301.propertiesservice`
+- Base package: `com.rental.propertiesservice`
 - Java: 21
 - Framework: Spring Boot
-- Build: Gradle Kotlin DSL
+- Build: Maven (module of the `rental-system-backend` reactor, parent pom at the backend root)
 - Database: PostgreSQL
 - Migration tool: Flyway
 
@@ -22,7 +22,7 @@ Before making any changes, read `ARCHITECTURE.md` and follow its architectural g
 6. Do not create unnecessary abstractions, speculative packages, or empty classes.
 7. Add `.gitkeep` only when an intentionally empty directory needs to be tracked.
 8. Add or update tests for meaningful behavior changes.
-9. Run relevant Gradle build and test commands when possible.
+9. Run the relevant Maven build and test commands when possible (`mvn -pl properties-service -am test` from the backend root).
 10. Report actual changes and test results honestly.
 
 ## Before implementing a task

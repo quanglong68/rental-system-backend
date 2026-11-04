@@ -35,9 +35,11 @@ public class MaintenanceScheduleController {
     }
 
     @GetMapping("/api/v1/maintenance-schedules")
-    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','ADMIN')")
-    public List<MaintenanceSchedule> findSchedules(@RequestParam(required = false) Long buildingId) {
-        return maintenanceScheduleService.findSchedules(buildingId);
+    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','SALE','ADMIN')")
+    public List<MaintenanceSchedule> findSchedules(
+            @RequestParam(required = false) Long buildingId,
+            @RequestParam(required = false) Long staffId) {
+        return maintenanceScheduleService.findSchedules(buildingId, staffId);
     }
 
     @PutMapping("/api/v1/maintenance-schedules/{id}")

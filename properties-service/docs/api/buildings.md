@@ -4,13 +4,13 @@ Base path: `/api/v1/buildings`
 
 | Method | Path | Query/body | Data payload |
 |---|---|---|---|
-| GET | `/api/v1/buildings` | `page`, `size`, `wardId`, `sort` | `Page<BuildingResponse>` |
-| GET | `/api/v1/buildings/search` | `keyword`, `provinceId`, `wardId`, `page`, `size`, `sort` | `Page<BuildingSearchResponse>` |
-| GET | `/api/v1/buildings/nearby` | `latitude`, `longitude`, `radiusMeters`, `page`, `size` | `Page<BuildingSearchResponse>` |
+| GET | `/api/v1/buildings` | `page`, `size`, `wardId`, `sort` | `PageResponse<BuildingResponse>` |
+| GET | `/api/v1/buildings/search` | `keyword`, `provinceId`, `wardId`, `page`, `size`, `sort` | `PageResponse<BuildingSearchResponse>` |
+| GET | `/api/v1/buildings/nearby` | `latitude`, `longitude`, `radiusMeters`, `page`, `size` | `PageResponse<BuildingSearchResponse>` |
 | POST | `/api/v1/buildings` | `BuildingRequest` | `BuildingResponse`; trạng thái luôn khởi tạo `ACTIVE`; HTTP 201 + `Location` |
 | GET | `/api/v1/buildings/{buildingId}` | — | `BuildingResponse` |
 | PUT | `/api/v1/buildings/{buildingId}` | `BuildingRequest` | `BuildingResponse` |
-| DELETE | `/api/v1/buildings/{buildingId}` | — | `null` |
+| DELETE | `/api/v1/buildings/{buildingId}` | — | `204 No Content` |
 
 Mặc định `page=0`, `size=20`; yêu cầu `page >= 0`, `1 <= size <= 100`. List/search mặc định `sort=createdAt,desc`; thuộc tính hỗ trợ `createdAt`, `updatedAt`, `name`, hướng `asc`/`desc`. Search nhận keyword và lọc province/ward tùy chọn.
 

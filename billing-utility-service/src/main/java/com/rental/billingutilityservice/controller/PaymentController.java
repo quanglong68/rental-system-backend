@@ -28,6 +28,14 @@ public class PaymentController {
         return service.create(request);
     }
 
+    @PostMapping("/simulate")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()")
+    public PaymentResponse simulate(@Valid @RequestBody CreatePaymentRequest request,
+            @AuthenticationPrincipal HeaderUser principal) {
+        return service.simulateCustomerPayment(request, principal);
+    }
+
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public List<PaymentResponse> list(@RequestParam Long invoiceId,

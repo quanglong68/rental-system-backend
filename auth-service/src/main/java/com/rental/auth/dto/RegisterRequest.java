@@ -16,14 +16,14 @@ import lombok.Setter;
 @NoArgsConstructor
 public class RegisterRequest {
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String username;
 
-    @NotBlank(message = "Khong duoc de trong")
-    @Size(min = 8, message = "Mat khau toi thieu 8 ky tu")
+    @NotBlank(message = "Không được để trống")
+    @Size(min = 8, message = "Mật khẩu tối thiểu 8 ký tự")
     private String password;
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String fullName;
 
     private String email;

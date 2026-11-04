@@ -17,4 +17,5 @@ public class ContractRenewedPayload {
     private Long buildingId;
     private LocalDate newEndDate;
     private List<Long> tenantIds;
+    private Long sourceRevision;
 }

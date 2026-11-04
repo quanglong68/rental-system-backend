@@ -12,9 +12,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 /**
- * Chi so chot tung thang (docs muc 9.5): prevIndex tu thang truoc (hoac initialIndex),
+ * Chỉ số chốt từng tháng (docs mục 9.5): prevIndex từ tháng trước (hoặc initialIndex),
  * consumption = currentIndex - prevIndex (>= 0), amount = consumption x unit_price hien hanh.
- * Moi dong ho moi thang mot dong; sua duoc cho den khi thang do da sinh hoa don.
+ * Mỗi đồng hồ mỗi tháng một dòng; sửa được cho đến khi tháng đó đã sinh hóa đơn.
  */
 @Getter
 @Setter

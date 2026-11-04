@@ -50,7 +50,7 @@ public class MaintenanceReport {
     private String rejectReason;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private OffsetDateTime createxdAt;
+    private OffsetDateTime createdAt;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "report_image", joinColumns = @JoinColumn(name = "report_id"))

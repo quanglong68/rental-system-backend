@@ -13,6 +13,7 @@ import java.util.List;
 @Builder
 public class InvoiceResponse {
     Long id;
+    Long roomInvoiceId;
     Long contractId;
     Long roomId;
     Long buildingId;

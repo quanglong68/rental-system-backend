@@ -92,35 +92,29 @@ Trả về những người **đang thực sự ở** phòng tại thời điể
 | `page` | query, int | `0` | ≥ 0 |
 | `size` | query, int | `20` | 1–100 |
 
-**Response**: `ApiResponse<Page<RoomOccupantResponse>>`
+**Response**: `PageResponse<RoomOccupantResponse>`
 
 ```json
 {
-  "code": 200,
-  "message": "Success",
-  "data": {
-    "content": [
-      {
-        "id": "898785309339156480",
-        "contractTenantId": "898785309339156481",
-        "roomId": "898785309339156482",
-        "contractId": "898785309339156483",
-        "userId": "898785309339156484",
-        "moveInDate": "2025-01-15",
-        "moveOutDate": null,
-        "status": "ACTIVE",
-        "sourceRevision": 3,
-        "createdAt": "2025-01-15T07:00:00Z",
-        "updatedAt": "2025-01-15T07:00:00Z"
-      }
-    ],
-    "totalElements": 1,
-    "totalPages": 1,
-    "size": 20,
-    "number": 0,
-    "first": true,
-    "last": true
-  }
+  "content": [
+    {
+      "id": "898785309339156480",
+      "contractTenantId": "898785309339156481",
+      "roomId": "898785309339156482",
+      "contractId": "898785309339156483",
+      "userId": "898785309339156484",
+      "moveInDate": "2025-01-15",
+      "moveOutDate": null,
+      "status": "ACTIVE",
+      "sourceRevision": 3,
+      "createdAt": "2025-01-15T07:00:00Z",
+      "updatedAt": "2025-01-15T07:00:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
 }
 ```
 
@@ -142,7 +136,7 @@ Trả về **tất cả** bản ghi occupant của phòng (bao gồm cả ACTIVE
 | `page` | query, int | `0` | ≥ 0 |
 | `size` | query, int | `20` | 1–100 |
 
-**Response**: `ApiResponse<Page<RoomOccupantResponse>>` — cấu trúc giống endpoint 3.1.
+**Response**: `PageResponse<RoomOccupantResponse>` — cấu trúc giống endpoint 3.1.
 
 ---
 
@@ -157,25 +151,21 @@ GET /api/v1/rooms/{roomId}/occupants/{occupantId}
 | `roomId` | path, số dương | Bắt buộc |
 | `occupantId` | path, số dương | Bắt buộc |
 
-**Response**: `ApiResponse<RoomOccupantResponse>` — một object duy nhất (không phân trang).
+**Response**: `RoomOccupantResponse` — một object duy nhất (không phân trang).
 
 ```json
 {
-  "code": 200,
-  "message": "Success",
-  "data": {
-    "id": "898785309339156480",
-    "contractTenantId": "898785309339156481",
-    "roomId": "898785309339156482",
-    "contractId": "898785309339156483",
-    "userId": "898785309339156484",
-    "moveInDate": "2025-01-15",
-    "moveOutDate": "2025-06-30",
-    "status": "ENDED",
-    "sourceRevision": 5,
-    "createdAt": "2025-01-15T07:00:00Z",
-    "updatedAt": "2025-07-01T02:00:00Z"
-  }
+  "id": "898785309339156480",
+  "contractTenantId": "898785309339156481",
+  "roomId": "898785309339156482",
+  "contractId": "898785309339156483",
+  "userId": "898785309339156484",
+  "moveInDate": "2025-01-15",
+  "moveOutDate": "2025-06-30",
+  "status": "ENDED",
+  "sourceRevision": 5,
+  "createdAt": "2025-01-15T07:00:00Z",
+  "updatedAt": "2025-07-01T02:00:00Z"
 }
 ```
 
@@ -194,21 +184,17 @@ GET /api/v1/rooms/{roomId}/occupancy-summary?date=2025-06-15
 | `roomId` | path, số dương | — | Bắt buộc |
 | `date` | query, `YYYY-MM-DD` | Ngày hiện tại (server) | Tùy chọn |
 
-**Response**: `ApiResponse<OccupancySummaryResponse>`
+**Response**: `OccupancySummaryResponse`
 
 ```json
 {
-  "code": 200,
-  "message": "Success",
-  "data": {
-    "roomId": "898785309339156482",
-    "maxCapacity": 4,
-    "currentOccupants": 3,
-    "availableCapacity": 1,
-    "overCapacity": false,
-    "roomStatus": "OCCUPIED",
-    "businessDate": "2025-06-15"
-  }
+  "roomId": "898785309339156482",
+  "maxCapacity": 4,
+  "currentOccupants": 3,
+  "availableCapacity": 1,
+  "overCapacity": false,
+  "roomStatus": "OCCUPIED",
+  "businessDate": "2025-06-15"
 }
 ```
 
@@ -240,7 +226,7 @@ Trả về tất cả bản ghi occupant của một user, bao gồm ACTIVE và 
 | `page` | query, int | `0` | ≥ 0 |
 | `size` | query, int | `20` | 1–100 |
 
-**Response**: `ApiResponse<Page<RoomOccupantResponse>>` — sắp xếp: `move_in_date DESC`, `room_occupant_id DESC`.
+**Response**: `PageResponse<RoomOccupantResponse>` — sắp xếp: `move_in_date DESC`, `room_occupant_id DESC`.
 
 ---
 
@@ -270,7 +256,7 @@ Trả về tất cả bản ghi occupant của một user, bao gồm ACTIVE và 
 
 ```javascript
 // ID trả về dạng string, lưu nguyên string — không parseInt()
-const occupant = response.data.content[0];
+const occupant = response.content[0];
 const id = occupant.id;        // "898785309339156480" — giữ nguyên string
 const userId = occupant.userId; // "898785309339156484" — giữ nguyên string
 
@@ -292,7 +278,7 @@ const statusMap = {
 ```javascript
 // Gọi summary endpoint
 const summary = await fetch(`/api/v1/rooms/${roomId}/occupancy-summary`);
-const { maxCapacity, currentOccupants, availableCapacity, overCapacity } = summary.data;
+const { maxCapacity, currentOccupants, availableCapacity, overCapacity } = summary;
 
 // Tính phần trăm
 const percent = Math.min((currentOccupants / maxCapacity) * 100, 100);
@@ -310,12 +296,12 @@ async function fetchOccupants(roomId, page = 0, size = 20) {
   const res = await fetch(
     `/api/v1/rooms/${roomId}/occupants?page=${page}&size=${size}`
   );
-  const { data } = await res.json();
-  // data.content      — mảng occupant
+  const data = await res.json();
+  // data.content       — mảng occupant
   // data.totalElements — tổng số bản ghi
   // data.totalPages    — tổng số trang
-  // data.number        — trang hiện tại (0-indexed)
-  // data.first / data.last — cờ trang đầu/cuối
+  // data.page          — trang hiện tại (0-indexed)
+  // data.size          — kích thước trang
   return data;
 }
 ```
@@ -335,7 +321,7 @@ sequenceDiagram
 
     FE->>GW: GET /api/v1/rooms/{roomId}/occupants?page=0&size=20
     GW->>PS: Forward request
-    PS-->>GW: Page<RoomOccupantResponse>
+    PS-->>GW: PageResponse<RoomOccupantResponse>
     GW-->>FE: { content: [...], totalElements, ... }
 
     Note over FE: Render occupancy bar + occupant table

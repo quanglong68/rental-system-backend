@@ -190,14 +190,19 @@ class ContractLifecycleControllerWebTest {
     }
 
     private static ContractDetailResponse detailResponse() {
-        return new ContractDetailResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.ACTIVE,
+        return new ContractDetailResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.ACTIVE, null, null,
                 LocalDate.of(2026, 12, 1), LocalDate.of(2027, 11, 30), new BigDecimal("4000000"),
-                new BigDecimal("1500000"), null, null, List.of());
+                new BigDecimal("1500000"), null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                List.of(), List.of(), null);
     }
 
     private static ContractResponse response() {
-        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.DRAFT, LocalDate.of(2026, 12, 1),
-                LocalDate.of(2027, 11, 30), new BigDecimal("4000000"), new BigDecimal("1500000"), null, null);
+        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.DRAFT, null, null,
+                LocalDate.of(2026, 12, 1), LocalDate.of(2027, 11, 30), new BigDecimal("4000000"),
+                new BigDecimal("1500000"), null, null, null, null);
     }
 
     // ---- sign ----
@@ -244,7 +249,7 @@ class ContractLifecycleControllerWebTest {
     @Test
     void sign_onIncompleteContract_returns422ContractIncomplete() throws Exception {
         when(contractService.sign(9L)).thenThrow(new BusinessException(
-                "CONTRACT_INCOMPLETE", "Hop dong thieu ngay ket thuc", HttpStatus.UNPROCESSABLE_ENTITY));
+                "CONTRACT_INCOMPLETE", "Hợp đồng thiếu ngày kết thúc", HttpStatus.UNPROCESSABLE_ENTITY));
 
         mvc.perform(post("/api/v1/contracts/9/sign")
                         .header("X-User-Id", "501").header("X-User-Type", "STAFF")
@@ -295,8 +300,9 @@ class ContractLifecycleControllerWebTest {
     }
 
     private static ContractResponse activeResponse() {
-        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.ACTIVE, LocalDate.of(2026, 12, 1),
-                LocalDate.of(2027, 11, 30), new BigDecimal("4000000"), new BigDecimal("1500000"), null, null);
+        return new ContractResponse(9L, 41L, 12L, 3L, 77L, ContractStatus.ACTIVE, null, null,
+                LocalDate.of(2026, 12, 1), LocalDate.of(2027, 11, 30), new BigDecimal("4000000"),
+                new BigDecimal("1500000"), null, null, null, null);
     }
 
     // ---- Task 5B: add tenant ----
@@ -427,7 +433,8 @@ class ContractLifecycleControllerWebTest {
     }
 
     private static ContractTenantResponse tenantResponse() {
-        return new ContractTenantResponse(45L, 9L, 88L, LocalDate.of(2026, 12, 1), null, false, null);
+        return new ContractTenantResponse(45L, 9L, 88L, null, null, null, null,
+                LocalDate.of(2026, 12, 1), null, false, null);
     }
 
     // ---- Task 5A: change representative ----
@@ -604,7 +611,7 @@ class ContractLifecycleControllerWebTest {
 
     @Test
     void quanLyLeaveTenant_assignedBuilding_returns200() throws Exception {
-        ContractTenantResponse resp = new ContractTenantResponse(32L, 9L, 88L,
+        ContractTenantResponse resp = new ContractTenantResponse(32L, 9L, 88L, null, null, null, null,
                 LocalDate.of(2026, 11, 10), LocalDate.of(2026, 12, 1), false, null);
         when(contractService.leaveTenant(eq(9L), eq(32L), any())).thenReturn(resp);
 
@@ -621,7 +628,7 @@ class ContractLifecycleControllerWebTest {
 
     @Test
     void adminLeaveTenant_returns200() throws Exception {
-        ContractTenantResponse resp = new ContractTenantResponse(32L, 9L, 88L,
+        ContractTenantResponse resp = new ContractTenantResponse(32L, 9L, 88L, null, null, null, null,
                 LocalDate.of(2026, 11, 10), LocalDate.of(2026, 12, 1), false, null);
         when(contractService.leaveTenant(eq(9L), eq(32L), any())).thenReturn(resp);
 
@@ -794,7 +801,7 @@ class ContractLifecycleControllerWebTest {
     void createMoveOutRequest_customer_returns201() throws Exception {
         com.rental.contracttenant.dto.MoveOutRequestResponse resp = new com.rental.contracttenant.dto.MoveOutRequestResponse(
                 1L, 9L, 600L, LocalDate.now(), LocalDate.now().plusDays(10), "Chuyen cong tac",
-                com.rental.contracttenant.entity.MoveOutStatus.PENDING, null
+                com.rental.contracttenant.entity.MoveOutStatus.PENDING, false, null, null
         );
         when(contractService.createMoveOutRequest(any())).thenReturn(resp);
 
@@ -813,7 +820,7 @@ class ContractLifecycleControllerWebTest {
     void createMoveOutRequest_withoutReason_returns201() throws Exception {
         com.rental.contracttenant.dto.MoveOutRequestResponse resp = new com.rental.contracttenant.dto.MoveOutRequestResponse(
                 1L, 9L, 600L, LocalDate.now(), LocalDate.now().plusDays(10), "",
-                com.rental.contracttenant.entity.MoveOutStatus.PENDING, null
+                com.rental.contracttenant.entity.MoveOutStatus.PENDING, false, null, null
         );
         when(contractService.createMoveOutRequest(any())).thenReturn(resp);
 
@@ -830,7 +837,7 @@ class ContractLifecycleControllerWebTest {
     void approveMoveOutRequest_quanLy_returns200() throws Exception {
         com.rental.contracttenant.dto.MoveOutRequestResponse resp = new com.rental.contracttenant.dto.MoveOutRequestResponse(
                 1L, 9L, 600L, LocalDate.now(), LocalDate.now().plusDays(10), "Chuyen cong tac",
-                com.rental.contracttenant.entity.MoveOutStatus.APPROVED, null
+                com.rental.contracttenant.entity.MoveOutStatus.APPROVED, false, null, null
         );
         when(contractService.approveMoveOutRequest(1L)).thenReturn(resp);
 
@@ -845,7 +852,7 @@ class ContractLifecycleControllerWebTest {
     void rejectMoveOutRequest_quanLy_returns200() throws Exception {
         com.rental.contracttenant.dto.MoveOutRequestResponse resp = new com.rental.contracttenant.dto.MoveOutRequestResponse(
                 1L, 9L, 600L, LocalDate.now(), LocalDate.now().plusDays(10), "Chuyen cong tac",
-                com.rental.contracttenant.entity.MoveOutStatus.REJECTED, null
+                com.rental.contracttenant.entity.MoveOutStatus.REJECTED, false, null, null
         );
         when(contractService.rejectMoveOutRequest(eq(1L), any())).thenReturn(resp);
 

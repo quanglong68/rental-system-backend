@@ -1,0 +1,46 @@
+package com.rental.listingbooking.dto;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+public record RentalRequestResponse(
+    Long id,
+    Long customerId,
+    Long listingId,
+    Long roomId,
+    Long buildingId,
+    String status,
+    LocalDate moveInDate,
+    String note,
+    String rejectReason,
+    String fullName,
+    LocalDate dateOfBirth,
+    String gender,
+    String phone,
+    String email,
+    String permanentAddress,
+    String occupation,
+    String cccdNumber,
+    LocalDate cccdIssueDate,
+    String cccdIssuePlace,
+    boolean cccdFrontUploaded,
+    boolean cccdBackUploaded,
+    boolean termsAccepted,
+    BigDecimal rentAmount,
+    BigDecimal depositAmount,
+    BigDecimal electricityPrice,
+    BigDecimal waterPrice,
+    String waterUnit,
+    String paymentMethod,
+    Integer paymentDueDay,
+    Integer minTermMonths,
+    LocalDate availableFrom,
+    String lessorName,
+    String lessorPhone,
+    String lessorAddress,
+    Instant requestedAt,
+    Long verifiedBy,
+    Instant verifiedAt,
+    Instant readAt
+) {}

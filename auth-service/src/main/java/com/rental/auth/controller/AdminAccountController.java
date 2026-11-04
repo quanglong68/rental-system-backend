@@ -2,7 +2,7 @@ package com.rental.auth.controller;
 
 import com.rental.auth.dto.AccountResponse;
 import com.rental.auth.dto.CreateAccountRequest;
-import com.rental.auth.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.auth.dto.UpdateAccountRolesRequest;
 import com.rental.auth.dto.UpdateAccountStatusRequest;
 import com.rental.auth.service.AccountService;

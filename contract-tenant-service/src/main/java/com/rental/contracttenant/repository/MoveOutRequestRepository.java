@@ -32,12 +32,17 @@ public interface MoveOutRequestRepository extends JpaRepository<MoveOutRequest, 
     @Query("SELECT m FROM MoveOutRequest m, Contract c WHERE m.contractId = c.id " +
            "AND (:buildingId IS NULL OR c.buildingId = :buildingId) " +
            "AND (:allowedBuildings IS NULL OR c.buildingId IN :allowedBuildings) " +
-           "AND (:status IS NULL OR m.status = :status)")
+           "AND (:status IS NULL OR m.status = :status) " +
+           "AND (:unread = FALSE OR m.readAt IS NULL) " +
+           "ORDER BY m.createdAt DESC")
     Page<MoveOutRequest> findByFilters(
             @Param("buildingId") Long buildingId,
             @Param("allowedBuildings") Collection<Long> allowedBuildings,
             @Param("status") MoveOutStatus status,
+            @Param("unread") boolean unread,
             Pageable pageable);
 
     List<MoveOutRequest> findByContractIdAndStatus(Long contractId, MoveOutStatus status);
+
+    boolean existsByContractIdAndStatusIn(Long contractId, Collection<MoveOutStatus> statuses);
 }

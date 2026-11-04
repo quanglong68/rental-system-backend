@@ -47,7 +47,7 @@ public interface ContractTenantRepository extends JpaRepository<ContractTenant, 
      * {@code clearAutomatically} drops the stale in-memory copies of the rows this statement changed
      * behind Hibernate's back, so the caller's reload reads what the database actually holds.
      * <p>
-     * Its own transaction is required ({@code @Modifying} + bulk write).
+     * Its own transaction là bắt buộc ({@code @Modifying} + bulk write).
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update ContractTenant t set t.isRepresentative = false "

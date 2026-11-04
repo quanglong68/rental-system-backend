@@ -1,7 +1,7 @@
 package com.rental.user.controller;
 
 import com.rental.user.dto.BuildingIdsRequest;
-import com.rental.user.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.user.dto.UpdateProfileRequest;
 import com.rental.user.dto.UpdateStaffRequest;
 import com.rental.user.dto.UserProfileResponse;
@@ -35,7 +35,23 @@ public class UserProfileController {
     @GetMapping("/users/{id}") @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','SALE','ADMIN')")
     public UserProfileResponse customer(@PathVariable Long id) { return service.customer(id); }
 
-    @GetMapping("/staff") @PreAuthorize("hasAnyRole('ADMIN','QUAN_LY')")
+    /**
+     * Danh sách khách hàng có tìm kiếm, dùng cho màn tạo hợp đồng nháp và thêm người ở
+     * để nhân sự chọn khách thay vì gõ customerId thô.
+     */
+    @GetMapping("/users") @PreAuthorize("hasAnyRole('ADMIN','QUAN_LY','SALE')")
+    public PageResponse<UserProfileResponse> customers(@RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return service.listCustomers(keyword, page, size);
+    }
+
+    /**
+     * SALE được đọc danh sách nhân sự trong phạm vi tòa nhà mình phụ trách để chọn staffId khi tạo
+     * lịch hẹn xem phòng (POST /api/v1/appointments yêu cầu staffId). Service tự giới hạn theo
+     * buildingIds của người gọi, nên SALE không xem được nhân sự ngoài phạm vi phân công.
+     */
+    @GetMapping("/staff") @PreAuthorize("hasAnyRole('ADMIN','QUAN_LY','SALE')")
     public PageResponse<UserProfileResponse> staff(@RequestParam(required = false) Long buildingId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -63,7 +79,7 @@ public class UserProfileController {
     public Map<String, Object> internalStaffBuildings(@PathVariable Long staffId) {
         if (!service.existsStaff(staffId)) {
             throw new com.rental.common.error.BusinessException(com.rental.common.error.ErrorCode.NOT_FOUND,
-                    "Khong tim thay ho so nhan vien");
+                    "Không tìm thấy hồ sơ nhân viên");
         }
         return Map.of("staffId", staffId, "buildingIds", service.buildingIds(staffId));
     }

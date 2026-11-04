@@ -4,7 +4,7 @@ Base path: `/api/v1/rooms/{roomId}/prices`; `roomId` là số dương.
 
 | Method | Path | Query/body | Data payload |
 |---|---|---|---|
-| POST | `/api/v1/rooms/{roomId}/prices` | `SetRoomPriceRequest` | `RoomPriceResponse` |
+| POST | `/api/v1/rooms/{roomId}/prices` | `SetRoomPriceRequest` | `RoomPriceResponse`, HTTP 201 |
 | GET | `/api/v1/rooms/{roomId}/prices/current` | `date` tùy chọn | `RoomPriceResponse` |
 | GET | `/api/v1/rooms/{roomId}/prices/history` | — | `RoomPriceResponse[]` |
 

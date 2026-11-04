@@ -10,14 +10,14 @@ Start the main `rental-system` stack first so its shared Kafka broker is running
 docker compose up -d --build
 ```
 
-When running the application directly on Windows, use the host addresses published by Compose: PostgreSQL `localhost:5433` and Kafka `localhost:9092`. Spring Boot does not automatically load `.env` into a process launched by `gradlew`. In PowerShell, load the local file into the current process, then run the service:
+When running the application directly on Windows, use the host addresses published by Compose: PostgreSQL `localhost:5433` and Kafka `localhost:9092`. Spring Boot does not automatically load `.env` into a process launched by Maven. In PowerShell, load the local file into the current process, then run the service:
 
 ```powershell
 Get-Content .env | Where-Object { $_ -match '^\s*[A-Za-z_][A-Za-z0-9_]*\s*=' } | ForEach-Object {
     $propertyKey, $propertyValue = $_ -split '=', 2
     [Environment]::SetEnvironmentVariable($propertyKey.Trim(), $propertyValue.Trim(), 'Process')
 }
-.\gradlew.bat bootRun
+mvn -pl properties-service -am spring-boot:run
 ```
 
 When the service runs inside Compose, PostgreSQL is `postgres:5432` and the shared Kafka broker is `kafka:9092`; `docker-compose.yaml` sets the Kafka override for the container. The `rental-net` external network must already exist, which the main `rental-system` stack creates.
@@ -85,9 +85,14 @@ The Compose service receives `kafka:9092` for Kafka and `postgres:5432` for Post
 ## Build and run
 
 ```powershell
-.\gradlew.bat test
-.\gradlew.bat bootJar
-docker compose up -d --build
+# From the backend root: builds common-lib + this module and runs every test
+mvn -pl properties-service -am test
+
+# Package the runnable jar (properties-service/target/properties-service.jar)
+mvn -pl properties-service -am package -DskipTests
+
+# Build and start the container (image copies the pre-built jar)
+docker compose up -d --build properties-service
 ```
 
 Use the project's Java 21 toolchain. Flyway remains enabled, Hibernate DDL generation remains disabled, and schema changes continue to be managed by the existing migrations.

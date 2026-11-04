@@ -21,6 +21,9 @@
         <module>asset-maintenance-service</module>
         <module>contract-tenant-service</module>
         <module>billing-utility-service</module>
+        <module>listing-booking-service</module>
+        <module>chat-service</module>
+        <module>properties-service</module>
     </modules>
 
     <properties>

@@ -52,10 +52,11 @@ public class OutboxEventPublisher {
         }
     }
 
-    @Scheduled(cron = "0 0 6 * * *", zone = "UTC")
+    /** 06:00 gio VN (docs 9.6) phat MaintenanceScheduleDue cho lich den han hom nay/ngay mai. */
+    @Scheduled(cron = "0 0 6 * * *", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void createDueScheduleEvents() {
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         for (MaintenanceSchedule schedule : maintenanceScheduleRepository
                 .findByActiveTrueAndNextDateBetween(today, today.plusDays(1))) {
             createScheduleDueEvent(schedule);

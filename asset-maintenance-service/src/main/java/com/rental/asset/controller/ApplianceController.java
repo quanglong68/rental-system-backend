@@ -2,7 +2,7 @@ package com.rental.asset.controller;
 
 import com.rental.asset.dto.ApplianceCreateRequest;
 import com.rental.asset.dto.ApplianceUpdateRequest;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.dto.UploadUrlRequest;
 import com.rental.asset.dto.UploadUrlResponse;
 import com.rental.asset.dto.WarrantyUpdateRequest;
@@ -38,7 +38,7 @@ public class ApplianceController {
     }
 
     @GetMapping("/api/v1/appliances")
-    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','ADMIN')")
+    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','SALE','ADMIN')")
     public PageResponse<Appliance> findAppliances(
             @RequestParam(required = false) Long roomId,
             @RequestParam(required = false) Long buildingId,
@@ -49,7 +49,7 @@ public class ApplianceController {
     }
 
     @GetMapping("/api/v1/appliances/{id}")
-    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','ADMIN')")
+    @PreAuthorize("hasAnyRole('QUAN_LY','KY_THUAT','SALE','ADMIN')")
     public Appliance getAppliance(@PathVariable("id") Long applianceId) {
         return applianceService.getAppliance(applianceId);
     }

@@ -7,6 +7,11 @@ spring:
   application:
     name: api-gateway
   cloud:
+    # Dev local: service vua restart phai duoc nhan dien lai trong ~5s thay vi 35-60s
+    # (mac dinh cache cua LoadBalancer la 35s).
+    loadbalancer:
+      cache:
+        ttl: 5s
     gateway:
       # Route tuong minh, khong dung discovery locator (ke hoach D1).
       discovery:
@@ -42,6 +47,20 @@ spring:
           filters:
             - SetPath=/v3/api-docs
             - OpenApiGatewayServer
+        - id: chat-openapi-docs
+          uri: lb://chat-service
+          predicates:
+            - Path=/v3/api-docs/chat-service
+          filters:
+            - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
+        - id: contract-tenant-openapi-docs
+          uri: lb://contract-tenant-service
+          predicates:
+            - Path=/v3/api-docs/contract-tenant-service
+          filters:
+            - SetPath=/v3/api-docs
+            - OpenApiGatewayServer
         - id: billing-utility-openapi-docs
           uri: lb://billing-utility-service
           predicates:
@@ -72,14 +91,18 @@ spring:
           uri: lb://listing-booking-service
           predicates:
             - Path=/api/v1/listings/**,/api/v1/rental-requests/**,/api/v1/appointments/**,/api/v1/roommate-posts/**,/api/v1/roommate-applications/**
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/api/v1/chat/**
         - id: contract-tenant-service
           uri: lb://contract-tenant-service
           predicates:
-            - Path=/api/v1/contracts/**,/api/v1/move-out-requests/**
+            - Path=/api/v1/contracts/**,/api/v1/move-out-requests/**,/api/v1/renewal-requests/**
         - id: billing-utility-service
           uri: lb://billing-utility-service
           predicates:
-            - Path=/api/v1/utility-types/**,/api/v1/meters/**,/api/v1/meter-readings/**,/api/v1/services/**,/api/v1/contract-services/**,/api/v1/invoices/**,/api/v1/payments/**
+            - Path=/api/v1/utility-types/**,/api/v1/meters/**,/api/v1/meter-readings/**,/api/v1/services/**,/api/v1/contract-services/**,/api/v1/invoices/**,/api/v1/room-invoices/**,/api/v1/payments/**
         - id: asset-maintenance-service
           uri: lb://asset-maintenance-service
           predicates:
@@ -103,6 +126,8 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    # Dev local: lay lai registry moi 5s de thay instance vua restart.
+    registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
 
