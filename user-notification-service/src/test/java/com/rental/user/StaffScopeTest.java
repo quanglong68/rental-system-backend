@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.ErrorCode;
 import com.rental.common.security.HeaderUser;
-import com.rental.user.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.user.dto.UserProfileResponse;
 import com.rental.user.entity.Staff;
 import com.rental.user.entity.StaffBuilding;
@@ -90,8 +90,8 @@ class StaffScopeTest {
 
         PageResponse<UserProfileResponse> result = userProfileService.listStaff(null, 0, 20);
 
-        assertThat(result.content()).hasSize(1);
-        UserProfileResponse profile = result.content().get(0);
+        assertThat(result.getContent()).hasSize(1);
+        UserProfileResponse profile = result.getContent().get(0);
         assertThat(profile.id()).isEqualTo(201L);
         // Admin sees all buildings including 10 and 99
         assertThat(profile.buildingIds()).containsExactly(10L, 99L);
@@ -117,8 +117,8 @@ class StaffScopeTest {
 
         PageResponse<UserProfileResponse> result = userProfileService.listStaff(10L, 0, 20);
 
-        assertThat(result.content()).hasSize(1);
-        UserProfileResponse profile = result.content().get(0);
+        assertThat(result.getContent()).hasSize(1);
+        UserProfileResponse profile = result.getContent().get(0);
         assertThat(profile.id()).isEqualTo(201L);
         // Data leak prevention: Building 99 is filtered out, manager only sees building 10
         assertThat(profile.buildingIds()).containsExactly(10L);
@@ -163,8 +163,8 @@ class StaffScopeTest {
 
         PageResponse<UserProfileResponse> result = userProfileService.listStaff(null, 0, 20);
 
-        assertThat(result.content()).hasSize(1);
-        UserProfileResponse profile = result.content().get(0);
+        assertThat(result.getContent()).hasSize(1);
+        UserProfileResponse profile = result.getContent().get(0);
         assertThat(profile.buildingIds()).containsExactly(10L);
         // Verify findStaff(null, ...) was NOT called (which would fetch all staff)
         verify(staffRepository, never()).findStaff(eq(null), any());
@@ -179,7 +179,7 @@ class StaffScopeTest {
 
         PageResponse<UserProfileResponse> result = userProfileService.listStaff(null, 0, 20);
 
-        assertThat(result.content()).isEmpty();
+        assertThat(result.getContent()).isEmpty();
         verify(staffRepository, never()).findStaff(any(), any());
         verify(staffRepository, never()).findStaffInBuildings(any(), any());
     }

@@ -17,10 +17,12 @@ public class BillingDataResponse {
     private Long contractId;
     private Long roomId;
     private Long buildingId;
+    private String roomNumber;
     private BigDecimal rentAmount;
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private Integer paymentDueDay;
     private List<TenantStay> tenants;
 
     @Data

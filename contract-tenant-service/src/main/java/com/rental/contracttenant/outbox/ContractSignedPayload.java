@@ -25,20 +25,24 @@ public class ContractSignedPayload {
     private Long contractId;
     private Long roomId;
     private Long buildingId;
+    private Long rentalRequestId;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal rentAmount;
     private List<Long> tenantIds;
+    private Long sourceRevision;
 
     static ContractSignedPayload of(Contract contract, List<Long> tenantIds) {
         ContractSignedPayload payload = new ContractSignedPayload();
         payload.setContractId(contract.getId());
         payload.setRoomId(contract.getRoomId());
         payload.setBuildingId(contract.getBuildingId());
+        payload.setRentalRequestId(contract.getRentalRequestId());
         payload.setStartDate(contract.getStartDate());
         payload.setEndDate(contract.getEndDate());
         payload.setRentAmount(contract.getRentAmount());
         payload.setTenantIds(tenantIds);
+        payload.setSourceRevision(contract.getRevision());
         return payload;
     }
 }

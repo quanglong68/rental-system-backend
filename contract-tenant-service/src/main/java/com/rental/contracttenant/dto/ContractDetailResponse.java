@@ -3,6 +3,7 @@ package com.rental.contracttenant.dto;
 import com.rental.contracttenant.entity.Contract;
 import com.rental.contracttenant.entity.ContractStatus;
 import com.rental.contracttenant.entity.ContractTenant;
+import com.rental.contracttenant.entity.SignatureStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -18,17 +19,55 @@ public class ContractDetailResponse {
     Long buildingId;
     Long customerId;
     ContractStatus status;
+    SignatureStatus signatureStatus;
+    Instant signatureDeadline;
     LocalDate startDate;
     LocalDate endDate;
     BigDecimal rentAmount;
     BigDecimal depositAmount;
     String terminationReason;
     Instant createdAt;
-    List<ContractTenantResponse> tenants;
+    Long renewedFromContractId;
+    Long renewalRequestId;
 
-    public static ContractDetailResponse from(Contract contract, List<ContractTenant> tenants) {
-        List<ContractTenantResponse> tenantResponses = tenants == null ? List.of() :
-                tenants.stream().map(ContractTenantResponse::from).toList();
+    String roomNumber;
+    String buildingName;
+    String roomAddress;
+    BigDecimal electricityPrice;
+    BigDecimal waterPrice;
+    String waterUnit;
+    String paymentMethod;
+    Integer paymentDueDay;
+    Integer minTermMonths;
+    LocalDate availableFrom;
+
+    String lessorName;
+    LocalDate lessorDateOfBirth;
+    String lessorIdNumber;
+    LocalDate lessorIdIssueDate;
+    String lessorIdIssuePlace;
+    String lessorPhone;
+    String lessorAddress;
+
+    String tenantFullName;
+    LocalDate tenantDateOfBirth;
+    String tenantGender;
+    String tenantPhone;
+    String tenantEmail;
+    String tenantPermanentAddress;
+    String tenantOccupation;
+    String tenantCccdNumber;
+    LocalDate tenantCccdIssueDate;
+    String tenantCccdIssuePlace;
+
+    List<ContractTenantResponse> tenants;
+    List<ContractSignatureResponse> signatures;
+    ContractDocumentResponse latestDocument;
+
+    public static ContractDetailResponse from(Contract contract, List<ContractTenant> tenants,
+            List<ContractSignatureResponse> signatures, ContractDocumentResponse latestDocument) {
+        List<ContractTenantResponse> tenantResponses = tenants == null ? List.of()
+                : tenants.stream().map(ContractTenantResponse::from).toList();
         return new ContractDetailResponse(
                 contract.getId(),
                 contract.getRentalRequestId(),
@@ -36,13 +75,46 @@ public class ContractDetailResponse {
                 contract.getBuildingId(),
                 contract.getCustomerId(),
                 contract.getStatus(),
+                contract.getSignatureStatus(),
+                contract.getSignatureDeadline(),
                 contract.getStartDate(),
                 contract.getEndDate(),
                 contract.getRentAmount(),
                 contract.getDepositAmount(),
                 contract.getTerminationReason(),
                 contract.getCreatedAt(),
-                tenantResponses
+                contract.getRenewedFromContractId(),
+                contract.getRenewalRequestId(),
+                contract.getRoomNumber(),
+                contract.getBuildingName(),
+                contract.getRoomAddress(),
+                contract.getElectricityPrice(),
+                contract.getWaterPrice(),
+                contract.getWaterUnit(),
+                contract.getPaymentMethod(),
+                contract.getPaymentDueDay(),
+                contract.getMinTermMonths(),
+                contract.getAvailableFrom(),
+                contract.getLessorName(),
+                contract.getLessorDateOfBirth(),
+                contract.getLessorIdNumber(),
+                contract.getLessorIdIssueDate(),
+                contract.getLessorIdIssuePlace(),
+                contract.getLessorPhone(),
+                contract.getLessorAddress(),
+                contract.getTenantFullName(),
+                contract.getTenantDateOfBirth(),
+                contract.getTenantGender(),
+                contract.getTenantPhone(),
+                contract.getTenantEmail(),
+                contract.getTenantPermanentAddress(),
+                contract.getTenantOccupation(),
+                contract.getTenantCccdNumber(),
+                contract.getTenantCccdIssueDate(),
+                contract.getTenantCccdIssuePlace(),
+                tenantResponses,
+                signatures == null ? List.of() : signatures,
+                latestDocument
         );
     }
 }

@@ -19,4 +19,5 @@ public class ContractEndedPayload {
     private String status;
     private boolean nextContractExists;
     private List<Long> tenantIds;
+    private Long sourceRevision;
 }

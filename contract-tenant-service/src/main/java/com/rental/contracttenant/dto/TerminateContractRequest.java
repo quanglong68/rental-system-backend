@@ -14,9 +14,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TerminateContractRequest {
 
-    @NotNull(message = "terminationDate is required")
+    @NotNull(message = "terminationDate là bắt buộc")
     private LocalDate terminationDate;
 
-    @NotBlank(message = "reason is required")
+    @NotBlank(message = "reason là bắt buộc")
     private String reason;
 }

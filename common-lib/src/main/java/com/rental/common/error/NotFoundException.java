@@ -3,7 +3,7 @@ package com.rental.common.error;
 import org.springframework.http.HttpStatus;
 
 /**
- * Khong tim thay tai nguyen -&gt; 404 NOT_FOUND (docs Table 8).
+ * Không tìm thấy tai nguyen -&gt; 404 NOT_FOUND (docs Table 8).
  * Cho phep code rieng (vd PRICE_NOT_FOUND) nhung giu status 404.
  */
 public class NotFoundException extends BusinessException {

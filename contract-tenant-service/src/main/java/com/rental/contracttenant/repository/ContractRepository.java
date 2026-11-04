@@ -2,7 +2,9 @@ package com.rental.contracttenant.repository;
 
 import com.rental.contracttenant.entity.Contract;
 import com.rental.contracttenant.entity.ContractStatus;
+import com.rental.contracttenant.entity.SignatureStatus;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -53,16 +55,36 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
                                  @Param("allowedBuildings") Collection<Long> allowedBuildings,
                                  Pageable pageable);
 
+    /**
+     * Contracts a customer can see in "hợp đồng của tôi": either they are still an occupant, or they
+     * are the named customer of a draft that is waiting for their e-signature (occupant rows only
+     * exist after both parties sign).
+     */
     @Query("""
             select c from Contract c
-            where c.id in (
-                select t.contractId from ContractTenant t
-                where t.customerId = :customerId
-                  and t.leftAt is null
-            )
+            where c.customerId = :customerId
+               or c.id in (
+                   select t.contractId from ContractTenant t
+                   where t.customerId = :customerId
+                     and t.leftAt is null
+               )
             order by c.createdAt desc
             """)
-    List<Contract> findActiveOccupantContracts(@Param("customerId") Long customerId);
+    List<Contract> findContractsForCustomer(@Param("customerId") Long customerId);
+
+    @Query("""
+            select c from Contract c
+            where c.status = :status
+              and (c.customerId = :customerId
+                   or c.id in (
+                       select t.contractId from ContractTenant t
+                       where t.customerId = :customerId
+                         and t.leftAt is null
+                   ))
+            order by c.startDate desc
+            """)
+    List<Contract> findActiveForCustomer(@Param("customerId") Long customerId,
+                                         @Param("status") ContractStatus status);
 
     @Query("""
             select c from Contract c
@@ -94,4 +116,31 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
                                      @Param("afterDate") LocalDate afterDate);
 
     Optional<Contract> findFirstByRoomIdAndStatusOrderByStartDateDesc(Long roomId, ContractStatus status);
+
+    @Query("""
+            select c from Contract c
+            where c.signatureStatus in :statuses
+              and c.signatureDeadline is not null
+              and c.signatureDeadline < :now
+            """)
+    List<Contract> findExpiredSignatureContracts(@Param("statuses") Collection<SignatureStatus> statuses,
+                                                  @Param("now") Instant now);
+
+    @Query("""
+            select c from Contract c
+            where c.status = :status
+              and c.endDate between :from and :to
+            """)
+    List<Contract> findByStatusAndEndDateBetween(@Param("status") ContractStatus status,
+                                                 @Param("from") LocalDate from,
+                                                 @Param("to") LocalDate to);
+
+    /** Hop dong da kich hoat va co ngay chuyen vao dung ngay chi dinh (quet nhac ban giao). */
+    List<Contract> findByStatusAndStartDate(ContractStatus status, LocalDate startDate);
+
+    Optional<Contract> findFirstByRenewedFromContractIdOrderByCreatedAtDesc(Long renewedFromContractId);
+
+    Optional<Contract> findByRenewalRequestId(Long renewalRequestId);
+
+    boolean existsByRenewedFromContractId(Long renewedFromContractId);
 }

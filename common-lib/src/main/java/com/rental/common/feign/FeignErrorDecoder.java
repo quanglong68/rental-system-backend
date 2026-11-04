@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
  * (doc ErrorResponse chung trong body); 5xx -&gt; DependencyUnavailableException (503).
  * Khong nuot loi, khong tra du lieu gia.
  * Timeout / loi mang (RetryableException) khong qua day ma do GlobalExceptionHandler
- * chuyen thang sang 503.
+ * chuyen tháng sang 503.
  */
 public class FeignErrorDecoder implements ErrorDecoder {
 
@@ -34,7 +34,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
         int status = response.status();
         if (status == HttpStatus.NOT_FOUND.value()) {
-            return new NotFoundException("Du lieu yeu cau khong ton tai o service phu thuoc");
+            return new NotFoundException("Dữ liệu yêu cầu không tồn tại ở dịch vụ phụ thuộc");
         }
         if (status >= 400 && status < 500) {
             ErrorResponse upstream = readUpstreamError(response);
@@ -45,10 +45,10 @@ public class FeignErrorDecoder implements ErrorDecoder {
             }
             String reason = response.reason();
             return new BusinessException("UPSTREAM_ERROR",
-                    reason != null && !reason.isBlank() ? reason : "Yeu cau khong hop le", resolved);
+                    reason != null && !reason.isBlank() ? reason : "Yêu cầu không hợp lệ", resolved);
         }
         return new DependencyUnavailableException(
-                "Service phu thuoc khong phan hoi (" + methodKey + ": " + status + ")");
+                "Dịch vụ phụ thuộc không phản hồi (" + methodKey + ": " + status + ")");
     }
 
     private ErrorResponse readUpstreamError(Response response) {

@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 /**
  * Dong ho theo phong + loai tien ich (docs muc 9.5).
@@ -42,8 +43,12 @@ public class Meter {
     @Column(name = "initial_index", nullable = false, precision = 15, scale = 2)
     private BigDecimal initialIndex = BigDecimal.ZERO;
 
+    /** Ngay ky thuat ghi nhan chi so ban giao; null nghia la phong moi chua ban giao. */
+    @Column(name = "initial_index_date")
+    private LocalDate initialIndexDate;
+
     @Column(name = "is_active", nullable = false)
-    private boolean active = true;
+    private boolean isActive = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

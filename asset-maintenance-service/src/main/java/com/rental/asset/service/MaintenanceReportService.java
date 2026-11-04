@@ -2,27 +2,30 @@ package com.rental.asset.service;
 
 import com.rental.asset.client.ContractClient;
 import com.rental.asset.dto.ApproveReportRequest;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.dto.RejectReportRequest;
 import com.rental.asset.dto.ReportCreateRequest;
 import com.rental.asset.entity.MaintenanceRequest;
 import com.rental.asset.entity.MaintenanceReport;
+import com.rental.asset.repository.ApplianceRepository;
 import com.rental.asset.repository.MaintenanceReportRepository;
 import com.rental.asset.repository.MaintenanceRequestRepository;
 import com.rental.common.error.BusinessException;
+import com.rental.common.error.ErrorCode;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MaintenanceReportService {
 
     private final MaintenanceReportRepository maintenanceReportRepository;
     private final MaintenanceRequestRepository maintenanceRequestRepository;
+    private final ApplianceRepository applianceRepository;
     private final ContractClient contractClient;
     private final AssetAccessService assetAccessService;
     private final OutboxEventService outboxEventService;
@@ -31,12 +34,14 @@ public class MaintenanceReportService {
     public MaintenanceReportService(
             MaintenanceReportRepository maintenanceReportRepository,
             MaintenanceRequestRepository maintenanceRequestRepository,
+            ApplianceRepository applianceRepository,
             ContractClient contractClient,
             AssetAccessService assetAccessService,
             OutboxEventService outboxEventService,
             PageRequestFactory pageRequestFactory) {
         this.maintenanceReportRepository = maintenanceReportRepository;
         this.maintenanceRequestRepository = maintenanceRequestRepository;
+        this.applianceRepository = applianceRepository;
         this.contractClient = contractClient;
         this.assetAccessService = assetAccessService;
         this.outboxEventService = outboxEventService;
@@ -52,13 +57,17 @@ public class MaintenanceReportService {
             throw new BusinessException(
                     "DEPENDENCY_UNAVAILABLE", "Không thể xác minh hợp đồng thuê phòng", HttpStatus.SERVICE_UNAVAILABLE);
         }
+        if (tenantInfo == null || tenantInfo.buildingId() == null) {
+            throw new BusinessException(
+                    "DEPENDENCY_UNAVAILABLE", "Không thể xác minh hợp đồng thuê phòng", HttpStatus.SERVICE_UNAVAILABLE);
+        }
 
         if (!tenantInfo.isTenant()) {
             throw new BusinessException(
                     "NOT_A_TENANT_OF_ROOM", "Bạn không phải người thuê hiện tại của phòng này", HttpStatus.FORBIDDEN);
         }
         if (request.imageUrls() != null && request.imageUrls().size() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tối đa 5 ảnh");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Tối đa 5 ảnh");
         }
 
         MaintenanceReport report = new MaintenanceReport();
@@ -110,11 +119,11 @@ public class MaintenanceReportService {
 
     public MaintenanceReport getReport(Long reportId) {
         MaintenanceReport report = findRequired(maintenanceReportRepository.findById(reportId));
-        if (assetAccessService.currentUserHasRole("CUSTOMER")
-                && report.getCustomerId().longValue() != assetAccessService.currentUserId().longValue()) {
-            throw new org.springframework.security.access.AccessDeniedException("Không có quyền xem báo cáo này");
-        }
-        if (assetAccessService.currentUserHasRole("QUAN_LY")) {
+        if (assetAccessService.currentUserHasRole("CUSTOMER")) {
+            if (!report.getCustomerId().equals(assetAccessService.currentUserId())) {
+                throw new AccessDeniedException("Không có quyền xem báo cáo này");
+            }
+        } else {
             assetAccessService.requireBuildingAccess(report.getBuildingId());
         }
         return report;
@@ -125,7 +134,15 @@ public class MaintenanceReportService {
         MaintenanceReport report = findRequired(maintenanceReportRepository.findById(reportId));
         assetAccessService.requireBuildingAccess(report.getBuildingId());
         ensureReportIsPending(report);
-        assetAccessService.requireStaffAssignment(request.staffId(), report.getBuildingId());
+        assetAccessService.requireStaffBelongsToBuilding(request.staffId(), report.getBuildingId());
+        if (request.applianceId() != null) {
+            var appliance = applianceRepository.findById(request.applianceId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy thiết bị"));
+            if (!appliance.getRoomId().equals(report.getRoomId())) {
+                throw new BusinessException("APPLIANCE_NOT_IN_ROOM",
+                        "Thiết bị không thuộc phòng của báo cáo", HttpStatus.UNPROCESSABLE_ENTITY);
+            }
+        }
 
         MaintenanceRequest maintenanceRequest = new MaintenanceRequest();
         maintenanceRequest.setReportId(reportId);
@@ -135,6 +152,7 @@ public class MaintenanceReportService {
         maintenanceRequest.setStaffId(request.staffId());
         maintenanceRequest.setPriority(request.priority() == null ? "MEDIUM" : request.priority());
         maintenanceRequest.setScheduledAt(request.scheduledAt());
+        maintenanceRequest.setStatus("ASSIGNED");
 
         report.setStatus("APPROVED");
         maintenanceReportRepository.save(report);
@@ -175,12 +193,14 @@ public class MaintenanceReportService {
     }
 
     private void ensureReportIsPending(MaintenanceReport report) {
-        if (!report.getStatus().equals("PENDING")) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Báo cáo đã được xử lý");
+        if (!"PENDING".equals(report.getStatus())) {
+            throw new BusinessException("INVALID_STATUS", "Báo cáo đã được xử lý",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
     private MaintenanceReport findRequired(Optional<MaintenanceReport> reportOptional) {
-        return reportOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return reportOptional.orElseThrow(
+                () -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy báo cáo"));
     }
 }

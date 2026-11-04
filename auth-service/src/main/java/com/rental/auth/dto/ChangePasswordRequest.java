@@ -15,10 +15,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String oldPassword;
 
-    @NotBlank(message = "Khong duoc de trong")
-    @Size(min = 8, message = "Mat khau moi toi thieu 8 ky tu")
+    @NotBlank(message = "Không được để trống")
+    @Size(min = 8, message = "Mật khẩu mới tối thiểu 8 ký tự")
     private String newPassword;
 }

@@ -1,0 +1,20 @@
+﻿1. Long (Hạ tầng & Định danh)
+Trách nhiệm: Dựng nền móng cho cả team chạy, nắm quyền sinh sát tài khoản.
+* Ôm trọn: discovery-server (Eureka), api-gateway, và auth-service.
+* Nhiệm vụ: Code màn hình Đăng ký/Đăng nhập. Cấp và xác thực JWT. Code Gateway để chặn token và truyền header xuống cho anh em. Setup file docker-compose.yml tổng.
+2. Huy (Không gian & Giao dịch Khách hàng)
+Trách nhiệm: Nắm toàn bộ mảng "phòng ốc" từ lúc tạo phòng đến lúc đăng lên web cho khách đặt.
+* Ôm trọn: property-service và listing-booking-service.
+* Nhiệm vụ: Quản lý tọa độ tòa nhà (PostGIS), tạo phòng, set giá. Code toàn bộ luồng khách hàng lên web tìm phòng, lọc theo bán kính, gửi yêu cầu thuê (rental_request), đặt lịch xem phòng, và đăng bài tìm người ở ghép.
+3. Dương (Hợp đồng & Cư dân)
+Trách nhiệm: Nắm "trái tim" pháp lý của hệ thống. Dù chỉ ôm 1 service nhưng logic cực kỳ gắt gao.
+* Ôm trọn: contract-tenant-service.
+* Nhiệm vụ: Quản lý vòng đời hợp đồng (nháp, ký, gia hạn, chấm dứt). Chặn logic không cho thêm người nếu phòng vượt sức chứa. Chốt ngày vào/ngày ra của từng khách để Dương có data tính tiền. Xử lý đơn xin dọn đi (move_out_request).
+4. Duy (Kế toán & Dòng tiền)
+Trách nhiệm: Xử lý tiền bạc, tuyệt đối không được tính sai 1 đồng.
+* Ôm trọn: billing-utility-service.
+* Nhiệm vụ: Quản lý đồng hồ, ghi chỉ số điện nước hàng tháng. Viết Cronjob chạy lúc 2h sáng ngày chốt sổ để tự động xuất hóa đơn. Cài đặt đúng thuật toán "chia tiền điện/nước/phòng theo ngày có mặt". Cập nhật trạng thái khi khách đóng tiền.
+5. Hoàng (Vận hành & Giao tiếp)
+Trách nhiệm: Xử lý các vấn đề hậu cần và làm cái "loa" thông báo cho toàn hệ thống.
+* Ôm trọn: asset-maintenance-service và user-notification-service.
+* Nhiệm vụ: Viết API nhận ảnh báo hư hỏng lưu lên MinIO, lên lịch cho thợ đi sửa đồ. Quản lý hồ sơ (Profile) của tất cả Customer/Staff. Lắng nghe Kafka để bắn Email và Push Notification (FCM) cho khách hàng/nhân viên.

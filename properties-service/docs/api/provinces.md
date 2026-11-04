@@ -4,11 +4,11 @@ Base path: `/api/v1/provinces`
 
 | Method | Path | Data payload |
 |---|---|---|
-| POST | `/api/v1/provinces` | `ProvinceResponse` |
+| POST | `/api/v1/provinces` | `ProvinceResponse`, HTTP 201 |
 | GET | `/api/v1/provinces` | `ProvinceResponse[]` |
 | GET | `/api/v1/provinces/{id}` | `ProvinceResponse` |
 | PUT | `/api/v1/provinces/{id}` | `ProvinceResponse` |
-| DELETE | `/api/v1/provinces/{id}` | `null` |
+| DELETE | `/api/v1/provinces/{id}` | `204 No Content` |
 
 `id` là số dương. POST/PUT dùng `Content-Type: application/json`.
 

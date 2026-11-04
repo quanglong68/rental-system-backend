@@ -46,6 +46,10 @@ class ContractNightlySchedulerTest {
     @Mock
     private MoveOutRequestRepository moveOutRequestRepository;
     @Mock
+    private com.rental.contracttenant.service.ContractService contractService;
+    @Mock
+    private com.rental.contracttenant.config.ContractRenewalSettings renewalSettings;
+    @Mock
     private OutboxEventPublisher outboxEventPublisher;
     @Mock
     private PlatformTransactionManager transactionManager;
@@ -58,6 +62,8 @@ class ContractNightlySchedulerTest {
                 contractRepository,
                 contractTenantRepository,
                 moveOutRequestRepository,
+                contractService,
+                renewalSettings,
                 outboxEventPublisher,
                 transactionManager,
                 CLOCK

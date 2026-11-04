@@ -82,7 +82,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(principal,
                     null, authoritiesOf(roles));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Da xac thuc {} ({}) voi {} quyen", principal.getUserId(), principal.getUserType(),
+            log.debug("Đã xác thực {} ({}) với {} quyền", principal.getUserId(), principal.getUserType(),
                     roles.size());
             chain.doFilter(request, response);
         } finally {
@@ -123,7 +123,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     private void writeUnauthenticated(HttpServletResponse response, String correlationId) throws IOException {
         ErrorResponse body = ErrorResponse.builder().code(ErrorCode.UNAUTHENTICATED.name())
-                .message("Request khong di qua Gateway").status(HttpStatus.UNAUTHORIZED.value())
+                .message("Request không đi qua Gateway").status(HttpStatus.UNAUTHORIZED.value())
                 .traceId(correlationId).build();
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

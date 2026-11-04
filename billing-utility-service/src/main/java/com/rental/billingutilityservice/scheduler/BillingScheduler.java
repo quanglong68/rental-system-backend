@@ -14,7 +14,7 @@ import java.time.ZoneId;
 
 /**
  * Scheduler billing (docs muc 9.5): chot so 02:00 ngay closing-day (mac dinh ngay 1, gio VN)
- * cho thang truoc; quet overdue 03:00 hang ngay. Feign tu scheduler gui X-User-Type SYSTEM
+ * cho tháng truoc; quet overdue 03:00 hang ngay. Feign tu scheduler gui X-User-Type SYSTEM
  * (FeignHeaderInterceptor). Contract loi -> job dung, ghi log, staff chay lai tay.
  */
 @Component
@@ -29,7 +29,7 @@ public class BillingScheduler {
     @Value("${billing.closing-day:1}")
     private int closingDay;
 
-    /** Chot so thang truoc luc 02:00 ngay closing-day (gio VN). */
+    /** Chot so tháng truoc luc 02:00 ngay closing-day (gio VN). */
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Ho_Chi_Minh")
     public void closeMonth() {
         LocalDate today = LocalDate.now(VN);
@@ -39,11 +39,24 @@ public class BillingScheduler {
         YearMonth previous = YearMonth.from(today).minusMonths(1);
         try {
             var result = invoices.generate(previous.getMonthValue(), previous.getYear(), null);
-            log.info("Chot so {}/{}: {} hoa don, {} phong bo qua", previous.getMonthValue(), previous.getYear(),
+            log.info("Chốt sổ {}/{}: {} hóa đơn, {} phòng bỏ qua", previous.getMonthValue(), previous.getYear(),
                     result.getGeneratedCount(), result.getSkipped().size());
         } catch (Exception e) {
             log.error("Chot so {}/{} that bai, staff chay lai tay: {}", previous.getMonthValue(), previous.getYear(),
                     e.toString());
+        }
+    }
+
+    /** Nhắc nhập chỉ số 08:00 mỗi ngày trong 5 ngày đầu tháng (giờ VN). */
+    @Scheduled(cron = "0 0 8 * * *", zone = "Asia/Ho_Chi_Minh")
+    public void remindMissingReadings() {
+        try {
+            int sent = invoices.remindMissingReadings(LocalDate.now(VN));
+            if (sent > 0) {
+                log.info("Đã gửi nhắc nhập chỉ số cho {} tòa", sent);
+            }
+        } catch (Exception e) {
+            log.error("Nhắc nhập chỉ số thất bại: {}", e.toString());
         }
     }
 
@@ -53,7 +66,7 @@ public class BillingScheduler {
         try {
             int count = invoices.markOverdue(LocalDate.now(VN));
             if (count > 0) {
-                log.info("Danh dau {} hoa don OVERDUE", count);
+                log.info("Đánh dấu {} hóa đơn OVERDUE", count);
             }
         } catch (Exception e) {
             log.error("Quet overdue that bai: {}", e.toString());

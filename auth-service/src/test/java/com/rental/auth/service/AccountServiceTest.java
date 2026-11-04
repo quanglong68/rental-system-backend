@@ -98,6 +98,29 @@ class AccountServiceTest {
     }
 
     @Test
+    void register_duCaEmailVaPhone_chiCanUsernameKhopMot_thanhCong() {
+        RegisterRequest req = registerRequest("customer@mail.com", "matkhau123", "Khach Hang",
+                "customer@mail.com", "0912345678");
+        when(accounts.existsByUsername("customer@mail.com")).thenReturn(false);
+        when(passwordEncoder.encode(any())).thenReturn("HASH");
+        when(accounts.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(roles.findByCode("CUSTOMER")).thenReturn(Optional.of(role(5, "CUSTOMER")));
+
+        RegisterResponse res = service.register(req);
+
+        assertThat(res.getUsername()).isEqualTo("customer@mail.com");
+    }
+
+    @Test
+    void register_usernameKhongKhopCaEmailLanPhone_400() {
+        RegisterRequest req = registerRequest("khac@mail.com", "matkhau123", "Sai",
+                "customer@mail.com", "0912345678");
+
+        assertThatThrownBy(() -> service.register(req)).isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("VALIDATION_ERROR"));
+    }
+
+    @Test
     void register_chuanHoaUsername_lowercase() {
         RegisterRequest req = registerRequest("  ADMIN@Mail.COM ", "matkhau123", "Chuan", "ADMIN@Mail.COM", null);
         when(accounts.existsByUsername("admin@mail.com")).thenReturn(false);

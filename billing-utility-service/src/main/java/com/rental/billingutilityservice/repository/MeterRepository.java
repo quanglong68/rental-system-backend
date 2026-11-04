@@ -3,6 +3,7 @@ package com.rental.billingutilityservice.repository;
 import com.rental.billingutilityservice.entity.Meter;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +19,6 @@ public interface MeterRepository extends JpaRepository<Meter, Long> {
     List<Meter> findByRoomIdAndIsActiveTrue(Long roomId);
 
     List<Meter> findByBuildingIdAndIsActiveTrue(Long buildingId);
+
+    List<Meter> findByBuildingIdIn(Collection<Long> buildingIds);
 }

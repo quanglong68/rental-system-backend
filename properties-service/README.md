@@ -35,19 +35,19 @@ The following capabilities are implemented in the current source:
 | Technology | Version in repository | Purpose |
 | --- | --- | --- |
 | Java | 21 toolchain | Application language and runtime. |
-| Gradle | 9.8.1 wrapper | Build and test automation. |
-| Spring Boot | 4.1.1 | Web API, validation, data access, security, Kafka integration, Actuator, and Flyway integration. |
-| Spring Cloud | 2025.1.3 BOM | Eureka client dependency management. |
+| Maven | 3.9+ (module of the `rental-system-backend` reactor) | Build and test automation. |
+| Spring Boot | 3.3.5 | Web API, validation, data access, security, Kafka integration, Actuator, and Flyway integration. |
+| Spring Cloud | 2023.0.3 BOM | Eureka client dependency management. |
 | PostgreSQL/PostGIS | Compose image `postgis/postgis:16-3.4` | Persistent and spatial data. |
 | Hibernate Spatial | Managed by Spring Boot | Spatial persistence and queries. |
 | Flyway | Managed by Spring Boot | Versioned SQL migrations. |
 | Apache Kafka | Broker supplied externally | Property and contract event transport. |
 | AWS SDK for Java S3 | 2.54.18 | S3-compatible R2 object storage. |
 | MapStruct | 1.6.3 | DTO mapping. |
-| springdoc OpenAPI | 3.1.1 | Optional API documentation UI and JSON. |
+| springdoc OpenAPI | 2.5.0 | Optional API documentation UI and JSON. |
 | JUnit and Testcontainers | JUnit managed by Spring Boot; Testcontainers 1.21.3 | Unit and container-backed integration tests. |
 
-Other dependencies and their exact declarations are in [`build.gradle.kts`](build.gradle.kts).
+Other dependencies and their exact declarations are in [`pom.xml`](pom.xml); versions come from the backend parent pom.
 
 ## Quick start
 
@@ -76,19 +76,14 @@ You need Git, JDK 21, Docker Engine with Compose, access to a Cloudflare R2 endp
 
    `.env` is ignored by Git. Keep credentials out of commits. The shared Kafka broker should be reachable as `kafka:9092` from the external Compose network, or set `KAFKA_DOCKER_BOOTSTRAP_SERVERS` to its reachable address.
 
-3. Verify Java and build with the included wrapper:
-
-   ```powershell
-   java -version
-   .\gradlew.bat build
-   ```
+3. Verify Java and build from the backend root (`rental-system-backend/`):
 
    ```bash
    java -version
-   sh ./gradlew build
+   mvn -pl properties-service -am package
    ```
 
-   `build` runs tests; container-backed tests require a working Docker environment. The wrapper downloads Gradle and dependencies on first use.
+   `package` runs tests; container-backed tests require a working Docker environment. `-am` builds `common-lib` first.
 
 4. After the shared Kafka stack and external network are ready, start this service and PostGIS:
 
@@ -112,19 +107,19 @@ For host-based `bootRun`, environment variable details, JAR packaging, and troub
 Endpoints use the `/api/v1` prefix. Once the service is running, a read-only request is:
 
 ```bash
-curl http://localhost:8083/api/v1/provinces
+curl http://localhost:8083/api/v1/locations/provinces
 ```
 
 | Area | Example route | Use |
 | --- | --- | --- |
-| Locations | `GET /api/v1/provinces`, `GET /api/v1/wards` | Browse administrative locations. |
+| Locations | `GET /api/v1/locations/provinces`, `GET /api/v1/locations/provinces/{id}/wards` | Public province/ward lookup (two-tier model). Admin CRUD stays on `/api/v1/provinces` and `/api/v1/wards`. |
 | Buildings | `GET /api/v1/buildings`, `GET /api/v1/buildings/search` | List and search buildings. The nearby search also requires coordinates and a radius. |
 | Rooms | `GET /api/v1/rooms`, `GET /api/v1/room-types` | Browse rooms and types. |
 | Prices | `GET /api/v1/rooms/{roomId}/prices/current` | Read a room's current price. |
 | Occupancy | `GET /api/v1/rooms/{roomId}/occupants` | Read occupants through a trusted gateway identity. |
 | Images | `GET /api/v1/images/buildings/{buildingId}` | List a building's images. |
 
-The API returns an `ApiResponse` envelope. Large Snowflake IDs are serialized as decimal strings in JSON, so clients should retain them as strings. Occupancy routes require trusted gateway headers and role checks; do not expose the backend directly to untrusted clients. See the [API documentation index](docs/api/README.md) for request fields, pagination, image uploads, validation, and endpoint-specific behavior.
+The API follows the shared `common-lib` contract: plain DTO bodies, `PageResponse` for paginated lists, and `ErrorResponse` for errors. Large Snowflake IDs are serialized as decimal strings in JSON, so clients should retain them as strings. Occupancy routes require trusted gateway headers and role checks; do not expose the backend directly to untrusted clients. See the [API documentation index](docs/api/README.md) for request fields, pagination, image uploads, validation, and endpoint-specific behavior.
 
 ## Architecture at a glance
 
@@ -148,12 +143,11 @@ The [architecture guide](docs/ARCHITECTURE.md) describes development conventions
 
 ```text
 .
-├── build.gradle.kts, settings.gradle.kts  # Single Gradle project
-├── gradlew, gradlew.bat, gradle/wrapper/   # Pinned Gradle wrapper
+├── pom.xml                                 # Maven module (parent pom one level up)
 ├── Dockerfile, docker-compose.yaml        # Container build and local stack
 ├── .env.example                            # Local variable template
 ├── src/
-│   ├── main/java/fptu/semester8/mss301/propertiesservice/
+│   ├── main/java/com/rental/propertiesservice/
 │   │   ├── common/id/                      # Snowflake IDs
 │   │   ├── config/                         # Application integrations/security
 │   │   └── features/                       # Property features and event flow
@@ -166,17 +160,14 @@ The [architecture guide](docs/ARCHITECTURE.md) describes development conventions
 
 ## Testing
 
-The Gradle `test` task runs JUnit tests, including integration tests backed by Testcontainers. Docker must be available for the complete suite.
-
-```powershell
-.\gradlew.bat test
-```
+The Maven `test` phase runs JUnit tests, including integration tests backed by Testcontainers. Docker must be available for the complete suite.
 
 ```bash
-sh ./gradlew test
+# From the backend root
+mvn -pl properties-service -am test
 ```
 
-After a successful run, view `build/reports/tests/test/index.html`. This README does not claim a passing build or CI status; see [HELP.md](HELP.md#testing) for test details.
+After a successful run, view `target/surefire-reports/`. This README does not claim a passing build or CI status; see [HELP.md](HELP.md#testing) for test details.
 
 ## Documentation
 

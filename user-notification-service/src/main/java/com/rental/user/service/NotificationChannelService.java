@@ -5,6 +5,7 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.rental.user.repository.DeviceTokenRepository;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,6 +19,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 public class NotificationChannelService {
+    /** Spec 10: email only for these events; push goes to every event with a device token. */
+    private static final Set<String> EMAIL_EVENTS = Set.of("InvoiceIssued", "InvoiceOverdue", "ContractSigned",
+            "RentalRequestAccepted", "RentalRequestRejected", "MaintenanceRequestAssigned");
+
     private final JavaMailSender mailSender;
     private final DeviceTokenRepository devices;
     private final boolean emailEnabled;
@@ -35,7 +40,7 @@ public class NotificationChannelService {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void deliver(NotificationDeliveryEvent event) {
-        if (emailEnabled && event.email() != null && !event.email().isBlank()) sendEmail(event);
+        if (emailEnabled && EMAIL_EVENTS.contains(event.eventType()) && event.email() != null && !event.email().isBlank()) sendEmail(event);
         if (pushEnabled) event.deviceTokens().forEach(token -> sendPush(token, event));
     }
 
@@ -46,7 +51,7 @@ public class NotificationChannelService {
             message.setTo(event.email()); message.setSubject(event.title()); message.setText(event.content());
             mailSender.send(message);
         } catch (Exception ex) {
-            log.warn("Khong gui duoc email notification", ex);
+            log.warn("Không gửi được email thông báo", ex);
         }
     }
 
@@ -57,7 +62,7 @@ public class NotificationChannelService {
                     .putData("type", "notification").build();
             FirebaseMessaging.getInstance().send(message);
         } catch (Exception ex) {
-            log.warn("Khong gui duoc push notification", ex);
+            log.warn("Không gửi được push notification", ex);
         }
     }
 }

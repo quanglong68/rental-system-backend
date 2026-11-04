@@ -1,16 +1,7 @@
-# ===== Gradle =====
-.gradle/
-.gradle-user/
-**/build/
-!gradle/wrapper/gradle-wrapper.jar
-
-# Build directories
+# ===== Build output =====
 /bin/
 /target/
-/build/
 /out/
-/.gradle/
-.gradle-user-home/
 
 # ===== IDE =====
 .idea/

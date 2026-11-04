@@ -45,3 +45,4 @@ Chạy từ thư mục gốc backend nếu muốn biên dịch và chạy test t
 ```powershell
 mvn clean verify
 ```
+docker compose up -d

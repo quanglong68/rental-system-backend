@@ -125,16 +125,28 @@ class JwtAuthenticationFilterTest {
     @Test
     void listingsPublic_duocChuyenTiep() {
         MockServerWebExchange list = exchange(HttpMethod.GET, "/api/v1/listings", null, null);
-        MockServerWebExchange detail = exchange(HttpMethod.GET, "/api/v1/listings/abc", null, null);
+        MockServerWebExchange detail = exchange(HttpMethod.GET, "/api/v1/listings/42", null, null);
+        MockServerWebExchange byRoom = exchange(HttpMethod.GET, "/api/v1/listings/room/7", null, null);
         MockServerWebExchange nearby = exchange(HttpMethod.GET, "/api/v1/buildings/nearby", null, null);
 
         filter.filter(list, chain()).block();
         filter.filter(detail, chain()).block();
+        filter.filter(byRoom, chain()).block();
         filter.filter(nearby, chain()).block();
 
         assertThat(list.getResponse().getStatusCode()).isNull();
         assertThat(detail.getResponse().getStatusCode()).isNull();
+        assertThat(byRoom.getResponse().getStatusCode()).isNull();
         assertThat(nearby.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
+    void listingsManage_khongToken_401() {
+        MockServerWebExchange manage = exchange(HttpMethod.GET, "/api/v1/listings/manage", null, null);
+
+        filter.filter(manage, chain()).block();
+
+        assertThat(manage.getResponse().getStatusCode().value()).isEqualTo(401);
     }
 
     @Test

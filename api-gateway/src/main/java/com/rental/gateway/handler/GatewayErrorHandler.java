@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.common.constant.Headers;
 import com.rental.common.error.ErrorCode;
 import com.rental.common.error.ErrorResponse;
+import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -38,16 +39,16 @@ public class GatewayErrorHandler implements ErrorWebExceptionHandler {
         String message;
         if (status == HttpStatus.NOT_FOUND) {
             code = ErrorCode.NOT_FOUND;
-            message = "Khong tim thay";
+            message = "Không tìm thấy";
         } else if (status == HttpStatus.SERVICE_UNAVAILABLE) {
             code = ErrorCode.DEPENDENCY_UNAVAILABLE;
-            message = "Service phu thuoc khong phan hoi";
+            message = "Dịch vụ phụ thuộc không phản hồi";
         } else if (status == HttpStatus.UNAUTHORIZED) {
             code = ErrorCode.UNAUTHENTICATED;
-            message = "Chua dang nhap";
+            message = "Chưa đăng nhập";
         } else {
             code = ErrorCode.INTERNAL_ERROR;
-            message = "Loi he thong, vui long thu lai sau";
+            message = "Lỗi hệ thống, vui lòng thử lại sau";
         }
         String correlationId = exchange.getRequest().getHeaders().getFirst(Headers.X_CORRELATION_ID);
         if (correlationId == null || correlationId.isBlank()) {
@@ -72,7 +73,13 @@ public class GatewayErrorHandler implements ErrorWebExceptionHandler {
         if (ex instanceof ResponseStatusException statusEx) {
             return HttpStatus.resolve(statusEx.getStatusCode().value());
         }
-        if (exchange.getResponse().getStatusCode() instanceof HttpStatus set) {
+        // Upstream da duoc chon nhung khong mo duoc cong (service dang khoi dong lai).
+        if (ex instanceof ConnectException) {
+            return HttpStatus.SERVICE_UNAVAILABLE;
+        }
+        // Response co the da bi set 200 (vi du ModifyResponseBody loi truoc khi upstream tra loi);
+        // chi tin status khi no la status loi, neu khong error se bi nuot thanh 2xx.
+        if (exchange.getResponse().getStatusCode() instanceof HttpStatus set && set.isError()) {
             return set;
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;

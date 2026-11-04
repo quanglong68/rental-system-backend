@@ -3,7 +3,7 @@ package com.rental.billingutilityservice.controller;
 import com.rental.billingutilityservice.dto.request.GenerateInvoiceRequest;
 import com.rental.billingutilityservice.dto.response.GenerateInvoiceResult;
 import com.rental.billingutilityservice.dto.response.InvoiceResponse;
-import com.rental.billingutilityservice.dto.response.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.billingutilityservice.service.InvoiceService;
 import com.rental.common.security.HeaderUser;
 import jakarta.validation.Valid;

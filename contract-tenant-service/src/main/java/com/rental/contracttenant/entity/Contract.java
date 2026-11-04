@@ -61,6 +61,115 @@ public class Contract {
     @Column(name = "termination_reason", length = 1000)
     private String terminationReason;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "signature_status", nullable = false, length = 30)
+    private SignatureStatus signatureStatus = SignatureStatus.NOT_READY;
+
+    @Column(name = "signature_deadline")
+    private Instant signatureDeadline;
+
+    @Column(name = "renewed_from_contract_id")
+    private Long renewedFromContractId;
+
+    /** Set only when this draft was produced from an approved renewal request. */
+    @Column(name = "renewal_request_id")
+    private Long renewalRequestId;
+
+    @Column(name = "room_number", length = 50)
+    private String roomNumber;
+
+    @Column(name = "building_name", length = 255)
+    private String buildingName;
+
+    @Column(name = "room_address", length = 500)
+    private String roomAddress;
+
+    @Column(name = "electricity_price", precision = 15, scale = 0)
+    private BigDecimal electricityPrice;
+
+    @Column(name = "water_price", precision = 15, scale = 0)
+    private BigDecimal waterPrice;
+
+    @Column(name = "water_unit", length = 20)
+    private String waterUnit;
+
+    @Column(name = "payment_method", length = 30)
+    private String paymentMethod;
+
+    @Column(name = "payment_due_day")
+    private Integer paymentDueDay;
+
+    @Column(name = "min_term_months")
+    private Integer minTermMonths;
+
+    @Column(name = "available_from")
+    private LocalDate availableFrom;
+
+    @Column(name = "lessor_name", length = 200)
+    private String lessorName;
+
+    @Column(name = "lessor_date_of_birth")
+    private LocalDate lessorDateOfBirth;
+
+    @Column(name = "lessor_id_number", length = 20)
+    private String lessorIdNumber;
+
+    @Column(name = "lessor_id_issue_date")
+    private LocalDate lessorIdIssueDate;
+
+    @Column(name = "lessor_id_issue_place", length = 255)
+    private String lessorIdIssuePlace;
+
+    @Column(name = "lessor_phone", length = 20)
+    private String lessorPhone;
+
+    @Column(name = "lessor_address", length = 500)
+    private String lessorAddress;
+
+    @Column(name = "tenant_full_name", length = 200)
+    private String tenantFullName;
+
+    @Column(name = "tenant_date_of_birth")
+    private LocalDate tenantDateOfBirth;
+
+    @Column(name = "tenant_gender", length = 20)
+    private String tenantGender;
+
+    @Column(name = "tenant_phone", length = 20)
+    private String tenantPhone;
+
+    @Column(name = "tenant_email", length = 255)
+    private String tenantEmail;
+
+    @Column(name = "tenant_permanent_address", length = 500)
+    private String tenantPermanentAddress;
+
+    @Column(name = "tenant_occupation", length = 200)
+    private String tenantOccupation;
+
+    @Column(name = "tenant_cccd_number", length = 20)
+    private String tenantCccdNumber;
+
+    @Column(name = "tenant_cccd_issue_date")
+    private LocalDate tenantCccdIssueDate;
+
+    @Column(name = "tenant_cccd_issue_place", length = 255)
+    private String tenantCccdIssuePlace;
+
+    @Column(name = "tenant_cccd_front_key", length = 500)
+    private String tenantCccdFrontKey;
+
+    @Column(name = "tenant_cccd_back_key", length = 500)
+    private String tenantCccdBackKey;
+
+    /**
+     * Monotonic revision of the event stream of this contract. Every published contract event carries
+     * the revision it produced, and the Property projection only accepts {@code revision == previous + 1}.
+     * Bumped under the contract row lock, in the same transaction that writes the outbox row.
+     */
+    @Column(nullable = false)
+    private long revision;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

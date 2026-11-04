@@ -40,7 +40,7 @@ public class OutboxEventPublisher {
      * de chung commit/rollback voi tao account.
      */
     public void publishAccountRegistered(Long accountId, AccountType accountType, String username, String fullName,
-            String email, String phone) {
+            String email, String phone, java.util.List<String> roles) {
         AccountRegisteredPayload payload = new AccountRegisteredPayload();
         payload.setAccountId(accountId);
         payload.setAccountType(accountType.name());
@@ -48,6 +48,7 @@ public class OutboxEventPublisher {
         payload.setFullName(fullName);
         payload.setEmail(email);
         payload.setPhone(phone);
+        payload.setRoles(roles == null ? java.util.List.of() : java.util.List.copyOf(roles));
         EventEnvelope<AccountRegisteredPayload> envelope = EventEnvelope.of(EVENT_ACCOUNT_REGISTERED, payload,
                 correlationId());
         OutboxEvent event = new OutboxEvent();
@@ -58,7 +59,7 @@ public class OutboxEventPublisher {
         try {
             event.setPayload(objectMapper.writeValueAsString(envelope));
         } catch (JsonProcessingException impossible) {
-            throw new IllegalStateException("Khong serialize duoc AccountRegistered", impossible);
+            throw new IllegalStateException("Không serialize được AccountRegistered", impossible);
         }
         outbox.save(event);
     }

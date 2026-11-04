@@ -4,13 +4,13 @@ Base path: `/api/v1/rooms`
 
 | Method | Path | Query/body | Data payload |
 |---|---|---|---|
-| POST | `/api/v1/rooms` | `RoomRequest` | `RoomResponse` |
+| POST | `/api/v1/rooms` | `RoomRequest` | `RoomResponse`, HTTP 201 + `Location` |
 | GET | `/api/v1/rooms/{id}` | — | `RoomResponse` |
-| GET | `/api/v1/rooms` | `buildingId`, `page`, `size`, `sort` | `Page<RoomResponse>` |
+| GET | `/api/v1/rooms` | `buildingId`, `page`, `size`, `sort` | `PageResponse<RoomResponse>` |
 | GET | `/api/v1/rooms/statistics` | `buildingId` (tùy chọn), ADMIN | `RoomStatisticsResponse` |
-| GET | `/api/v1/rooms/building/{buildingId}` | `page`, `size` | `Page<RoomResponse>` |
+| GET | `/api/v1/rooms/building/{buildingId}` | `page`, `size` | `PageResponse<RoomResponse>` |
 | PUT | `/api/v1/rooms/{id}` | `RoomRequest` | `RoomResponse` |
-| DELETE | `/api/v1/rooms/{id}` | — | `null` |
+| DELETE | `/api/v1/rooms/{id}` | — | `204 No Content`; `409 ROOM_HAS_OCCUPANTS` nếu phòng đã có lịch sử cư trú |
 
 List mặc định `page=0`, `size=20`, `sort=createdAt,desc`; `page >= 0`, `1 <= size <= 100`. Sort hỗ trợ `createdAt`, `updatedAt`, `roomCode`, `status`, `basePrice` với hướng `asc`/`desc`. `buildingId` là filter tùy chọn.
 
@@ -20,7 +20,7 @@ List mặc định `page=0`, `size=20`, `sort=createdAt,desc`; `page >= 0`, `1 <
 
 Quyền `ADMIN`, theo các header danh tính đáng tin cậy do Gateway truyền: `X-User-Id`, `X-User-Type`, `X-User-Roles`. Thiếu danh tính trả `401`, không có quyền trả `403`. `buildingId` phải là số nguyên dương (`400` nếu sai); bỏ qua để thống kê toàn bộ. Tòa nhà không tồn tại hoặc đã xóa trả các số đếm bằng `0`.
 
-Payload `data` trong `ApiResponse<RoomStatisticsResponse>`:
+Response `RoomStatisticsResponse`:
 
 ```json
 {"totalRooms":100,"operatingRooms":60,"roomsNeedingUpdate":8,"businessDate":"2026-10-26"}

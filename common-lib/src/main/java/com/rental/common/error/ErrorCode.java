@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * Ma loi dung chung (docs muc 8, Table 8 + Table 7 auth-service).
- * Service co ma loi nghiep vu rieng (vd ROOM_CAPACITY_EXCEEDED) thi truyen thang String code
+ * Service có mã lỗi nghiệp vụ riêng (vd ROOM_CAPACITY_EXCEEDED) thì truyền thẳng String code
  * vao {@link BusinessException}, khong can them vao enum nay.
  */
 @Getter

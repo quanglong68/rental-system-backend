@@ -4,11 +4,11 @@ Base path: `/api/v1/room-types`
 
 | Method | Path | Query/body | Data payload |
 |---|---|---|---|
-| POST | `/api/v1/room-types` | `RoomTypeRequest` | `RoomTypeResponse` |
+| POST | `/api/v1/room-types` | `RoomTypeRequest` | `RoomTypeResponse`, HTTP 201 |
 | GET | `/api/v1/room-types/{id}` | — | `RoomTypeResponse` |
-| GET | `/api/v1/room-types` | `page`, `size` | `Page<RoomTypeResponse>` |
+| GET | `/api/v1/room-types` | `page`, `size` | `PageResponse<RoomTypeResponse>` |
 | PUT | `/api/v1/room-types/{id}` | `RoomTypeRequest` | `RoomTypeResponse` |
-| DELETE | `/api/v1/room-types/{id}` | — | `null` |
+| DELETE | `/api/v1/room-types/{id}` | — | `204 No Content` |
 
 List mặc định `page=0`, `size=20`, sort `createdAt` giảm dần. Controller không đặt giới hạn page/size riêng.
 

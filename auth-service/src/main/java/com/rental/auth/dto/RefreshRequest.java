@@ -13,6 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class RefreshRequest {
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String refreshToken;
 }

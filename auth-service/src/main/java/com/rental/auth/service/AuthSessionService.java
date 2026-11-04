@@ -5,6 +5,8 @@ import com.rental.auth.dto.LoginRequest;
 import com.rental.auth.dto.LoginResponse;
 import com.rental.auth.dto.MeResponse;
 import com.rental.auth.dto.RefreshRequest;
+import com.rental.auth.dto.VerifyPasswordRequest;
+import com.rental.auth.dto.VerifyPasswordResponse;
 import com.rental.auth.entity.Account;
 import com.rental.auth.entity.RefreshToken;
 import com.rental.auth.repository.AccountRepository;
@@ -55,14 +57,14 @@ public class AuthSessionService {
     public LoginResponse login(LoginRequest request) {
         String username = normalize(request.getUsername());
         Account account = accounts.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS, "Sai thong tin dang nhap"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS, "Sai thông tin đăng nhập"));
         if (!account.isActive()) {
             revokeAll(account.getId());
-            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED, "Tai khoan da bi khoa");
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED, "Tài khoản đã bị khóa");
         }
         Instant now = Instant.now();
         if (account.getLockedUntil() != null && account.getLockedUntil().isAfter(now)) {
-            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED, "Tai khoan dang bi khoa do sai mat khau");
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED, "Tài khoản đang bị khóa do sai mật khẩu");
         }
         if (!passwordEncoder.matches(request.getPassword(), account.getPasswordHash())) {
             throw handleWrongPassword(account, now);
@@ -79,20 +81,20 @@ public class AuthSessionService {
     public LoginResponse refresh(RefreshRequest request) {
         String hash = refreshTokenService.hash(request.getRefreshToken());
         RefreshToken token = refreshTokens.findByTokenHash(hash).orElseThrow(
-                () -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token khong hop le"));
+                () -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token không hợp lệ"));
         if (token.getRevokedAt() != null) {
             // Dung lai token da thu hoi = replay: thu hoi toan bo phien de chong attacker.
             revokeAll(token.getAccountId());
-            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token da bi thu hoi");
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token đã bị thu hồi");
         }
         if (token.getExpiresAt().isBefore(Instant.now())) {
-            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token da het han");
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token đã hết hạn");
         }
         Account account = accounts.findById(token.getAccountId()).orElseThrow(
-                () -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Tai khoan khong ton tai"));
+                () -> new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID, "Tài khoản không tồn tại"));
         if (!account.isActive()) {
             revokeAll(account.getId());
-            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED, "Tai khoan da bi khoa");
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED, "Tài khoản đã bị khóa");
         }
         token.setRevokedAt(Instant.now());
         refreshTokens.save(token);
@@ -114,7 +116,7 @@ public class AuthSessionService {
     public MeResponse me(HeaderUser principal) {
         Long accountId = Long.valueOf(principal.getUserId());
         Account account = accounts.findById(accountId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay account"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản"));
         return new MeResponse(account.getId(), account.getUsername(), account.getAccountType(),
                 principal.getRoles());
     }
@@ -123,9 +125,9 @@ public class AuthSessionService {
     @Transactional
     public void changePassword(Long accountId, ChangePasswordRequest request) {
         Account account = accounts.findById(accountId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay account"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản"));
         if (!passwordEncoder.matches(request.getOldPassword(), account.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.WRONG_OLD_PASSWORD, "Mat khau cu khong dung");
+            throw new BusinessException(ErrorCode.WRONG_OLD_PASSWORD, "Mật khẩu cũ không đúng");
         }
         account.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         account.setFailedLoginCount(0);
@@ -140,6 +142,20 @@ public class AuthSessionService {
         refreshTokens.revokeAllByAccountId(accountId, Instant.now());
     }
 
+    /**
+     * Xac thuc lai mat khau cho chu ky dien tu hop dong (internal, khong cap token).
+     * Tra valid=false thay vi nem loi de service goi phan biet "sai mat khau" voi "mat ket noi".
+     */
+    @Transactional(readOnly = true)
+    public VerifyPasswordResponse verifyPassword(VerifyPasswordRequest request) {
+        Account account = accounts.findById(request.accountId()).orElse(null);
+        if (account == null || !account.isActive()) {
+            return new VerifyPasswordResponse(false, null);
+        }
+        boolean valid = passwordEncoder.matches(request.password(), account.getPasswordHash());
+        return new VerifyPasswordResponse(valid, valid ? account.getUsername() : null);
+    }
+
     private BusinessException handleWrongPassword(Account account, Instant now) {
         int failed = account.getFailedLoginCount() + 1;
         account.setFailedLoginCount(failed);
@@ -150,7 +166,7 @@ public class AuthSessionService {
                     "Sai mat khau " + MAX_FAILED_LOGINS + " lan lien tiep, tai khoan bi khoa 15 phut");
         }
         accounts.save(account);
-        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "Sai thong tin dang nhap");
+        return new BusinessException(ErrorCode.INVALID_CREDENTIALS, "Sai thông tin đăng nhập");
     }
 
     private LoginResponse issueSession(Account account) {

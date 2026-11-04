@@ -32,6 +32,12 @@ public class OutboxEventPublisher {
     public static final String EVENT_TENANT_REMOVED = "TenantRemoved";
     public static final String EVENT_MOVE_OUT_REQUESTED = "MoveOutRequested";
     public static final String EVENT_MOVE_OUT_APPROVED = "MoveOutApproved";
+    public static final String EVENT_CONTRACT_SIGNATURE_DECLINED = "ContractSignatureDeclined";
+    public static final String EVENT_CONTRACT_SIGNATURE_EXPIRED = "ContractSignatureExpired";
+    public static final String EVENT_CONTRACT_RENEWAL_REQUESTED = "ContractRenewalRequested";
+    public static final String EVENT_CONTRACT_RENEWAL_APPROVED = "ContractRenewalApproved";
+    public static final String EVENT_CONTRACT_RENEWAL_REJECTED = "ContractRenewalRejected";
+    public static final String EVENT_METER_READING_HANDOVER_DUE = "MeterReadingHandoverDue";
 
     private final OutboxEventRepository outbox;
 
@@ -71,6 +77,38 @@ public class OutboxEventPublisher {
         saveOutboxEvent(EVENT_MOVE_OUT_APPROVED, String.valueOf(payload.getContractId()), payload);
     }
 
+    public void publishContractSignatureDeclined(ContractSignatureDeclinedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_SIGNATURE_DECLINED, String.valueOf(payload.contractId()), payload);
+    }
+
+    public void publishContractSignatureExpired(ContractSignatureExpiredPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_SIGNATURE_EXPIRED, String.valueOf(payload.contractId()), payload);
+    }
+
+    public void publishContractRenewalRequested(ContractRenewalRequestedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_RENEWAL_REQUESTED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishContractRenewalApproved(ContractRenewalDecidedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_RENEWAL_APPROVED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    public void publishContractRenewalRejected(ContractRenewalDecidedPayload payload) {
+        saveOutboxEvent(EVENT_CONTRACT_RENEWAL_REJECTED, String.valueOf(payload.getContractId()), payload);
+    }
+
+    /**
+     * Nhac ky thuat ghi chi so ban giao dung ngay khach chuyen vao. Moi hop dong chi phat mot lan;
+     * lan quet hang ngay bo qua neu da co event cua cung hop dong.
+     */
+    public void publishMeterReadingHandoverDue(Contract contract) {
+        String contractId = String.valueOf(contract.getId());
+        if (outbox.existsByEventTypeAndEventKey(EVENT_METER_READING_HANDOVER_DUE, contractId)) {
+            return;
+        }
+        saveOutboxEvent(EVENT_METER_READING_HANDOVER_DUE, contractId, MeterReadingHandoverDuePayload.of(contract));
+    }
+
     private <T> void saveOutboxEvent(String eventType, String eventKey, T payload) {
         EventEnvelope<T> envelope = EventEnvelope.of(eventType, payload, correlationId());
         OutboxEvent event = new OutboxEvent();
@@ -81,7 +119,7 @@ public class OutboxEventPublisher {
         try {
             event.setPayload(objectMapper.writeValueAsString(envelope));
         } catch (JsonProcessingException impossible) {
-            throw new IllegalStateException("Khong serialize duoc " + eventType, impossible);
+            throw new IllegalStateException("Không serialize được " + eventType, impossible);
         }
         outbox.save(event);
     }

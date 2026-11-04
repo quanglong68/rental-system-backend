@@ -38,15 +38,23 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/actuator/**", "/internal/**").permitAll()
+                        .requestMatchers("/actuator/**", "/internal/**", "/v3/api-docs/**", "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new HeaderAuthenticationFilter(), AuthorizationFilter.class)
+                .addFilterBefore(new HeaderAuthenticationFilter() {
+                    @Override
+                    protected boolean isSkipped(String path) {
+                        return super.isSkipped(path)
+                                || path != null
+                                        && (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui"));
+                    }
+                }, AuthorizationFilter.class)
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, ex) -> writeError(request, response,
                                 HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.UNAUTHENTICATED.name(),
-                                "Chua dang nhap", objectMapper))
+                                "Chưa đăng nhập", objectMapper))
                         .accessDeniedHandler((request, response, ex) -> writeError(request, response,
-                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Khong du quyen",
+                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Không đủ quyền",
                                 objectMapper)))
                 .httpBasic(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable);
         return http.build();

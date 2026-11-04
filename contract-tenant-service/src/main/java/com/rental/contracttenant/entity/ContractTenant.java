@@ -48,6 +48,42 @@ public class ContractTenant {
     @Column(name = "is_representative", nullable = false)
     private boolean isRepresentative;
 
+    @Column(name = "full_name", length = 200)
+    private String fullName;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(length = 20)
+    private String gender;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 255)
+    private String email;
+
+    @Column(name = "permanent_address", length = 500)
+    private String permanentAddress;
+
+    @Column(length = 200)
+    private String occupation;
+
+    @Column(name = "cccd_number", length = 20)
+    private String cccdNumber;
+
+    @Column(name = "cccd_issue_date")
+    private LocalDate cccdIssueDate;
+
+    @Column(name = "cccd_issue_place", length = 255)
+    private String cccdIssuePlace;
+
+    @Column(name = "cccd_front_key", length = 500)
+    private String cccdFrontKey;
+
+    @Column(name = "cccd_back_key", length = 500)
+    private String cccdBackKey;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

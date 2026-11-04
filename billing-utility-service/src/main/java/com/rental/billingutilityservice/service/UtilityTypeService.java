@@ -26,7 +26,7 @@ public class UtilityTypeService {
     @Transactional
     public UtilityTypeResponse create(UtilityTypeRequest request) {
         repository.findByNameIgnoreCase(request.getName().trim()).ifPresent(existing -> {
-            throw new BusinessException("UTILITY_TYPE_EXISTS", "Loai tien ich da ton tai",
+            throw new BusinessException("UTILITY_TYPE_EXISTS", "Loại tiện ích đã tồn tại",
                     HttpStatus.CONFLICT);
         });
         UtilityType entity = new UtilityType();
@@ -39,11 +39,11 @@ public class UtilityTypeService {
     @Transactional
     public UtilityTypeResponse update(Long id, UtilityTypeRequest request) {
         UtilityType entity = repository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay loai tien ich"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy loại tiện ích"));
         String newName = request.getName().trim();
         repository.findByNameIgnoreCase(newName).ifPresent(other -> {
             if (!other.getId().equals(id)) {
-                throw new BusinessException("UTILITY_TYPE_EXISTS", "Loai tien ich da ton tai",
+                throw new BusinessException("UTILITY_TYPE_EXISTS", "Loại tiện ích đã tồn tại",
                         HttpStatus.CONFLICT);
             }
         });

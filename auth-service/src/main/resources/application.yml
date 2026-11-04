@@ -38,6 +38,9 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
+    # Dev local: heartbeat nhanh de Gateway thay instance vua restart trong ~5-10s.
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
 
 # JWT (docs muc 7.1): HS256, toi thieu 32 ky tu, iss=rental-auth, access 15 phut (900s).
 jwt:

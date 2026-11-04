@@ -43,9 +43,9 @@ public class SecurityConfig {
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, ex) -> writeError(request, response,
                                 HttpServletResponse.SC_UNAUTHORIZED, ErrorCode.UNAUTHENTICATED.name(),
-                                "Chua dang nhap", objectMapper))
+                                "Chưa đăng nhập", objectMapper))
                         .accessDeniedHandler((request, response, ex) -> writeError(request, response,
-                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Khong du quyen",
+                                HttpServletResponse.SC_FORBIDDEN, ErrorCode.FORBIDDEN.name(), "Không đủ quyền",
                                 objectMapper)))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable);

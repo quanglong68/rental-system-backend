@@ -13,6 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UpdateAccountStatusRequest {
 
-    @NotNull(message = "Khong duoc de trong")
+    @NotNull(message = "Không được để trống")
     private Boolean active;
 }

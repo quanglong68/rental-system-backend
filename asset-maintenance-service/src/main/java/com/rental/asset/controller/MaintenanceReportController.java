@@ -1,7 +1,7 @@
 package com.rental.asset.controller;
 
 import com.rental.asset.dto.ApproveReportRequest;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.dto.RejectReportRequest;
 import com.rental.asset.dto.ReportCreateRequest;
 import com.rental.asset.entity.MaintenanceReport;

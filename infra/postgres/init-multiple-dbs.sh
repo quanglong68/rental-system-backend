@@ -1,13 +1,13 @@
 #!/bin/bash
 # Init script for postgres container (mounted to /docker-entrypoint-initdb.d/).
 # Chay 1 lan duy nhat khi volume postgres con trong (lan dau docker compose up).
-# Docs muc 4.3: tao 7 database, moi service 1 user rieng chi co quyen tren DB cua minh,
+# Docs muc 4.3: tao database cho tung service, moi service 1 user rieng chi co quyen tren DB cua minh,
 # bat extension postgis cho property_db.
 set -e
 
 # $POSTGRES_USER / $POSTGRES_DB do image postgres cung cap san.
 # $POSTGRES_MULTIPLE_DATABASES: danh sach cach nhau boi dau phay, vd:
-#   auth_db,user_db,property_db,listing_db,contract_db,billing_db,asset_db
+#   auth_db,user_db,property_db,listing_db,contract_db,billing_db,asset_db,chat_db
 # Dung if (khong dung exit) vi entrypoint postgres co the source file nay thay vi execute.
 if [ -z "$POSTGRES_MULTIPLE_DATABASES" ]; then
   echo "POSTGRES_MULTIPLE_DATABASES is empty, skipping multi-db init."

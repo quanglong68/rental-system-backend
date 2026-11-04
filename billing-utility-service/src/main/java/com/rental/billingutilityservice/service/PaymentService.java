@@ -31,21 +31,22 @@ public class PaymentService {
 
     private final InvoiceRepository invoices;
     private final PaymentRepository payments;
+    private final RoomInvoiceService roomInvoices;
     private final BillingEventPublisher events;
     private final AuthSupport auth;
 
     @Transactional
     public PaymentResponse create(CreatePaymentRequest request) {
         Invoice invoice = invoices.findById(request.getInvoiceId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay hoa don"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy hóa đơn"));
         auth.requireBuildingScope(invoice.getBuildingId());
         if (invoice.getStatus() == InvoiceStatus.PAID) {
-            throw new BusinessException("INVOICE_ALREADY_PAID", "Hoa don da thanh toan du",
+            throw new BusinessException("INVOICE_ALREADY_PAID", "Hóa đơn đã thanh toán đủ",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
         BigDecimal remaining = invoice.getTotalAmount().subtract(invoice.getPaidAmount());
         if (request.getAmountPaid().compareTo(remaining) > 0) {
-            throw new BusinessException("AMOUNT_EXCEEDS_REMAINING", "So tien vuot qua so con no",
+            throw new BusinessException("AMOUNT_EXCEEDS_REMAINING", "Số tiền vượt quá số còn nợ",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
         Payment payment = new Payment();
@@ -65,6 +66,54 @@ public class PaymentService {
         }
         // OVERDUE tra thieu van giu OVERDUE (docs 9.5: overdue chi set 1 lan, khong dao ve PARTIALLY_PAID).
         invoices.save(invoice);
+        roomInvoices.recomputeForShare(invoice);
+        events.publishPaymentReceived(saved.getId(), invoice.getId(), invoice.getCustomerId(),
+                saved.getAmountPaid(), invoice.getStatus().name());
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public PaymentResponse simulateCustomerPayment(CreatePaymentRequest request, com.rental.common.security.HeaderUser principal) {
+        Invoice invoice = invoices.findById(request.getInvoiceId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy hóa đơn"));
+
+        if ("CUSTOMER".equalsIgnoreCase(principal.getUserType())) {
+            if (!String.valueOf(invoice.getCustomerId()).equals(principal.getUserId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN, "Không phải hóa đơn của bạn");
+            }
+        } else if (!"ADMIN".equalsIgnoreCase(principal.getUserType()) && !principal.getRoles().contains("ADMIN")) {
+            auth.requireBuildingScope(invoice.getBuildingId());
+        }
+
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new BusinessException("INVOICE_ALREADY_PAID", "Hóa đơn đã thanh toán đủ",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        BigDecimal remaining = invoice.getTotalAmount().subtract(invoice.getPaidAmount());
+        BigDecimal payAmount = request.getAmountPaid() != null && request.getAmountPaid().compareTo(BigDecimal.ZERO) > 0
+                ? request.getAmountPaid() : remaining;
+        if (payAmount.compareTo(remaining) > 0) {
+            payAmount = remaining;
+        }
+
+        Payment payment = new Payment();
+        payment.setInvoice(invoice);
+        payment.setAmountPaid(payAmount);
+        payment.setMethod("BANK_TRANSFER");
+        payment.setPaidAt(request.getPaidAt() == null ? Instant.now() : request.getPaidAt());
+        payment.setNote(request.getNote() != null ? request.getNote() : "Giả lập thanh toán VietQR thành công");
+        payment.setRecordedBy(Long.valueOf(principal.getUserId()));
+        Payment saved = payments.save(payment);
+
+        BigDecimal paidTotal = invoice.getPaidAmount().add(payAmount);
+        invoice.setPaidAmount(paidTotal);
+        if (paidTotal.compareTo(invoice.getTotalAmount()) >= 0) {
+            invoice.setStatus(InvoiceStatus.PAID);
+        } else if (invoice.getStatus() != InvoiceStatus.OVERDUE) {
+            invoice.setStatus(InvoiceStatus.PARTIALLY_PAID);
+        }
+        invoices.save(invoice);
+        roomInvoices.recomputeForShare(invoice);
         events.publishPaymentReceived(saved.getId(), invoice.getId(), invoice.getCustomerId(),
                 saved.getAmountPaid(), invoice.getStatus().name());
         return toResponse(saved);
@@ -73,13 +122,13 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public List<PaymentResponse> listByInvoice(Long invoiceId, com.rental.common.security.HeaderUser principal) {
         Invoice invoice = invoices.findById(invoiceId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay hoa don"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy hóa đơn"));
         boolean admin = "ADMIN".equalsIgnoreCase(principal.getUserType())
                 || principal.getRoles().contains("ADMIN");
         boolean owner = String.valueOf(invoice.getCustomerId()).equals(principal.getUserId());
         if (!admin && !owner) {
             if ("CUSTOMER".equalsIgnoreCase(principal.getUserType())) {
-                throw new BusinessException(ErrorCode.FORBIDDEN, "Khong phai hoa don cua ban");
+                throw new BusinessException(ErrorCode.FORBIDDEN, "Không phải hóa đơn của bạn");
             }
             auth.requireBuildingScope(invoice.getBuildingId());
         }

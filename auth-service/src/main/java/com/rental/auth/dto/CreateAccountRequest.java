@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Request ADMIN tao STAFF/ADMIN (Table 7). accountType chi nhan STAFF|ADMIN (service kiem tra).
+ * Request ADMIN tao STAFF/ADMIN (Table 7). accountType chỉ nhận STAFF|ADMIN (service kiem tra).
  * STAFF bat buoc co roles; ADMIN duoc auto-gan role ADMIN, input roles bi bo qua.
  */
 @Getter
@@ -17,21 +17,21 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CreateAccountRequest {
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String username;
 
-    @NotBlank(message = "Khong duoc de trong")
-    @Size(min = 8, message = "Mat khau toi thieu 8 ky tu")
+    @NotBlank(message = "Không được để trống")
+    @Size(min = 8, message = "Mật khẩu tối thiểu 8 ký tự")
     private String password;
 
-    @NotBlank(message = "Khong duoc de trong")
+    @NotBlank(message = "Không được để trống")
     private String fullName;
 
     private String email;
 
     private String phone;
 
-    @NotNull(message = "Khong duoc de trong")
+    @NotNull(message = "Không được để trống")
     private String accountType;
 
     private List<String> roles;

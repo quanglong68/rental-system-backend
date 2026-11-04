@@ -33,6 +33,7 @@ public class BillingEventPublisher {
     public static final String EVENT_PAYMENT_RECEIVED = "PaymentReceived";
     public static final String EVENT_INVOICE_OVERDUE = "InvoiceOverdue";
     public static final String EVENT_METER_READING_MISSING = "MeterReadingMissing";
+    public static final String EVENT_METER_READING_REMINDER = "MeterReadingReminder";
 
     private final OutboxEventRepository outbox;
 
@@ -40,12 +41,12 @@ public class BillingEventPublisher {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public void publishInvoiceIssued(Long invoiceId, Long customerId, Long contractId, Long roomId, Long buildingId,
-            int month, int year, BigDecimal totalAmount, LocalDate dueDate) {
-        record Payload(Long invoiceId, Long customerId, Long contractId, Long roomId, Long buildingId, Integer month,
-                Integer year, BigDecimal totalAmount, LocalDate dueDate) {
+            Long roomInvoiceId, int month, int year, BigDecimal totalAmount, LocalDate dueDate) {
+        record Payload(Long invoiceId, Long customerId, Long contractId, Long roomId, Long buildingId,
+                Long roomInvoiceId, Integer month, Integer year, BigDecimal totalAmount, LocalDate dueDate) {
         }
         save(EVENT_INVOICE_ISSUED, String.valueOf(invoiceId), new Payload(invoiceId, customerId, contractId, roomId,
-                buildingId, month, year, totalAmount, dueDate));
+                buildingId, roomInvoiceId, month, year, totalAmount, dueDate));
     }
 
     public void publishPaymentReceived(Long paymentId, Long invoiceId, Long customerId, BigDecimal amountPaid,
@@ -65,11 +66,22 @@ public class BillingEventPublisher {
                 new Payload(invoiceId, customerId, buildingId, month, year, totalAmount, dueDate));
     }
 
-    public void publishMeterReadingMissing(Long roomId, Long buildingId, int month, int year, List<Long> meterIds) {
-        record Payload(Long roomId, Long buildingId, Integer month, Integer year, List<Long> meterIds) {
+    public void publishMeterReadingMissing(Long roomId, Long buildingId, String roomNumber, int month, int year,
+            List<Long> meterIds) {
+        record Payload(Long roomId, Long buildingId, String roomNumber, Integer month, Integer year,
+                List<Long> meterIds) {
         }
         save(EVENT_METER_READING_MISSING, String.valueOf(roomId),
-                new Payload(roomId, buildingId, month, year, meterIds));
+                new Payload(roomId, buildingId, roomNumber, month, year, meterIds));
+    }
+
+    public void publishMeterReadingReminder(Long buildingId, String buildingName, int month, int year,
+            List<String> roomNumbers) {
+        record Payload(Long buildingId, String buildingName, Integer month, Integer year,
+                List<String> roomNumbers, Integer roomCount) {
+        }
+        save(EVENT_METER_READING_REMINDER, String.valueOf(buildingId),
+                new Payload(buildingId, buildingName, month, year, roomNumbers, roomNumbers.size()));
     }
 
     private void save(String eventType, String eventKey, Object payload) {
@@ -82,7 +94,7 @@ public class BillingEventPublisher {
         try {
             event.setPayload(objectMapper.writeValueAsString(envelope));
         } catch (JsonProcessingException impossible) {
-            throw new IllegalStateException("Khong serialize duoc " + eventType, impossible);
+            throw new IllegalStateException("Không serialize được " + eventType, impossible);
         }
         outbox.save(event);
     }

@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required (copy .env.example to .env)}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_MULTIPLE_DATABASES:-auth_db,user_db,property_db,listing_db,contract_db,billing_db,asset_db}
+      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_MULTIPLE_DATABASES:-auth_db,user_db,property_db,listing_db,contract_db,billing_db,asset_db,chat_db}
       AUTH_DB_USER: ${AUTH_DB_USER:-auth_user}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:?AUTH_DB_PASSWORD is required}
       USER_DB_USER: ${USER_DB_USER:-user_svc}
@@ -28,6 +28,8 @@ services:
       BILLING_DB_PASSWORD: ${BILLING_DB_PASSWORD:?BILLING_DB_PASSWORD is required}
       ASSET_DB_USER: ${ASSET_DB_USER:-asset_svc}
       ASSET_DB_PASSWORD: ${ASSET_DB_PASSWORD:?ASSET_DB_PASSWORD is required}
+      CHAT_DB_USER: ${CHAT_DB_USER:-chat_svc}
+      CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD:?CHAT_DB_PASSWORD is required}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
@@ -38,6 +40,40 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Volume postgres cu (tao truoc khi co chat_db) khong chay lai init script;
+  # one-shot nay tao DB/role chat idempotent de khong phai xoa volume.
+  chat-db-init:
+    image: postgres:16-alpine
+    container_name: rental-chat-db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - rental-net
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      CHAT_DB_USER: ${CHAT_DB_USER:-chat_svc}
+      CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD:?CHAT_DB_PASSWORD is required}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        until pg_isready -h postgres -U "$$PGUSER" -d postgres >/dev/null 2>&1; do sleep 2; done
+        psql -d postgres -v ON_ERROR_STOP=1 -v db=chat_db -v usr="$$CHAT_DB_USER" -v pwd="$$CHAT_DB_PASSWORD" <<'SQL'
+        SELECT format('CREATE DATABASE %I', :'db')
+        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db') \gexec
+        SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'usr', :'pwd')
+        WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'usr') \gexec
+        SQL
+        psql -d chat_db -v ON_ERROR_STOP=1 -v usr="$$CHAT_DB_USER" <<'SQL'
+        SELECT format('GRANT ALL ON SCHEMA public TO %I', :'usr') \gexec
+        SELECT format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO %I', :'usr') \gexec
+        SELECT format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO %I', :'usr') \gexec
+        SQL
 
   kafka:
     image: apache/kafka:3.8.0
@@ -55,6 +91,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       CLUSTER_ID: ${KAFKA_CLUSTER_ID:-MkU3OEVBNTcwNTJENDM2Qk}
+      KAFKA_HEAP_OPTS: "-Xms160m -Xmx256m"
     networks:
       - rental-net
     healthcheck:
@@ -92,6 +129,8 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
     container_name: rental-kafka-ui
+    profiles:
+      - debug
     restart: unless-stopped
     depends_on:
       kafka-init:
@@ -101,6 +140,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: rental
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      JAVA_OPTS: "-Xms64m -Xmx160m"
     networks:
       - rental-net
 
@@ -151,9 +191,13 @@ services:
       - /bin/sh
       - -c
       - |
-        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" && \
+        until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 2; done && \
         until mc ready local; do sleep 2; done && \
         mc mb --ignore-existing local/report-images && \
+        mc mb --ignore-existing local/property-images && \
+        mc mb --ignore-existing local/identity-documents && \
+        mc mb --ignore-existing local/contract-documents && \
+        mc anonymous set download local/property-images && \
         mc cors set local/report-images /report-images-cors.xml
     volumes:
       - ./minio/report-images-cors.xml:/report-images-cors.xml:ro
@@ -171,6 +215,7 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx140m"
     networks:
       - rental-net
     healthcheck:
@@ -194,6 +239,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
       SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER:-auth_user}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD:?AUTH_DB_PASSWORD is required}
@@ -210,8 +256,6 @@ services:
       retries: 12
 
   user-notification-service:
-    ports:
-      - "127.0.0.1:8082:8082"
     build:
       context: ..
       dockerfile: user-notification-service/Dockerfile
@@ -226,6 +270,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
       SPRING_DATASOURCE_USERNAME: ${USER_DB_USER:-user_svc}
       SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD:?USER_DB_PASSWORD is required}
@@ -267,12 +312,13 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/asset_db
       SPRING_DATASOURCE_USERNAME: ${ASSET_DB_USER:-asset_svc}
       SPRING_DATASOURCE_PASSWORD: ${ASSET_DB_PASSWORD:?ASSET_DB_PASSWORD is required}
       EUREKA_URL: http://discovery-server:8761/eureka/
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://host.docker.internal:9000}
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
       MINIO_BUCKET: report-images
@@ -280,6 +326,174 @@ services:
       - rental-net
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  listing-booking-service:
+    build:
+      context: ..
+      dockerfile: listing-booking-service/Dockerfile
+    container_name: rental-listing-booking
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+      LISTING_DB_URL: jdbc:postgresql://postgres:5432/listing_db
+      LISTING_DB_USER: ${LISTING_DB_USER:-listing_svc}
+      LISTING_DB_PASSWORD: ${LISTING_DB_PASSWORD:?LISTING_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      MINIO_IDENTITY_BUCKET: identity-documents
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  chat-service:
+    build:
+      context: ..
+      dockerfile: chat-service/Dockerfile
+    container_name: rental-chat
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chat-db-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+      CHAT_DB_URL: jdbc:postgresql://postgres:5432/chat_db
+      CHAT_DB_USER: ${CHAT_DB_USER:-chat_svc}
+      CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD:?CHAT_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  contract-tenant-service:
+    build:
+      context: ..
+      dockerfile: contract-tenant-service/Dockerfile
+    container_name: rental-contract-tenant
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+      CONTRACT_DB_URL: jdbc:postgresql://postgres:5432/contract_db
+      CONTRACT_DB_USER: ${CONTRACT_DB_USER:-contract_svc}
+      CONTRACT_DB_PASSWORD: ${CONTRACT_DB_PASSWORD:?CONTRACT_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      MINIO_CONTRACT_BUCKET: contract-documents
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  billing-utility-service:
+    build:
+      context: ..
+      dockerfile: billing-utility-service/Dockerfile
+    container_name: rental-billing-utility
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+      BILLING_DB_URL: jdbc:postgresql://postgres:5432/billing_db
+      BILLING_DB_USER: ${BILLING_DB_USER:-billing_svc}
+      BILLING_DB_PASSWORD: ${BILLING_DB_PASSWORD:?BILLING_DB_PASSWORD is required}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      BILLING_CLOSING_DAY: ${BILLING_CLOSING_DAY:-1}
+      BILLING_DUE_DAYS: ${BILLING_DUE_DAYS:-7}
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  properties-service:
+    # Build tu repo root de thay parent pom + common-lib (giong cac service khac).
+    build:
+      context: ..
+      dockerfile: properties-service/Dockerfile
+    container_name: rental-properties
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/property_db?currentSchema=properties_service,public
+      SPRING_DATASOURCE_USERNAME: ${PROPERTY_DB_USER:-property_svc}
+      SPRING_DATASOURCE_PASSWORD: ${PROPERTY_DB_PASSWORD:?PROPERTY_DB_PASSWORD is required}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_ENABLED: "true"
+      EUREKA_SERVER_URL: http://discovery-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-r2}
+      R2_ENDPOINT: ${R2_ENDPOINT:-http://minio:9000}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-minioadmin}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-minioadmin}
+      R2_BUCKET: ${PROPERTY_IMAGE_BUCKET:-property-images}
+      R2_PUBLIC_BASE_URL: ${PROPERTY_IMAGE_PUBLIC_BASE_URL:-http://localhost:9000/property-images}
+    networks:
+      - rental-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -300,6 +514,7 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
       EUREKA_URL: http://discovery-server:8761/eureka/
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required (min 32 chars)}
       JWT_ISSUER: ${JWT_ISSUER:-rental-auth}

@@ -34,15 +34,15 @@ public class MeterService {
     @Transactional
     public MeterResponse create(CreateMeterRequest request) {
         UtilityType utilityType = utilityTypes.findById(request.getUtilityTypeId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Khong tim thay loai tien ich"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy loại tiện ích"));
         PropertyClient.RoomInternal room = propertyClient.getRoom(request.getRoomId());
         if (room == null || room.getBuildingId() == null) {
-            throw new BusinessException(ErrorCode.DEPENDENCY_UNAVAILABLE, "Khong lay duoc thong tin phong");
+            throw new BusinessException(ErrorCode.DEPENDENCY_UNAVAILABLE, "Không lấy được thông tin phòng");
         }
         auth.requireBuildingScope(room.getBuildingId());
         meters.findByRoomIdAndUtilityType_IdAndIsActiveTrue(request.getRoomId(), request.getUtilityTypeId())
                 .ifPresent(existing -> {
-                    throw new BusinessException("METER_EXISTS", "Phong da co dong ho loai nay",
+                    throw new BusinessException("METER_EXISTS", "Phòng đã có đồng hồ loại này",
                             HttpStatus.CONFLICT);
                 });
         Meter meter = new Meter();
@@ -59,11 +59,9 @@ public class MeterService {
     public List<MeterResponse> list(Long roomId, Long buildingId) {
         if (roomId != null) {
             List<Meter> result = meters.findByRoomId(roomId);
-            if (!result.isEmpty() && !auth.isAdmin()) {
+            if (!result.isEmpty()) {
                 // STAFF chi xem toa minh phu trach (docs 6.2): suy building tu du lieu, khong tin param.
                 auth.requireBuildingScope(result.get(0).getBuildingId());
-                List<Long> allowed = allowedBuildings();
-                result = result.stream().filter(m -> allowed.contains(m.getBuildingId())).toList();
             }
             return result.stream().map(this::toResponse).toList();
         }
@@ -75,23 +73,18 @@ public class MeterService {
             return meters.findAll().stream().map(this::toResponse).toList();
         }
         // Khong filter ma doi full list -> chi tra toa duoc phan cong.
-        List<Long> allowed = allowedBuildings();
-        return meters.findAll().stream().filter(m -> allowed.contains(m.getBuildingId())).map(this::toResponse)
-                .toList();
-    }
-
-    private List<Long> allowedBuildings() {
-        try {
-            return auth.staffBuildingIds(auth.currentUserId());
-        } catch (RuntimeException e) {
+        List<Long> allowed = auth.staffBuildingIds(auth.currentUserId());
+        if (allowed.isEmpty()) {
             return List.of();
         }
+        return meters.findByBuildingIdIn(allowed).stream().map(this::toResponse).toList();
     }
 
     private MeterResponse toResponse(Meter meter) {
         return MeterResponse.builder().id(meter.getId()).roomId(meter.getRoomId())
                 .buildingId(meter.getBuildingId()).utilityTypeId(meter.getUtilityType().getId())
                 .utilityTypeName(meter.getUtilityType().getName()).meterCode(meter.getMeterCode())
-                .initialIndex(meter.getInitialIndex()).active(meter.isActive()).build();
+                .initialIndex(meter.getInitialIndex()).initialIndexDate(meter.getInitialIndexDate())
+                .active(meter.isActive()).build();
     }
 }

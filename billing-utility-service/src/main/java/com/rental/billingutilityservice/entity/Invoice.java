@@ -28,6 +28,10 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Hoa don tong cua phong/thang ma hoa don nay la mot share (docs muc 11.4). */
+    @Column(name = "room_invoice_id")
+    private Long roomInvoiceId;
+
     @Column(name = "contract_id", nullable = false)
     private Long contractId;
 
@@ -42,6 +46,10 @@ public class Invoice {
 
     @Column(name = "customer_id", nullable = false)
     private Long customerId;
+
+    /** Nguoi dai dien phong: duoc xem so tien cua cac thanh vien khac trong hoa don tong. */
+    @Column(name = "is_representative", nullable = false)
+    private boolean representative = false;
 
     @Column(nullable = false)
     private Integer month;

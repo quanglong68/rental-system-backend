@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Dinh dang loi chuan, moi service dung chung qua common-lib (docs muc 8).
- * Vi du: {"code":"ROOM_CAPACITY_EXCEEDED","message":"Phong da du so nguoi toi da",
+ * Vi du: {"code":"ROOM_CAPACITY_EXCEEDED","message":"Phòng đã đủ số người tối đa",
  * "status":422,"traceId":"&lt;correlationId&gt;","details":[...]}.
  */
 @Data

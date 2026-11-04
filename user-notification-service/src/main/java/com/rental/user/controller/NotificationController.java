@@ -2,7 +2,7 @@ package com.rental.user.controller;
 
 import com.rental.user.dto.DeviceRequest;
 import com.rental.user.dto.NotificationResponse;
-import com.rental.user.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.user.service.NotificationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

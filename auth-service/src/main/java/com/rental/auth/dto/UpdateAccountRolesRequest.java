@@ -15,6 +15,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UpdateAccountRolesRequest {
 
-    @NotEmpty(message = "Phai co it nhat 1 role")
+    @NotEmpty(message = "Phải có ít nhất 1 role")
     private List<String> roles;
 }

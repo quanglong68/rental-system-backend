@@ -43,6 +43,21 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
+    # Dev local: heartbeat nhanh de Gateway thay instance vua restart trong ~5-10s.
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+
+contract:
+  # Khách phải ký trong vòng 2 ngày (48 giờ) kể từ khi hợp đồng được tạo.
+  signature-deadline-days: ${CONTRACT_SIGNATURE_DEADLINE_DAYS:2}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ROOT_USER:minioadmin}
+    secret-key: ${MINIO_ROOT_PASSWORD:changeit}
+    bucket: ${MINIO_CONTRACT_BUCKET:contract-documents}
+  pdf:
+    font-regular: fonts/NotoSans-Regular.ttf
+    font-bold: fonts/NotoSans-Bold.ttf
 
 management:
   endpoints:

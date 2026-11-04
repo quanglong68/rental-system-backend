@@ -13,10 +13,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateMoveOutRequest {
 
-    @NotNull(message = "contractId is required")
+    @NotNull(message = "contractId là bắt buộc")
     private Long contractId;
 
-    @NotNull(message = "expectedMoveOutDate is required")
+    @NotNull(message = "expectedMoveOutDate là bắt buộc")
     private LocalDate expectedMoveOutDate;
 
     /** Spec 9.4: {@code {contractId, expectedMoveOutDate, reason?}} — optional. */

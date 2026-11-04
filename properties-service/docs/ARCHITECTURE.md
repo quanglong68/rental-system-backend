@@ -32,7 +32,7 @@ All AI coding agents, including Codex, must read and follow this document before
 - Build system: Gradle with Kotlin DSL
 - Database: PostgreSQL
 - Database migration tool: Flyway
-- Base package: `fptu.semester8.mss301.propertiesservice`
+- Base package: `com.rental.propertiesservice`
 
 ### Existing technical conventions
 
@@ -103,10 +103,9 @@ Adapt the structure to the existing codebase and actual business requirements.
 src/
 ├── main/
 │   ├── java/
-│   │   └── fptu/
-│   │       └── semester8/
-│   │           └── mss301/
-│   │               └── propertiesservice/
+│   │   └── com/
+│   │       └── rental/
+│   │           └── propertiesservice/
 │   │                   ├── PropertiesServiceApplication.java
 │   │                   │
 │   │                   ├── common/
@@ -164,17 +163,16 @@ src/
 │
 └── test/
     └── java/
-        └── fptu/
-            └── semester8/
-                └── mss301/
-                    └── propertiesservice/
-                        └── features/
+        └── com/
+            └── rental/
+                └── propertiesservice/
+                    └── features/
 ```
 
 ### Structure rules
 
 - Keep `PropertiesServiceApplication.java` in the root package.
-- Use the base package `fptu.semester8.mss301.propertiesservice`.
+- Use the base package `com.rental.propertiesservice`.
 - Put business features inside `features/`.
 - Keep shared, genuinely cross-feature components inside `common/`.
 - Keep Spring configuration classes inside `config/` or a more specific configuration package when appropriate.

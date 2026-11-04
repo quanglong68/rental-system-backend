@@ -21,7 +21,7 @@ import com.rental.asset.controller.ApplianceController;
 import com.rental.asset.controller.MaintenanceReportController;
 import com.rental.asset.controller.MaintenanceRequestController;
 import com.rental.asset.controller.MaintenanceScheduleController;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.entity.Appliance;
 import com.rental.asset.entity.MaintenanceReport;
 import com.rental.asset.entity.MaintenanceRequest;
@@ -230,12 +230,15 @@ class AssetControllerSecurityTest {
     }
 
     @Test
-    @DisplayName("SALE: Không có quyền xem appliances và list reports, nhưng có thể xem report đơn lẻ nếu authenticated")
-    void sale_cannotAccessAppliancesOrListReports_butCanReadSingleReport() throws Exception {
-        // SALE KHÔNG có trong PreAuthorize của GET /api/v1/appliances -> 403
+    @DisplayName("SALE: Đọc được appliances (STAFF), không list được reports, vẫn xem report đơn lẻ nếu authenticated")
+    void sale_canAccessAppliances_butCannotListReports_canReadSingleReport() throws Exception {
+        when(applianceService.findAppliances(any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(new PageResponse<>(List.of(), 0, 20, 0, 0));
+
+        // SALE thuộc STAFF -> GET /api/v1/appliances được phép (docs 9.6)
         mvc.perform(get("/api/v1/appliances?buildingId=10")
                         .header("X-User-Id", "301").header("X-User-Type", "STAFF").header("X-User-Roles", "SALE"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
 
         // SALE KHÔNG có trong PreAuthorize của GET /api/v1/reports -> 403
         mvc.perform(get("/api/v1/reports?buildingId=10")
@@ -411,7 +414,7 @@ class AssetControllerSecurityTest {
         // Theo yêu cầu không sửa production code trừ khi có bug rõ ràng, tôi sẽ sửa test
         
         // Hành vi hiện tại: service trả về tất cả schedules nếu buildingId == null
-        when(maintenanceScheduleService.findSchedules(null))
+        when(maintenanceScheduleService.findSchedules(null, null))
                 .thenReturn(List.of());
 
         mvc.perform(get("/api/v1/maintenance-schedules")

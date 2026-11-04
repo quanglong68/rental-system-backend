@@ -3,6 +3,7 @@ package com.rental.contracttenant.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -17,8 +18,10 @@ import com.rental.common.error.BusinessException;
 import com.rental.common.error.DependencyUnavailableException;
 import com.rental.common.error.NotFoundException;
 import com.rental.common.security.HeaderUser;
+import com.rental.contracttenant.client.AuthClient;
 import com.rental.contracttenant.client.CustomerClient;
 import com.rental.contracttenant.client.PropertyClient;
+import com.rental.contracttenant.config.ContractSignatureSettings;
 import com.rental.contracttenant.dto.AddTenantRequest;
 import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
@@ -31,13 +34,17 @@ import com.rental.contracttenant.entity.ContractStatus;
 import com.rental.contracttenant.entity.ContractTenant;
 import com.rental.contracttenant.entity.MoveOutRequest;
 import com.rental.contracttenant.entity.MoveOutStatus;
+import com.rental.contracttenant.entity.SignatureStatus;
 import com.rental.contracttenant.outbox.OutboxEventPublisher;
+import com.rental.contracttenant.outbox.TenantAddedPayload;
 import com.rental.contracttenant.outbox.TenantRemovedPayload;
 import com.rental.contracttenant.repository.ContractRepository;
+import com.rental.contracttenant.repository.ContractSignatureRepository;
 import com.rental.contracttenant.repository.ContractTenantRepository;
 import com.rental.contracttenant.repository.MoveOutRequestRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -75,6 +82,30 @@ class ContractServiceTest {
     private MoveOutRequestRepository moveOutRequests;
 
     @Mock
+    private com.rental.contracttenant.repository.ContractRenewalRequestRepository renewalRequests;
+
+    @Mock
+    private ContractSignatureRepository signatureRows;
+
+    @Mock
+    private com.rental.contracttenant.repository.ContractDocumentRepository documents;
+
+    @Mock
+    private ContractDocumentService documentService;
+
+    @Mock
+    private ContractDocumentStorage documentStorage;
+
+    @Mock
+    private AuthClient authClient;
+
+    @Mock
+    private ContractSignatureSettings signatureSettings;
+
+    @Mock
+    private com.rental.contracttenant.config.ContractRenewalSettings renewalSettings;
+
+    @Mock
     private OutboxEventPublisher outbox;
 
     @Mock
@@ -99,9 +130,14 @@ class ContractServiceTest {
     void setUp() {
         lenient().when(transactionManager.getTransaction(any(TransactionDefinition.class)))
                 .thenReturn(new SimpleTransactionStatus());
+        lenient().when(signatureSettings.deadline()).thenReturn(Duration.ofDays(15));
+        lenient().when(renewalSettings.leadDays()).thenReturn(30);
+        lenient().when(renewalSettings.moveOutDays()).thenReturn(15);
+        lenient().when(renewalSettings.defaultTermMonths()).thenReturn(12);
         lenient().when(contracts.findById(9L)).thenReturn(Optional.of(fixture()));
-        service = new ContractService(contracts, tenants, moveOutRequests, outbox, properties, customers,
-                buildingScope, transactionManager, CLOCK);
+        service = new ContractService(contracts, tenants, moveOutRequests, renewalRequests, signatureRows, documents,
+                documentService, documentStorage, authClient, signatureSettings, renewalSettings, outbox, properties,
+                customers, buildingScope, transactionManager, CLOCK);
     }
 
     @org.junit.jupiter.api.AfterEach
@@ -319,6 +355,56 @@ class ContractServiceTest {
     }
 
     @Test
+    void updateDraft_awaitingTenant_regeneratesPdfWithNewTerms() {
+        Contract draft = fixture();
+        draft.setSignatureStatus(SignatureStatus.AWAITING_TENANT);
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(draft));
+        when(contracts.save(draft)).thenReturn(draft);
+
+        service.updateDraftDetails(9L, updateRequest());
+
+        verify(documentService).generate(eq(draft), any());
+    }
+
+    @Test
+    void updateDraft_afterTenantSigned_throwsInvalidSignatureStatusAndDoesNotTouchTerms() {
+        Contract draft = fixture();
+        draft.setSignatureStatus(SignatureStatus.AWAITING_LESSOR);
+        draft.setRentAmount(new BigDecimal("3500000"));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(draft));
+
+        assertThatThrownBy(() -> service.updateDraftDetails(9L, updateRequest()))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getCode())
+                        .isEqualTo("INVALID_SIGNATURE_STATUS"));
+        assertThat(draft.getRentAmount()).isEqualByComparingTo("3500000");
+        verify(contracts, never()).save(any(Contract.class));
+        verify(documentService, never()).generate(any(), any());
+    }
+
+    @Test
+    void updateDraft_omittedTermFieldsKeepStoredValues() {
+        Contract draft = fixture();
+        draft.setSignatureStatus(SignatureStatus.AWAITING_TENANT);
+        draft.setElectricityPrice(new BigDecimal("3500"));
+        draft.setWaterUnit("M3");
+        draft.setPaymentMethod("CASH");
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(draft));
+        when(contracts.save(draft)).thenReturn(draft);
+
+        UpdateDraftContractRequest request = updateRequest();
+        request.setElectricityPrice(null);
+        request.setWaterUnit(null);
+        request.setPaymentMethod(null);
+
+        service.updateDraftDetails(9L, request);
+
+        assertThat(draft.getElectricityPrice()).isEqualByComparingTo("3500");
+        assertThat(draft.getWaterUnit()).isEqualTo("M3");
+        assertThat(draft.getPaymentMethod()).isEqualTo("CASH");
+    }
+
+    @Test
     void updateDraft_nullRequest_throwsValidationException() {
         assertThatThrownBy(() -> service.updateDraftDetails(9L, null))
                 .isInstanceOf(BusinessException.class)
@@ -352,11 +438,21 @@ class ContractServiceTest {
         when(tenants.existsCurrentTenantInContractWithStatus(any(), any())).thenReturn(false);
     }
 
+    /** Signing also inserts the representative row and then references its generated id. */
+    private void stubRepresentativeInsert() {
+        when(tenants.save(any(ContractTenant.class))).thenAnswer(invocation -> {
+            ContractTenant inserted = invocation.getArgument(0);
+            inserted.setId(501L);
+            return inserted;
+        });
+    }
+
     @Test
     void sign_draftContract_activatesAndCreatesOneRepresentativeFromStartDate() {
         Contract contract = signable();
         allowSigning(contract);
         when(contracts.save(contract)).thenReturn(contract);
+        stubRepresentativeInsert();
 
         ContractResponse response = service.sign(9L);
 
@@ -379,6 +475,7 @@ class ContractServiceTest {
         Contract contract = signable();
         allowSigning(contract);
         when(contracts.save(contract)).thenReturn(contract);
+        stubRepresentativeInsert();
 
         service.sign(9L);
 
@@ -390,6 +487,7 @@ class ContractServiceTest {
         Contract contract = signable();
         allowSigning(contract);
         when(contracts.save(contract)).thenReturn(contract);
+        stubRepresentativeInsert();
 
         service.sign(9L);
 
@@ -586,6 +684,7 @@ class ContractServiceTest {
                 .thenReturn(Optional.of(draft));   // the update path's locked read
         when(contracts.save(active)).thenReturn(active);
         when(contracts.save(draft)).thenReturn(draft);
+        stubRepresentativeInsert();
         when(contracts.existsActiveOverlappingContract(any(), any(), any(), any(), any())).thenReturn(false);
         when(tenants.existsCurrentTenantInContractWithStatus(any(), any())).thenReturn(false);
 
@@ -738,6 +837,11 @@ class ContractServiceTest {
 
     // ---- Task 5B: add tenant ----
 
+    private static PropertyClient.RoomInfo roomInfo(long id, long buildingId, Integer maxCapacity) {
+        return new PropertyClient.RoomInfo(id, buildingId, maxCapacity, null, null, null, null,
+                null, null, null, null, null, null);
+    }
+
     private static AddTenantRequest addRequest(Long customerId, LocalDate joinedAt) {
         AddTenantRequest request = new AddTenantRequest();
         request.setCustomerId(customerId);
@@ -761,7 +865,7 @@ class ContractServiceTest {
                 .thenReturn(false);
         lenient().when(tenants.existsCurrentTenantInContractWithStatus(any(), any())).thenReturn(false);
         lenient().when(properties.getRoom(12L))
-                .thenReturn(new PropertyClient.RoomInfo(12L, 3L, maxCapacity));
+                .thenReturn(roomInfo(12L, 3L, maxCapacity));
         lenient().when(tenants.save(any(ContractTenant.class))).thenAnswer(invocation -> {
             ContractTenant saved = invocation.getArgument(0);
             saved.setId(45L);
@@ -938,7 +1042,7 @@ class ContractServiceTest {
     void addTenant_propertyResponseWithoutCapacity_closesWith503InsteadOfAssumingNoLimit() {
         Contract contract = fixture();
         allowAdding(contract, 3);
-        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 3L, null));
+        when(properties.getRoom(12L)).thenReturn(roomInfo(12L, 3L, null));
 
         assertThatThrownBy(() -> service.addTenant(9L, addRequest(88L, LocalDate.of(2026, 12, 1))))
                 .isInstanceOf(BusinessException.class)
@@ -1054,17 +1158,21 @@ class ContractServiceTest {
     }
 
     @Test
-    void addTenant_doesNotEmitAnEvent() {
+    void addTenant_emitsTenantAddedForTheOccupancyProjection() {
         Contract contract = fixture();
         allowAdding(contract, 3);
         when(tenants.countByContractIdAndLeftAtIsNull(9L)).thenReturn(0L);
 
         service.addTenant(9L, addRequest(88L, LocalDate.of(2026, 12, 1)));
 
-        // TenantAdded belongs to the roommate flow (spec 1025/1400), which this manual path does not
-        // run; writing one here would make Listing close applications this request never opened.
+        // The property projection only knows a tenant exists through TenantAdded. This manual path
+        // never carries an applicationId, so Listing must not read it as a roommate acceptance.
+        ArgumentCaptor<TenantAddedPayload> payload = ArgumentCaptor.forClass(TenantAddedPayload.class);
+        verify(outbox).publishTenantAdded(payload.capture());
+        assertThat(payload.getValue().getContractTenantId()).isEqualTo(45L);
+        assertThat(payload.getValue().getCustomerId()).isEqualTo(88L);
+        assertThat(payload.getValue().getApplicationId()).isNull();
         verify(outbox, never()).publishContractSigned(any(), any());
-        verifyNoInteractions(outbox);
     }
 
     @Test
@@ -1126,12 +1234,14 @@ class ContractServiceTest {
         Contract contract = signable();
         allowSigning(contract);
         when(contracts.save(contract)).thenReturn(contract);
+        stubRepresentativeInsert();
 
         ContractResponse response = service.sign(9L);
 
         assertThat(response.getStatus()).isEqualTo(ContractStatus.ACTIVE);
         verify(buildingScope).assertAssigned(contract.getBuildingId());
-        verify(contracts).save(contract);
+        // Sign writes the ACTIVE row and then the TenantAdded revision, so two saves are expected.
+        verify(contracts, times(2)).save(contract);
     }
 
     @Test
@@ -1482,22 +1592,137 @@ class ContractServiceTest {
     }
 
     @Test
-    void renewContract_validActiveContract_updatesEndDateAndPublishesEvent() {
+    void offerRenewal_activeContract_createsAwaitingTenantDraftAndPdf() {
         Contract contract = fixture();
         contract.setStatus(ContractStatus.ACTIVE);
         contract.setEndDate(LocalDate.of(2027, 5, 1));
         when(contracts.findById(9L)).thenReturn(Optional.of(contract));
         when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
-        when(contracts.save(any(Contract.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(tenants.findByContractIdAndLeftAtIsNullOrderByJoinedAtAsc(9L))
-                .thenReturn(List.of(tenant(31L, 77L, true, null)));
+        when(contracts.save(any(Contract.class))).thenAnswer(invocation -> {
+            Contract saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
 
         com.rental.contracttenant.dto.RenewContractRequest req =
-                new com.rental.contracttenant.dto.RenewContractRequest(LocalDate.of(2027, 11, 1));
+                new com.rental.contracttenant.dto.RenewContractRequest(LocalDate.of(2028, 5, 1));
         ContractResponse response = service.renewContract(9L, req);
 
-        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2027, 11, 1));
-        verify(outbox).publishContractRenewed(any());
+        assertThat(response.getId()).isEqualTo(10L);
+        assertThat(response.getStatus()).isEqualTo(ContractStatus.DRAFT);
+        assertThat(response.getSignatureStatus()).isEqualTo(SignatureStatus.AWAITING_TENANT);
+        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2027, 5, 2));
+        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2028, 5, 1));
+        assertThat(response.getRenewedFromContractId()).isEqualTo(9L);
+        verify(documentService).generate(any(Contract.class), any());
+        verify(outbox, never()).publishContractRenewed(any());
+    }
+
+    @Test
+    void offerRenewal_endDateNotAfterStart_isRejected() {
+        Contract contract = fixture();
+        contract.setStatus(ContractStatus.ACTIVE);
+        contract.setEndDate(LocalDate.of(2027, 5, 1));
+        when(contracts.findById(9L)).thenReturn(Optional.of(contract));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+
+        com.rental.contracttenant.dto.RenewContractRequest req =
+                new com.rental.contracttenant.dto.RenewContractRequest(LocalDate.of(2027, 5, 1));
+
+        assertThatThrownBy(() -> service.renewContract(9L, req))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("INVALID_DATE"));
+    }
+
+    @Test
+    void createRenewalDraft_withinLeadWindow_createsNotReadyDraftForDefaultTerm() {
+        Contract contract = activeContractEnding(LocalDate.of(2026, 11, 10));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+        when(contracts.save(any(Contract.class))).thenAnswer(invocation -> {
+            Contract saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
+
+        ContractResponse response = service.createRenewalDraft(9L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(ContractStatus.DRAFT);
+        assertThat(response.getSignatureStatus()).isEqualTo(SignatureStatus.NOT_READY);
+        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026, 11, 11));
+        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2027, 11, 11));
+        assertThat(response.getRenewedFromContractId()).isEqualTo(9L);
+    }
+
+    @Test
+    void createRenewalDraft_alreadyRenewed_skips() {
+        Contract contract = activeContractEnding(LocalDate.of(2026, 11, 10));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+        when(contracts.existsByRenewedFromContractId(9L)).thenReturn(true);
+
+        assertThat(service.createRenewalDraft(9L)).isNull();
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void createAutoMoveOut_unsignedRenewalInsideWindow_createsApprovedRequest() {
+        Contract contract = activeContractEnding(LocalDate.of(2026, 11, 5));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+        when(contracts.findFirstByRenewedFromContractIdOrderByCreatedAtDesc(9L)).thenReturn(Optional.empty());
+        when(moveOutRequests.existsByContractIdAndStatusIn(eq(9L), any())).thenReturn(false);
+        when(moveOutRequests.save(any(MoveOutRequest.class))).thenAnswer(invocation -> {
+            MoveOutRequest saved = invocation.getArgument(0);
+            saved.setId(55L);
+            return saved;
+        });
+        when(contracts.save(any(Contract.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tenants.findByContractIdAndLeftAtIsNullOrderByJoinedAtAsc(9L)).thenReturn(List.of());
+
+        var response = service.createAutoMoveOut(9L, LocalDate.of(2026, 10, 22));
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(MoveOutStatus.APPROVED);
+        assertThat(response.isAutoGenerated()).isTrue();
+        assertThat(response.getExpectedMoveOutDate()).isEqualTo(LocalDate.of(2026, 11, 5));
+        verify(outbox).publishMoveOutApproved(any());
+    }
+
+    @Test
+    void createAutoMoveOut_renewalCompleted_skips() {
+        Contract contract = activeContractEnding(LocalDate.of(2026, 11, 5));
+        Contract renewal = fixture();
+        renewal.setId(10L);
+        renewal.setStatus(ContractStatus.ACTIVE);
+        renewal.setSignatureStatus(SignatureStatus.COMPLETED);
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+        when(contracts.findFirstByRenewedFromContractIdOrderByCreatedAtDesc(9L)).thenReturn(Optional.of(renewal));
+
+        assertThat(service.createAutoMoveOut(9L, LocalDate.of(2026, 10, 22))).isNull();
+        verify(moveOutRequests, never()).save(any());
+    }
+
+    @Test
+    void markMoveOutRead_setsReadAtOnceAndIsScoped() {
+        MoveOutRequest request = moveOut(55L, MoveOutStatus.PENDING);
+        when(moveOutRequests.findById(55L)).thenReturn(Optional.of(request));
+        when(moveOutRequests.save(any(MoveOutRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.markMoveOutRead(55L);
+
+        assertThat(response.getReadAt()).isNotNull();
+        verify(buildingScope).assertAssigned(3L);
+    }
+
+    @Test
+    void markMoveOutRead_alreadyRead_doesNotTouchRowAgain() {
+        MoveOutRequest request = moveOut(55L, MoveOutStatus.PENDING);
+        request.setReadAt(Instant.parse("2026-10-20T00:00:00Z"));
+        when(moveOutRequests.findById(55L)).thenReturn(Optional.of(request));
+
+        var response = service.markMoveOutRead(55L);
+
+        assertThat(response.getReadAt()).isEqualTo(Instant.parse("2026-10-20T00:00:00Z"));
+        verify(moveOutRequests, never()).save(any());
     }
 
     /**
@@ -1647,12 +1872,12 @@ class ContractServiceTest {
     void searchMoveOutRequests_staffWithoutBuildingId_isRestrictedToAssignedBuildings() {
         when(buildingScope.getAssignedBuildingIds()).thenReturn(List.of(3L, 4L));
         Pageable pageable = PageRequest.of(0, 20);
-        when(moveOutRequests.findByFilters(null, List.of(3L, 4L), null, pageable))
+        when(moveOutRequests.findByFilters(null, List.of(3L, 4L), null, false, pageable))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        service.searchMoveOutRequests(null, null, pageable);
+        service.searchMoveOutRequests(null, null, false, pageable);
 
-        verify(moveOutRequests).findByFilters(null, List.of(3L, 4L), null, pageable);
+        verify(moveOutRequests).findByFilters(null, List.of(3L, 4L), null, false, pageable);
         verify(buildingScope, never()).assertAssigned(any());
     }
 
@@ -1660,12 +1885,12 @@ class ContractServiceTest {
     void searchMoveOutRequests_admin_isNotRestricted() {
         when(buildingScope.getAssignedBuildingIds()).thenReturn(null);
         Pageable pageable = PageRequest.of(0, 20);
-        when(moveOutRequests.findByFilters(null, null, null, pageable))
+        when(moveOutRequests.findByFilters(null, null, null, false, pageable))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        service.searchMoveOutRequests(null, null, pageable);
+        service.searchMoveOutRequests(null, null, false, pageable);
 
-        verify(moveOutRequests).findByFilters(null, null, null, pageable);
+        verify(moveOutRequests).findByFilters(null, null, null, false, pageable);
     }
 
     @Test
@@ -1673,9 +1898,9 @@ class ContractServiceTest {
         doThrow(new AccessDeniedException("Staff chua duoc phan cong tai toa nha nay"))
                 .when(buildingScope).assertAssigned(99L);
 
-        assertThatThrownBy(() -> service.searchMoveOutRequests(99L, null, PageRequest.of(0, 20)))
+        assertThatThrownBy(() -> service.searchMoveOutRequests(99L, null, false, PageRequest.of(0, 20)))
                 .isInstanceOf(AccessDeniedException.class);
-        verify(moveOutRequests, never()).findByFilters(any(), any(), any(), any());
+        verify(moveOutRequests, never()).findByFilters(any(), any(), any(), anyBoolean(), any());
     }
 
     // ---- move-out: concurrency --------------------------------------------------------------
@@ -1902,11 +2127,12 @@ class ContractServiceTest {
         when(contracts.findFirstByRoomIdAndStatusOrderByStartDateDesc(12L, ContractStatus.ACTIVE))
                 .thenReturn(Optional.of(contract));
         when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
-        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 3L, 1));
+        when(properties.getRoom(12L)).thenReturn(roomInfo(12L, 3L, 1));
         when(tenants.countByContractIdAndLeftAtIsNull(9L)).thenReturn(1L);
 
         com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent event =
-                new com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent(10L, 20L, 12L, 3L, 77L, 88L);
+                new com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent(10L, 20L, 12L, 3L, 77L, 88L,
+                        "Nguyễn Văn B", "0901234567", "012345678901");
         service.processRoommateAccepted(event);
 
         verify(outbox).publishTenantAddRejected(any());
@@ -1920,15 +2146,27 @@ class ContractServiceTest {
         when(contracts.findFirstByRoomIdAndStatusOrderByStartDateDesc(12L, ContractStatus.ACTIVE))
                 .thenReturn(Optional.of(contract));
         when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
-        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 3L, 2));
+        when(properties.getRoom(12L)).thenReturn(roomInfo(12L, 3L, 2));
         when(tenants.countByContractIdAndLeftAtIsNull(9L)).thenReturn(1L);
+        when(tenants.save(any(ContractTenant.class))).thenAnswer(call -> {
+            ContractTenant saved = call.getArgument(0);
+            saved.setId(555L);
+            return saved;
+        });
 
         com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent event =
-                new com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent(10L, 20L, 12L, 3L, 77L, 88L);
+                new com.rental.contracttenant.dto.RoommateApplicationAcceptedEvent(10L, 20L, 12L, 3L, 77L, 88L,
+                        "Nguyễn Văn B", "0901234567", "012345678901");
         service.processRoommateAccepted(event);
 
-        verify(tenants).save(any(ContractTenant.class));
+        org.mockito.ArgumentCaptor<ContractTenant> captor =
+                org.mockito.ArgumentCaptor.forClass(ContractTenant.class);
+        verify(tenants).save(captor.capture());
+        assertThat(captor.getValue().getFullName()).isEqualTo("Nguyễn Văn B");
+        assertThat(captor.getValue().getPhone()).isEqualTo("0901234567");
+        assertThat(captor.getValue().getCccdNumber()).isEqualTo("012345678901");
         verify(outbox).publishTenantAdded(any());
+        verify(documentService).generateAddendum(any(), any(), any());
     }
 
     @Test
@@ -1953,9 +2191,9 @@ class ContractServiceTest {
         contract.setStatus(ContractStatus.ACTIVE);
         when(contracts.findFirstByRoomIdAndStatusOrderByStartDateDesc(12L, ContractStatus.ACTIVE))
                 .thenReturn(Optional.of(contract));
-        when(tenants.existsByContractIdAndCustomerIdAndLeftAtIsNull(9L, 77L)).thenReturn(true);
+        when(tenants.existsByContractIdAndCustomerIdAndLeftAtIsNull(9L, 88L)).thenReturn(true);
 
-        var res = service.checkRoomTenant(12L, 77L);
+        var res = service.checkRoomTenant(12L, 88L);
         assertThat(res.isTenant()).isTrue();
         assertThat(res.getContractId()).isEqualTo(9L);
     }
@@ -2021,7 +2259,7 @@ class ContractServiceTest {
     @Test
     void createDraftManual_validRequest_createsContractWithNullRentalRequestId() {
         CreateDraftManualRequest request = manualRequest();
-        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 3L, 4));
+        when(properties.getRoom(12L)).thenReturn(roomInfo(12L, 3L, 4));
         when(contracts.save(any(Contract.class))).thenAnswer(invocation -> {
             Contract saved = invocation.getArgument(0);
             saved.setId(9L);
@@ -2092,7 +2330,7 @@ class ContractServiceTest {
     @Test
     void createDraftManual_roomBuildingMismatch_throws422() {
         CreateDraftManualRequest request = manualRequest();
-        when(properties.getRoom(12L)).thenReturn(new PropertyClient.RoomInfo(12L, 999L, 4)); // Wrong building
+        when(properties.getRoom(12L)).thenReturn(roomInfo(12L, 999L, 4)); // Wrong building
 
         assertThatThrownBy(() -> service.createDraftManual(request))
                 .isInstanceOf(BusinessException.class)

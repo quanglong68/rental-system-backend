@@ -3,12 +3,14 @@ package com.rental.asset.service;
 import com.rental.asset.client.PropertyClient;
 import com.rental.asset.dto.ApplianceCreateRequest;
 import com.rental.asset.dto.ApplianceUpdateRequest;
-import com.rental.asset.dto.PageResponse;
+import com.rental.common.dto.PageResponse;
 import com.rental.asset.dto.UploadUrlRequest;
 import com.rental.asset.dto.UploadUrlResponse;
 import com.rental.asset.dto.WarrantyUpdateRequest;
 import com.rental.asset.entity.Appliance;
 import com.rental.asset.repository.ApplianceRepository;
+import com.rental.common.error.BusinessException;
+import com.rental.common.error.ErrorCode;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
@@ -18,16 +20,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ApplianceService {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplianceService.class);
     private static final Set<String> SUPPORTED_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final Set<String> SUPPORTED_STATUSES = Set.of("GOOD", "NEEDS_REPAIR", "BROKEN");
 
     private final ApplianceRepository applianceRepository;
     private final PropertyClient propertyClient;
@@ -52,13 +57,14 @@ public class ApplianceService {
     }
 
     public Appliance createAppliance(ApplianceCreateRequest request) {
-        PropertyClient.RoomInfo roomInfo = propertyClient.getRoom(request.roomId());
+        PropertyClient.RoomInfo roomInfo = requireRoom(request.roomId());
+        assetAccessService.requireBuildingAccess(roomInfo.buildingId());
 
         Appliance appliance = new Appliance();
         appliance.setRoomId(request.roomId());
         appliance.setBuildingId(roomInfo.buildingId());
         appliance.setName(request.name());
-        appliance.setStatus(request.status() == null ? "GOOD" : request.status());
+        appliance.setStatus(normalizeStatus(request.status()));
         return applianceRepository.save(appliance);
     }
 
@@ -67,13 +73,13 @@ public class ApplianceService {
         PageRequest pageRequest = pageRequestFactory.create(pageNumber, pageSize);
 
         if (roomId != null) {
-            PropertyClient.RoomInfo roomInfo = propertyClient.getRoom(roomId);
+            PropertyClient.RoomInfo roomInfo = requireRoom(roomId);
             assetAccessService.requireBuildingAccess(roomInfo.buildingId());
             return PageResponse.from(applianceRepository.findByRoomId(roomId, pageRequest));
         }
 
         if (buildingId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cần roomId hoặc buildingId");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Cần roomId hoặc buildingId");
         }
 
         assetAccessService.requireBuildingAccess(buildingId);
@@ -94,14 +100,14 @@ public class ApplianceService {
         assetAccessService.requireBuildingAccess(appliance.getBuildingId());
         appliance.setName(request.name());
         if (request.status() != null) {
-            appliance.setStatus(request.status());
+            appliance.setStatus(normalizeStatus(request.status()));
         }
         return applianceRepository.save(appliance);
     }
 
     public Appliance updateWarranty(Long applianceId, WarrantyUpdateRequest request) {
         if (request.endDate().isBefore(request.startDate())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ngày hết hạn phải sau ngày bắt đầu");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày hết hạn phải sau ngày bắt đầu");
         }
 
         Appliance appliance = findRequired(applianceRepository.findById(applianceId));
@@ -121,7 +127,7 @@ public class ApplianceService {
     public UploadUrlResponse createReportImageUploadUrl(UploadUrlRequest request) {
         String contentType = request.contentType().toLowerCase(Locale.ROOT);
         if (!SUPPORTED_IMAGE_TYPES.contains(contentType)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ hỗ trợ JPG, PNG hoặc WEBP");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Chỉ hỗ trợ JPG, PNG hoặc WEBP");
         }
 
         String fileExtension = switch (contentType) {
@@ -149,12 +155,33 @@ public class ApplianceService {
                             .build());
             return new UploadUrlResponse(uploadUrl, imageUrl, 600);
         } catch (Exception exception) {
+            log.error("Không tạo được presigned URL cho bucket {}", imageBucket, exception);
             throw new com.rental.common.error.BusinessException(
                     "DEPENDENCY_UNAVAILABLE", "Không thể tạo liên kết tải ảnh", HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 
+    private PropertyClient.RoomInfo requireRoom(Long roomId) {
+        PropertyClient.RoomInfo roomInfo = propertyClient.getRoom(roomId);
+        if (roomInfo == null || roomInfo.buildingId() == null) {
+            throw new BusinessException(ErrorCode.DEPENDENCY_UNAVAILABLE, "Không lấy được thông tin phòng");
+        }
+        return roomInfo;
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "GOOD";
+        }
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
+        if (!SUPPORTED_STATUSES.contains(normalized)) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "status phải là GOOD/NEEDS_REPAIR/BROKEN");
+        }
+        return normalized;
+    }
+
     private Appliance findRequired(Optional<Appliance> applianceOptional) {
-        return applianceOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return applianceOptional.orElseThrow(
+                () -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy thiết bị"));
     }
 }

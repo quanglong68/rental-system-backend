@@ -20,10 +20,18 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       properties.enable.idempotence: true
-eureka.client.service-url.defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    # Dev local: heartbeat nhanh de Gateway thay instance vua restart trong ~5-10s.
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
 asset:
   minio:
-    endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT:http://localhost:9000}}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
+    region: ${MINIO_REGION:us-east-1}
     access-key: ${MINIO_ROOT_USER:minioadmin}
     secret-key: ${MINIO_ROOT_PASSWORD:changeit}
     bucket: ${MINIO_BUCKET:report-images}
