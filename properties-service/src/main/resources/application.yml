@@ -10,7 +10,7 @@ spring:
     timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:20s}
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:property_db}?currentSchema=${SCHEMA_NAME:properties_service},public
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:property_db}?currentSchema=${DB_SCHEMA:properties_service},public
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -28,8 +28,8 @@ spring:
   flyway:
     enabled: true
     create-schemas: true
-    default-schema: ${SCHEMA_NAME:properties_service}
-    schemas: ${SCHEMA_NAME:properties_service}
+    default-schema: ${DB_SCHEMA:properties_service}
+    schemas: ${DB_SCHEMA:properties_service}
     locations: classpath:db/migration
     baseline-on-migrate: true
     baseline-version: 1

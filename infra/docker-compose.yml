@@ -477,7 +477,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
       SERVER_PORT: 8083
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/property_db?currentSchema=properties_service,public
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/property_db?currentSchema=${DB_SCHEMA:-properties_service},public
       SPRING_DATASOURCE_USERNAME: ${PROPERTY_DB_USER:-property_svc}
       SPRING_DATASOURCE_PASSWORD: ${PROPERTY_DB_PASSWORD:?PROPERTY_DB_PASSWORD is required}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092

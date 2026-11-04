@@ -174,6 +174,6 @@ After a successful run, view `target/surefire-reports/`. This README does not cl
 - [Developer guide](HELP.md): environment setup, run modes, configuration, debugging, and troubleshooting.
 - [API documentation](docs/api/README.md): feature endpoints and request/response contracts.
 - [Architecture guidelines](docs/ARCHITECTURE.md): source organization and development conventions.
-- [Configuration notes](docs/CONFIGURATION.md): local infrastructure background; check current `application.yaml` for authoritative defaults.
+- [Configuration notes](docs/CONFIGURATION.md): local infrastructure background; check current `application.yml` for authoritative defaults.
 
 This repository currently has no root `LICENSE`, `CONTRIBUTING.md`, or `CHANGELOG.md` file. It also has no checked-in demo screenshots or GitHub Actions workflow, so no license, demo, or CI status is asserted here.

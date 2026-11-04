@@ -48,7 +48,7 @@ services:
       SWAGGER_UI_ENABLED: ${SWAGGER_UI_ENABLED:-true}
       ACTUATOR_EXPOSED_ENDPOINTS: ${ACTUATOR_EXPOSED_ENDPOINTS:-health,info}
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-property_db}?currentSchema=${SCHEMA_NAME:-properties_service},public
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-property_db}?currentSchema=${DB_SCHEMA:-properties_service},public
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the project .env file}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_DOCKER_BOOTSTRAP_SERVERS:-kafka:9092}

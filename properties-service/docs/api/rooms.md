@@ -48,7 +48,7 @@ Phòng `MAINTENANCE` không có người ở không bị đánh dấu chỉ vì 
 
 ### Kiểm thử (2026-10-26)
 
-`gradlew.bat --no-daemon test --tests '*RoomStatisticsIntegrationTest' build`: **thành công**, 3 test tích hợp PostgreSQL/MockMvc, bao gồm số người 0/1/2, trùng user, ngày vào/ra, múi giờ, bộ lọc, dữ liệu thiếu, vượt sức chứa, HTTP 400/401/403. Đã sửa test support để nối `currentSchema` bằng `&` khi URL Testcontainers có sẵn query parameter. Trên môi trường Windows kiểm thử, đặt `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=<workspace>\.gradle\tmp` với thư mục tồn tại để tránh lỗi socket tạm của Java.
+`mvn test -Dtest=RoomStatisticsIntegrationTest`: **thành công**, 3 test tích hợp PostgreSQL/MockMvc, bao gồm số người 0/1/2, trùng user, ngày vào/ra, múi giờ, bộ lọc, dữ liệu thiếu, vượt sức chứa, HTTP 400/401/403. Đã sửa test support để nối `currentSchema` bằng `&` khi URL Testcontainers có sẵn query parameter. 
 
 Bộ test toàn dự án chưa xanh: lượt đầu có 30/72 test lỗi; lượt chạy lại sau sửa test support vẫn có lỗi ở kiểm thử ID, kết nối database và không hoàn tất nên đã dừng. Kết quả build thành công bên trên chỉ áp dụng bộ test thống kê được chọn, không khẳng định toàn bộ test dự án đã đạt.
 

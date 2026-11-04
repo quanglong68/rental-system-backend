@@ -48,19 +48,19 @@ public class RoommateService {
 
     @Transactional
     public RoommatePostResponse createPost(RoommatePostCreateDto dto, Long customerId) {
-        // Feign call #3: XÃ¡c thá»±c ngÆ°á»i dÃ¹ng lÃ  khÃ¡ch thuÃª Ä‘ang á»Ÿ phÃ²ng nÃ y
+        // Feign call #3: Xác thực người dùng là khách thuê đang ở phòng này
         ContractClient.RoomTenantCheckResponse check;
         try {
             check = contractClient.checkRoomTenant(dto.roomId(), customerId);
         } catch (Exception ex) {
-            log.error("KhÃ´ng thá»ƒ káº¿t ná»‘i contract-tenant-service Ä‘á»ƒ kiá»ƒm tra ngÆ°á»i thuÃª: {}", ex.getMessage());
+            log.error("Không thể kết nối contract-tenant-service để kiểm tra người thuê: {}", ex.getMessage());
             throw new BusinessException(ErrorCode.DEPENDENCY_UNAVAILABLE,
-                    "Dá»‹ch vá»¥ há»£p Ä‘á»“ng táº¡m thá»i khÃ´ng kháº£ dá»¥ng, vui lÃ²ng thá»­ láº¡i sau");
+                    "Dịch vụ hợp đồng tạm thời không khả dụng, vui lòng thử lại sau");
         }
 
         if (check == null || !check.isTenant()) {
             throw new BusinessException("NOT_A_TENANT_OF_ROOM",
-                    "Chá»‰ khÃ¡ch thuÃª Ä‘ang cÃ³ há»£p Ä‘á»“ng hiá»‡u lá»±c táº¡i phÃ²ng nÃ y má»›i Ä‘Æ°á»£c Ä‘Äƒng tin tÃ¬m báº¡n á»Ÿ ghÃ©p", HttpStatus.FORBIDDEN);
+                    "Chỉ khách thuê đang có hợp đồng hiệu lực tại phòng này mới được đăng tin tìm bạn ở ghép", HttpStatus.FORBIDDEN);
         }
 
         RoommatePost post = new RoommatePost();
@@ -85,7 +85,7 @@ public class RoommateService {
     @Transactional(readOnly = true)
     public RoommatePostResponse getPostById(Long id) {
         RoommatePost post = postRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y tin tÃ¬m báº¡n á»Ÿ ghÃ©p ID " + id));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tin tìm bạn ở ghép ID " + id));
         return toPostResponse(post);
     }
 
@@ -97,10 +97,10 @@ public class RoommateService {
     @Transactional
     public void closePost(Long id, Long customerId) {
         RoommatePost post = postRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y tin tÃ¬m báº¡n á»Ÿ ghÃ©p ID " + id));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tin tìm bạn ở ghép ID " + id));
 
         if (!post.getCustomerId().equals(customerId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Báº¡n khÃ´ng cÃ³ quyá»n Ä‘Ã³ng tin Ä‘Äƒng nÃ y");
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền đóng tin đăng này");
         }
 
         post.setStatus("CLOSED");
@@ -110,20 +110,20 @@ public class RoommateService {
     @Transactional
     public RoommateApplicationResponse applyToPost(Long postId, RoommateApplicationCreateDto dto, Long applicantCustomerId) {
         RoommatePost post = postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y tin tÃ¬m báº¡n á»Ÿ ghÃ©p ID " + postId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tin tìm bạn ở ghép ID " + postId));
 
         if (!"OPEN".equals(post.getStatus())) {
-            throw new BusinessException("POST_CLOSED", "Tin Ä‘Äƒng nÃ y Ä‘Ã£ Ä‘Ã³ng", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("POST_CLOSED", "Tin đăng này đã đóng", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         if (post.getCustomerId().equals(applicantCustomerId)) {
-            throw new BusinessException("SELF_APPLICATION", "Báº¡n khÃ´ng thá»ƒ tá»± á»©ng tuyá»ƒn vÃ o bÃ i Ä‘Äƒng cá»§a chÃ­nh mÃ¬nh", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("SELF_APPLICATION", "Bạn không thể tự ứng tuyển vào bài đăng của chính mình", HttpStatus.BAD_REQUEST);
         }
 
-        // Báº£ng cÃ³ rÃ ng buá»™c duy nháº¥t (roommate_post_id, customer_id) nÃªn má»—i khÃ¡ch chá»‰ á»©ng tuyá»ƒn má»™t láº§n.
+        // Bảng có ràng buộc duy nhất (roommate_post_id, customer_id) nên mỗi khách chỉ ứng tuyển một lần.
         applicationRepository.findByRoommatePostIdAndCustomerId(postId, applicantCustomerId)
                 .ifPresent(existing -> {
-                    throw new BusinessException("ALREADY_APPLIED", "Báº¡n Ä‘Ã£ á»©ng tuyá»ƒn vÃ o tin nÃ y", HttpStatus.CONFLICT);
+                    throw new BusinessException("ALREADY_APPLIED", "Bạn đã ứng tuyển vào tin này", HttpStatus.CONFLICT);
                 });
 
         RoommateApplication app = new RoommateApplication();
@@ -166,16 +166,16 @@ public class RoommateService {
     @Transactional(readOnly = true)
     public PageResponse<RoommateApplicationResponse> getPostApplications(Long postId, Long ownerCustomerId, String status, Pageable pageable) {
         RoommatePost post = postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y tin tÃ¬m báº¡n á»Ÿ ghÃ©p ID " + postId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tin tìm bạn ở ghép ID " + postId));
         if (!post.getCustomerId().equals(ownerCustomerId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Báº¡n khÃ´ng cÃ³ quyá»n xem Ä‘Æ¡n á»©ng tuyá»ƒn cá»§a tin nÃ y");
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền xem đơn ứng tuyển của tin này");
         }
 
         Page<RoommateApplication> page = (status != null && !status.isBlank())
                 ? applicationRepository.findByRoommatePostIdAndStatus(postId, status.trim().toUpperCase(), pageable)
                 : applicationRepository.findByRoommatePostId(postId, pageable);
 
-        // Chá»§ bÃ i lÃ  CUSTOMER nÃªn khÃ´ng Ä‘á»c Ä‘Æ°á»£c /api/v1/users/{id}; láº¥y tÃªn qua internal API.
+        // Chủ bài là CUSTOMER nên không đọc được /api/v1/users/{id}; lấy tên qua internal API.
         Map<Long, String> names = customerNames(page.getContent());
         return PageResponse.from(page.map(app -> toApplicationResponse(app, names.get(app.getCustomerId()))));
     }
@@ -183,23 +183,23 @@ public class RoommateService {
     @Transactional
     public RoommateApplicationResponse acceptApplication(Long applicationId, Long ownerCustomerId) {
         RoommateApplication app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n á»©ng tuyá»ƒn ID " + applicationId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn ứng tuyển ID " + applicationId));
 
         RoommatePost post = postRepository.findById(app.getRoommatePostId())
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y bÃ i Ä‘Äƒng tÆ°Æ¡ng á»©ng"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài đăng tương ứng"));
 
         if (!post.getCustomerId().equals(ownerCustomerId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Báº¡n khÃ´ng cÃ³ quyá»n duyá»‡t Ä‘Æ¡n á»©ng tuyá»ƒn nÃ y");
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền duyệt đơn ứng tuyển này");
         }
 
         if (!"PENDING".equals(app.getStatus())) {
-            throw new BusinessException("INVALID_STATUS", "ÄÆ¡n á»©ng tuyá»ƒn Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_STATUS", "Đơn ứng tuyển đã được xử lý", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         app.setStatus("ACCEPTED_PENDING");
         RoommateApplication saved = applicationRepository.save(app);
 
-        // Báº¯n event RoommateApplicationAccepted Ä‘á»ƒ contract-tenant-service tiáº¿p nháº­n vÃ  xá»­ lÃ½ thÃªm ngÆ°á»i vÃ o há»£p Ä‘á»“ng
+        // Bắn event RoommateApplicationAccepted để contract-tenant-service tiếp nhận và xử lý thêm người vào hợp đồng
         publisher.publishRoommateApplicationAccepted(new RoommateApplicationAcceptedPayload(
                 saved.getId(),
                 post.getId(),
@@ -219,12 +219,12 @@ public class RoommateService {
     @Transactional
     public RoommateApplicationResponse markApplicationRead(Long applicationId, Long ownerCustomerId) {
         RoommateApplication app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n á»©ng tuyá»ƒn ID " + applicationId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn ứng tuyển ID " + applicationId));
         RoommatePost post = postRepository.findById(app.getRoommatePostId())
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y bÃ i Ä‘Äƒng tÆ°Æ¡ng á»©ng"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài đăng tương ứng"));
 
         if (!post.getCustomerId().equals(ownerCustomerId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Báº¡n khÃ´ng cÃ³ quyá»n xem Ä‘Æ¡n á»©ng tuyá»ƒn cá»§a tin nÃ y");
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền xem đơn ứng tuyển của tin này");
         }
 
         if (app.getReadAt() == null) {
@@ -237,17 +237,17 @@ public class RoommateService {
     @Transactional
     public RoommateApplicationResponse rejectApplication(Long applicationId, Long ownerCustomerId) {
         RoommateApplication app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n á»©ng tuyá»ƒn ID " + applicationId));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn ứng tuyển ID " + applicationId));
 
         RoommatePost post = postRepository.findById(app.getRoommatePostId())
-                .orElseThrow(() -> new NotFoundException("KhÃ´ng tÃ¬m tháº¥y bÃ i Ä‘Äƒng tÆ°Æ¡ng á»©ng"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài đăng tương ứng"));
 
         if (!post.getCustomerId().equals(ownerCustomerId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Báº¡n khÃ´ng cÃ³ quyá»n tá»« chá»‘i Ä‘Æ¡n á»©ng tuyá»ƒn nÃ y");
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Bạn không có quyền từ chối đơn ứng tuyển này");
         }
 
         if (!"PENDING".equals(app.getStatus())) {
-            throw new BusinessException("INVALID_STATUS", "ÄÆ¡n á»©ng tuyá»ƒn Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_STATUS", "Đơn ứng tuyển đã được xử lý", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         app.setStatus("REJECTED");
@@ -321,8 +321,8 @@ public class RoommateService {
                     .filter(summary -> summary.fullName() != null && !summary.fullName().isBlank())
                     .collect(Collectors.toMap(UserClient.CustomerSummary::id, UserClient.CustomerSummary::fullName));
         } catch (Exception ex) {
-            // KhÃ´ng lÃ m há»ng danh sÃ¡ch Ä‘Æ¡n náº¿u user-notification táº¡m thá»i khÃ´ng pháº£n há»“i.
-            log.warn("KhÃ´ng láº¥y Ä‘Æ°á»£c tÃªn khÃ¡ch hÃ ng cho Ä‘Æ¡n á»Ÿ ghÃ©p: {}", ex.getMessage());
+            // Không làm hỏng danh sách đơn nếu user-notification tạm thời không phản hồi.
+            log.warn("Không lấy được tên khách hàng cho đơn ở ghép: {}", ex.getMessage());
             return Map.of();
         }
     }

@@ -191,7 +191,8 @@ public class ContractPdfRenderer {
         return preferred != null ? preferred : fallback;
     }
 
-    private void addHeader(Document document, Contract contract) {        Paragraph nation = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", bold);
+    private void addHeader(Document document, Contract contract) {
+        Paragraph nation = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", bold);
         nation.setAlignment(Element.ALIGN_CENTER);
         document.add(nation);
         Paragraph motto = new Paragraph("Độc lập – Tự do – Hạnh phúc", regular);

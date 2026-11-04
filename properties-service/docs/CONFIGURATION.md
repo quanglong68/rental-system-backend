@@ -62,7 +62,7 @@ These checks verify broker readiness and topic configuration. The Kafka integrat
 | `SERVER_PORT` | `8083` | HTTP server port |
 | `SHUTDOWN_TIMEOUT` | `20s` | Graceful shutdown wait |
 | `DB_HOST`, `DB_PORT` | `localhost`, `5433` | PostgreSQL host and host-published port |
-| `DB_NAME`, `SCHEMA_NAME` | `property_db`, `properties_service` | Database and schema |
+| `DB_NAME`, `DB_SCHEMA` | `property_db`, `properties_service` | Database and schema |
 | `DB_USER`, `DB_PASSWORD` | `postgres`, local placeholder | Database credentials; inject real credentials through deployment secrets |
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Broker address for a process running on the host |
 | `KAFKA_DOCKER_BOOTSTRAP_SERVERS` | `kafka:9092` | Shared broker address passed by Compose to the service container |

@@ -78,7 +78,7 @@ properties-service/
     │   │   ├── config/                     # Kafka, security, OpenAPI, R2, clock
     │   │   └── features/                   # Business features
     │   └── resources/
-    │       ├── application.yaml            # Spring settings
+    │       ├── application.yml            # Spring settings
     │       └── db/migration/               # Flyway SQL and CSV data
     └── test/                               # JUnit tests and event fixtures
 ```
@@ -103,7 +103,7 @@ The application entry point is `com.rental.propertiesservice.PropertiesServiceAp
 
 ### Host process
 
-Set `DB_PASSWORD` and valid R2 values in the process environment. If using the supplied Compose database from the host, use `DB_HOST=localhost` and `DB_PORT=5433`: `application.yaml` itself defaults to **5432**. The default Kafka host address is `localhost:9092`. Set `EUREKA_CLIENT_ENABLED=false` for standalone development without a discovery server.
+Set `DB_PASSWORD` and valid R2 values in the process environment. If using the supplied Compose database from the host, use `DB_HOST=localhost` and `DB_PORT=5433`: `application.yml` itself defaults to **5432**. The default Kafka host address is `localhost:9092`. Set `EUREKA_CLIENT_ENABLED=false` for standalone development without a discovery server.
 
 Spring Boot does not automatically read `.env` for a host process. For the template's simple `KEY=value` lines, PowerShell can load the reviewed local file into the current process:
 
@@ -136,12 +136,12 @@ Compose publishes HTTP at `${SERVER_PORT:-8083}` and PostgreSQL at `${DB_PORT:-5
 
 ## Configuration
 
-`src/main/resources/application.yaml` defines Spring defaults. `.env.example` is a Compose template, not a complete catalog of settings.
+`src/main/resources/application.yml` defines Spring defaults. `.env.example` is a Compose template, not a complete catalog of settings.
 
 | Variable | Current default / meaning |
 | --- | --- |
 | `SERVER_PORT` | `8083`, HTTP port. |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `SCHEMA_NAME` | `localhost`, `5432`, `property_db`, `properties_service` in Spring. Compose publishes database port `5433` on the host. |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_SCHEMA` | `localhost`, `5432`, `property_db`, `properties_service` in Spring. Compose publishes database port `5433` on the host. |
 | `DB_USER`, `DB_PASSWORD` | `postgres`, **no password default**. Set `DB_PASSWORD`. |
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092`; Compose passes `KAFKA_DOCKER_BOOTSTRAP_SERVERS` (default `kafka:9092`). |
 | `PROPERTY_EVENTS_TOPIC`, `CONTRACT_EVENTS_TOPIC` | `property.events`, `contract.events`; the consumer's dead-letter topic uses `.DLT`. |
@@ -153,7 +153,7 @@ Compose publishes HTTP at `${SERVER_PORT:-8083}` and PostgreSQL at `${DB_PORT:-5
 | `BUILDING_SEARCH_MAX_RADIUS_METERS` | `50000`. |
 | `ACTUATOR_EXPOSED_ENDPOINTS`, `LOGGING_LEVEL_ROOT` | `health,info` and `INFO`. |
 
-See `application.yaml` for Kafka retries, consumer group, outbox polling, price schedule, storage URL, and shutdown overrides. Flyway is enabled at `classpath:db/migration`; Hibernate DDL generation is `none`. The first migration explicitly creates `properties_service`, `postgis`, and `btree_gist`, so changing `SCHEMA_NAME` alone does not make all migrations schema-independent. Use deployment secrets or the ignored local `.env` for credentials. Some prose defaults in [docs/CONFIGURATION.md](docs/CONFIGURATION.md) differ from current source; follow `application.yaml` and implementation for current behavior.
+See `application.yml` for Kafka retries, consumer group, outbox polling, price schedule, storage URL, and shutdown overrides. Flyway is enabled at `classpath:db/migration`; Hibernate DDL generation is `none`. The first migration explicitly creates `properties_service`, `postgis`, and `btree_gist`, so changing `DB_SCHEMA` alone does not make all migrations schema-independent. Use deployment secrets or the ignored local `.env` for credentials. Some prose defaults in [docs/CONFIGURATION.md](docs/CONFIGURATION.md) differ from current source; follow `application.yml` and implementation for current behavior.
 
 ## Architecture and components
 
@@ -191,7 +191,7 @@ Successful runs write XML/HTML reports to `properties-service/target/surefire-re
 
 ## Debugging and troubleshooting
 
-Debug `PropertiesServiceApplication.main` in an IDE with the same environment variables as the Maven run. Set breakpoints in the controller, service, repository, or Kafka listener involved. Logs go to the console by default; no file appender is configured. For containers, use `docker compose logs properties-service`. Read the earliest root cause in startup stack traces. Current `application.yaml` enables Kafka health; database and Kafka health can affect `/actuator/health`.
+Debug `PropertiesServiceApplication.main` in an IDE with the same environment variables as the Maven run. Set breakpoints in the controller, service, repository, or Kafka listener involved. Logs go to the console by default; no file appender is configured. For containers, use `docker compose logs properties-service`. Read the earliest root cause in startup stack traces. Current `application.yml` enables Kafka health; database and Kafka health can affect `/actuator/health`.
 
 | Problem | Possible cause | Solution |
 | --- | --- | --- |

@@ -29,7 +29,7 @@ All AI coding agents, including Codex, must read and follow this document before
 - Business domain: Properties and rental property management
 - Java version: Java 21
 - Framework: Spring Boot
-- Build system: Gradle with Kotlin DSL
+- Build system: Maven (module trong mono-repo)
 - Database: PostgreSQL
 - Database migration tool: Flyway
 - Base package: `com.rental.propertiesservice`
@@ -48,7 +48,7 @@ The project currently uses or has been configured to use:
 
 The existing application configuration includes database schema settings, Flyway migration configuration, Kafka configuration, and multipart upload limits.
 
-Before changing dependencies or configuration, inspect the current `build.gradle.kts`, `application.yaml`, and existing source code.
+Before changing dependencies or configuration, inspect the current `pom.xml`, `application.yml`, and existing source code.
 
 Do not add, remove, or upgrade dependencies without a clear technical requirement.
 
@@ -157,7 +157,7 @@ src/
 │   │                       └── integration/
 │   │
 │   └── resources/
-│       ├── application.yaml
+│       ├── application.yml
 │       └── db/
 │           └── migration/
 │
@@ -567,7 +567,7 @@ Keep environment-specific configuration outside business logic.
 
 Rules:
 
-- Use `application.yaml` for appropriate application defaults.
+- Use `application.yml` for appropriate application defaults.
 - Use environment variables or the existing secret-management mechanism for sensitive values.
 - Never hardcode database passwords, API keys, tokens, or credentials.
 - Do not commit real secrets.
@@ -710,8 +710,8 @@ Before modifying the project, the AI agent must:
 1. Read this `ARCHITECTURE.md`.
 2. Read `AGENTS.md` if it exists.
 3. Inspect the current source tree.
-4. Inspect `build.gradle.kts`.
-5. Inspect `application.yaml` and related configuration.
+4. Inspect `pom.xml`.
+5. Inspect `application.yml` and related configuration.
 6. Inspect the relevant Flyway migration files.
 7. Inspect existing entities, repositories, controllers, services, and tests.
 8. Identify the requested feature and its current implementation.
@@ -728,7 +728,7 @@ The AI agent must:
 5. Reuse existing shared components where appropriate.
 6. Preserve API and database compatibility.
 7. Add or update tests.
-8. Run the relevant Gradle build and tests.
+8. Run the relevant Maven build and tests.
 9. Report the files changed, design decisions, and actual verification results.
 
 ### When refactoring existing code
@@ -776,7 +776,7 @@ Recommended order:
 7. Isolate persistence details where doing so provides meaningful value.
 8. Extract genuinely shared components into `common/`.
 9. Update and execute tests after each significant change.
-10. Verify the complete Gradle build before considering the migration complete.
+10. Verify the complete Maven build before considering the migration complete.
 
 Do not move the entire codebase in one large, unverified operation.
 

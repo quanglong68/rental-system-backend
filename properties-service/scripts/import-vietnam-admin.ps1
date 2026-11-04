@@ -68,8 +68,8 @@ if (-not $Apply) {
 
 $dbUser = if ($env:DB_USER) { $env:DB_USER } else { 'postgres' }
 $dbName = if ($env:DB_NAME) { $env:DB_NAME } else { 'RoomRental' }
-$schemaName = if ($env:SCHEMA_NAME) { $env:SCHEMA_NAME } else { 'properties_service' }
-if ($schemaName -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') { throw 'SCHEMA_NAME must be a simple PostgreSQL identifier.' }
+$schemaName = if ($env:DB_SCHEMA) { $env:DB_SCHEMA } else { 'properties_service' }
+if ($schemaName -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') { throw 'DB_SCHEMA must be a simple PostgreSQL identifier.' }
 
 function Quote-SqlLiteral([string]$value) {
     if ($null -eq $value) { return 'NULL' }

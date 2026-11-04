@@ -119,7 +119,7 @@ public class ContractService {
 
     public ContractResponse createDraft(CreateDraftContractRequest request) {
         if (request == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Request khÃ´ng Ä‘Æ°á»£c rá»—ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Request không được rỗng", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
@@ -139,7 +139,7 @@ public class ContractService {
                             try {
                                 documentService.generate(saved, List.of());
                             } catch (Exception e) {
-                                log.warn("KhÃ´ng thá»ƒ sinh tÃ i liá»‡u ban Ä‘áº§u cho há»£p Ä‘á»“ng nhÃ¡p {}: {}", saved.getId(), e.getMessage());
+                                log.warn("Không thể sinh tài liệu ban đầu cho hợp đồng nháp {}: {}", saved.getId(), e.getMessage());
                             }
                             return ContractResponse.from(saved);
                         });
@@ -167,7 +167,7 @@ public class ContractService {
                 || existing.getRentAmount() == null
                 || request.getPrice() == null
                 || existing.getRentAmount().compareTo(normalizeMoney(request.getPrice())) != 0) {
-            throw new BusinessException("RENTAL_REQUEST_CONFLICT", "Rental request Ä‘Ã£ gáº¯n há»£p Ä‘á»“ng khÃ¡c dá»¯ liá»‡u",
+            throw new BusinessException("RENTAL_REQUEST_CONFLICT", "Rental request đã gắn hợp đồng khác dữ liệu",
                     HttpStatus.CONFLICT);
         }
     }
@@ -228,7 +228,7 @@ public class ContractService {
 
     private Contract reviveDeclined(Long id, CreateDraftContractRequest request) {
         Contract locked = contracts.findByIdForUpdate(id)
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
         locked.setStatus(ContractStatus.DRAFT);
         locked.setSignatureStatus(SignatureStatus.NOT_READY);
         locked.setTerminationReason(null);
@@ -272,20 +272,20 @@ public class ContractService {
         try {
             documentService.generate(saved, List.of());
         } catch (Exception e) {
-            log.warn("KhÃ´ng thá»ƒ sinh tÃ i liá»‡u khi revive há»£p Ä‘á»“ng {}: {}", saved.getId(), e.getMessage());
+            log.warn("Không thể sinh tài liệu khi revive hợp đồng {}: {}", saved.getId(), e.getMessage());
         }
         return saved;
     }
 
     public ContractResponse createManualDraft(CreateDraftManualRequest request) {
         if (request == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Request khÃ´ng Ä‘Æ°á»£c rá»—ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Request không được rỗng", HttpStatus.BAD_REQUEST);
         }
         if (request.getRoomId() == null || request.getBuildingId() == null || request.getCustomerId() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u roomId, buildingId hoáº·c customerId", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu roomId, buildingId hoặc customerId", HttpStatus.BAD_REQUEST);
         }
         if (request.getStartDate() == null || request.getRentAmount() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u startDate hoáº·c rentAmount", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu startDate hoặc rentAmount", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
@@ -298,25 +298,25 @@ public class ContractService {
                 throw nf;
             } catch (Exception unavailable) {
                 throw new BusinessException("DEPENDENCY_UNAVAILABLE",
-                        "KhÃ´ng xÃ¡c thá»±c Ä‘Æ°á»£c khÃ¡ch hÃ ng", HttpStatus.SERVICE_UNAVAILABLE);
+                        "Không xác thực được khách hàng", HttpStatus.SERVICE_UNAVAILABLE);
             }
 
             PropertyClient.RoomInfo room;
             try {
                 room = properties.getRoom(request.getRoomId());
             } catch (NotFoundException nf) {
-                throw new NotFoundException("ROOM_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y phÃ²ng " + request.getRoomId());
+                throw new NotFoundException("ROOM_NOT_FOUND", "Không tìm thấy phòng " + request.getRoomId());
             } catch (Exception unavailable) {
                 throw new BusinessException("DEPENDENCY_UNAVAILABLE",
-                        "KhÃ´ng xÃ¡c thá»±c Ä‘Æ°á»£c phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                        "Không xác thực được phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
             if (room == null || room.buildingId() == null) {
                 throw new BusinessException("DEPENDENCY_UNAVAILABLE",
-                        "KhÃ´ng xÃ¡c thá»±c Ä‘Æ°á»£c phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                        "Không xác thực được phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
             if (!room.buildingId().equals(request.getBuildingId())) {
                 throw new BusinessException("ROOM_BUILDING_MISMATCH",
-                        "PhÃ²ng khÃ´ng thuá»™c tÃ²a nhÃ  Ä‘Ã£ chá»n", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Phòng không thuộc tòa nhà đã chọn", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             Contract contract = new Contract();
@@ -364,7 +364,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, List.of());
             } catch (Exception e) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF cho há»£p Ä‘á»“ng thá»§ cÃ´ng {}: {}", saved.getId(), e.getMessage());
+                log.warn("Không thể sinh PDF cho hợp đồng thủ công {}: {}", saved.getId(), e.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -376,26 +376,26 @@ public class ContractService {
 
     public ContractResponse updateDraftDetails(Long id, UpdateDraftContractRequest request) {
         if (request == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Request khÃ´ng Ä‘Æ°á»£c rá»—ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Request không được rỗng", HttpStatus.BAD_REQUEST);
         }
         if (request.getStartDate() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "NgÃ y báº¯t Ä‘áº§u khÃ´ng Ä‘Æ°á»£c rá»—ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Ngày bắt đầu không được rỗng", HttpStatus.BAD_REQUEST);
         }
         if (request.getEndDate() != null && !request.getEndDate().isAfter(request.getStartDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y káº¿t thÃºc pháº£i sau ngÃ y báº¯t Ä‘áº§u", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày kết thúc phải sau ngày bắt đầu", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
             if (locked.getStatus() != ContractStatus.DRAFT) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ sá»­a há»£p Ä‘á»“ng á»Ÿ tráº¡ng thÃ¡i DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ sửa hợp đồng ở trạng thái DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (locked.getSignatureStatus() != SignatureStatus.NOT_READY) {
                 throw new BusinessException("INVALID_SIGNATURE_STATUS",
@@ -406,7 +406,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception e) {
-                log.warn("KhÃ´ng thá»ƒ cáº­p nháº­t tÃ i liá»‡u há»£p Ä‘á»“ng {}: {}", saved.getId(), e.getMessage());
+                log.warn("Không thể cập nhật tài liệu hợp đồng {}: {}", saved.getId(), e.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -478,7 +478,7 @@ public class ContractService {
 
     public ContractDocumentStorage.Download openDocument(Long id, boolean refresh) {
         Contract contract = contracts.findById(id)
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
         assertCanView(contract);
 
         ContractDocument doc = documents.findFirstByContractIdAndDocumentTypeOrderByVersionDesc(id, "CONTRACT").orElse(null);
@@ -486,18 +486,18 @@ public class ContractService {
             try {
                 doc = documentService.generate(contract, pdfTenants(contract));
             } catch (Exception ex) {
-                log.warn("Lá»—i khi tá»± sinh tÃ i liá»‡u cho há»£p Ä‘á»“ng {}: {}", id, ex.getMessage());
+                log.warn("Lỗi khi tự sinh tài liệu cho hợp đồng {}: {}", id, ex.getMessage());
             }
         }
         if (doc == null) {
-            throw new NotFoundException("DOCUMENT_NOT_FOUND", "Há»£p Ä‘á»“ng chÆ°a cÃ³ tÃ i liá»‡u PDF");
+            throw new NotFoundException("DOCUMENT_NOT_FOUND", "Hợp đồng chưa có tài liệu PDF");
         }
         return documentStorage.open(doc.getObjectKey());
     }
 
     public String uploadSignatureImage(Long id, MultipartFile file) {
         Contract contract = contracts.findById(id)
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
         assertCanView(contract);
         HeaderUser user = currentUser();
         boolean isStaffOrAdmin = user.getRoles().contains("ADMIN") || user.getRoles().contains("QUAN_LY");
@@ -509,40 +509,40 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             HeaderUser user = currentUser();
             boolean isStaffOrAdmin = user.getRoles().contains("ADMIN") || user.getRoles().contains("QUAN_LY");
 
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
             if (locked.getSignatureStatus() == SignatureStatus.NOT_READY) {
-                throw new BusinessException("NOT_READY", "Há»£p Ä‘á»“ng chÆ°a má»Ÿ kÃ½", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("NOT_READY", "Hợp đồng chưa mở ký", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (locked.getSignatureStatus() == SignatureStatus.COMPLETED) {
-                throw new BusinessException("ALREADY_COMPLETED", "Há»£p Ä‘á»“ng Ä‘Ã£ hoÃ n táº¥t kÃ½ káº¿t", HttpStatus.CONFLICT);
+                throw new BusinessException("ALREADY_COMPLETED", "Hợp đồng đã hoàn tất ký kết", HttpStatus.CONFLICT);
             }
 
             Instant now = Instant.now(clock);
             if (locked.getSignatureDeadline() != null && now.isAfter(locked.getSignatureDeadline())) {
                 expireLocked(locked);
-                throw new BusinessException("SIGNATURE_EXPIRED", "Háº¡n kÃ½ há»£p Ä‘á»“ng Ä‘Ã£ káº¿t thÃºc", HttpStatus.GONE);
+                throw new BusinessException("SIGNATURE_EXPIRED", "Hạn ký hợp đồng đã kết thúc", HttpStatus.GONE);
             }
 
             SignatureParty party = isStaffOrAdmin ? SignatureParty.LESSOR : SignatureParty.TENANT;
             if (party == SignatureParty.TENANT && locked.getSignatureStatus() != SignatureStatus.AWAITING_TENANT) {
-                throw new BusinessException("INVALID_ORDER", "ChÆ°a Ä‘áº¿n lÆ°á»£t khÃ¡ch thuÃª kÃ½", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_ORDER", "Chưa đến lượt khách thuê ký", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (party == SignatureParty.LESSOR && locked.getSignatureStatus() != SignatureStatus.AWAITING_LESSOR) {
-                throw new BusinessException("INVALID_ORDER", "KhÃ¡ch thuÃª chÆ°a kÃ½ hoáº·c tráº¡ng thÃ¡i khÃ´ng há»£p lá»‡", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_ORDER", "Khách thuê chưa ký hoặc trạng thái không hợp lệ", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             if (request != null && request.password() != null && !request.password().isBlank()) {
                 try {
                     authClient.verifyPassword(new AuthClient.VerifyPasswordRequest(Long.valueOf(user.getUserId()), request.password()));
                 } catch (Exception ex) {
-                    throw new BusinessException("INVALID_PASSWORD", "Máº­t kháº©u xÃ¡c thá»±c kÃ½ khÃ´ng Ä‘Ãºng", HttpStatus.UNAUTHORIZED);
+                    throw new BusinessException("INVALID_PASSWORD", "Mật khẩu xác thực ký không đúng", HttpStatus.UNAUTHORIZED);
                 }
             }
 
@@ -588,7 +588,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception ex) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF sau khi kÃ½ há»£p Ä‘á»“ng {}: {}", saved.getId(), ex.getMessage());
+                log.warn("Không thể sinh PDF sau khi ký hợp đồng {}: {}", saved.getId(), ex.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -598,20 +598,20 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             HeaderUser user = currentUser();
             assertTenantOwnsContract(contract, Long.valueOf(user.getUserId()));
 
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
             if (locked.getSignatureStatus() != SignatureStatus.AWAITING_TENANT) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ cÃ³ thá»ƒ tá»« chá»‘i kÃ½ khi Ä‘ang á»Ÿ tráº¡ng thÃ¡i chá» khÃ¡ch kÃ½", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ có thể từ chối ký khi đang ở trạng thái chờ khách ký", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             locked.setSignatureStatus(SignatureStatus.DECLINED);
             locked.setStatus(ContractStatus.TERMINATED);
-            locked.setTerminationReason(request != null ? request.reason() : "KhÃ¡ch thuÃª tá»« chá»‘i kÃ½");
+            locked.setTerminationReason(request != null ? request.reason() : "Khách thuê từ chối ký");
             Contract saved = contracts.save(locked);
 
             closeRenewalRequest(saved, "Khách thuê từ chối ký hợp đồng gia hạn");
@@ -643,7 +643,7 @@ public class ContractService {
     private void expireLocked(Contract locked) {
         locked.setSignatureStatus(SignatureStatus.EXPIRED);
         locked.setStatus(ContractStatus.TERMINATED);
-        locked.setTerminationReason("QuÃ¡ háº¡n kÃ½ há»£p Ä‘á»“ng Ä‘iá»‡n tá»­");
+        locked.setTerminationReason("Quá hạn ký hợp đồng điện tử");
         Contract saved = contracts.save(locked);
         closeRenewalRequest(saved, "Hợp đồng gia hạn quá hạn ký điện tử");
         outbox.publishContractSignatureExpired(new ContractSignatureExpiredPayload(
@@ -672,24 +672,24 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             if (locked.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ gia háº¡n há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ gia hạn hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (locked.getEndDate() == null) {
-                throw new BusinessException("INVALID_DATE", "Há»£p Ä‘á»“ng chÆ°a cÃ³ ngÃ y káº¿t thÃºc", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_DATE", "Hợp đồng chưa có ngày kết thúc", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             LocalDate start = locked.getEndDate().plusDays(1);
             LocalDate newEndDate = reqEndDate != null ? reqEndDate : locked.getEndDate().plusYears(1);
             if (!newEndDate.isAfter(start)) {
                 throw new BusinessException("INVALID_DATE",
-                        "NgÃ y káº¿t thÃºc gia háº¡n pháº£i sau ngÃ y báº¯t Ä‘áº§u " + start, HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Ngày kết thúc gia hạn phải sau ngày bắt đầu " + start, HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             Contract renewal = contracts.findFirstByRenewedFromContractIdOrderByCreatedAtDesc(id)
@@ -700,18 +700,18 @@ public class ContractService {
                 if (renewal.getStatus() == ContractStatus.ACTIVE
                         || renewal.getSignatureStatus() == SignatureStatus.COMPLETED) {
                     throw new BusinessException("ALREADY_RENEWED",
-                            "Há»£p Ä‘á»“ng nÃ y Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng gia háº¡n cÃ³ hiá»‡u lá»±c", HttpStatus.CONFLICT);
+                            "Hợp đồng này đã có hợp đồng gia hạn có hiệu lực", HttpStatus.CONFLICT);
                 }
                 if (renewal.getSignatureStatus() == SignatureStatus.AWAITING_LESSOR) {
                     throw new BusinessException("INVALID_SIGNATURE_STATUS",
-                            "KhÃ¡ch Ä‘Ã£ kÃ½ há»£p Ä‘á»“ng gia háº¡n, khÃ´ng thá»ƒ sá»­a hoáº·c gá»­i láº¡i", HttpStatus.UNPROCESSABLE_ENTITY);
+                            "Khách đã ký hợp đồng gia hạn, không thể sửa hoặc gửi lại", HttpStatus.UNPROCESSABLE_ENTITY);
                 }
                 renewal.setStartDate(start);
                 renewal.setEndDate(newEndDate);
             } else {
                 if (contracts.existsNextActiveContract(locked.getRoomId(), ContractStatus.ACTIVE, locked.getEndDate())) {
                     throw new BusinessException("ROOM_ALREADY_CONTRACTED",
-                            "PhÃ²ng Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng khÃ¡c báº¯t Ä‘áº§u sau ngÃ y káº¿t thÃºc nÃ y", HttpStatus.CONFLICT);
+                            "Phòng đã có hợp đồng khác bắt đầu sau ngày kết thúc này", HttpStatus.CONFLICT);
                 }
                 renewal = renewalDraft(locked, start, newEndDate);
             }
@@ -723,7 +723,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception ex) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF khi gá»­i Ä‘á» nghá»‹ gia háº¡n {}: {}", saved.getId(), ex.getMessage());
+                log.warn("Không thể sinh PDF khi gửi đề nghị gia hạn {}: {}", saved.getId(), ex.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -750,18 +750,18 @@ public class ContractService {
             Long customerId = Long.valueOf(user.getUserId());
 
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             assertTenantOwnsContract(contract, customerId);
 
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             validateRenewableContract(locked, LocalDate.now(clock));
             assertNoRenewalInProgress(locked);
 
             if (renewalRequests.existsByContractIdAndStatus(locked.getId(), RenewalRequestStatus.PENDING)) {
                 throw new BusinessException("REQUEST_ALREADY_EXISTS",
-                        "ÄÃ£ cÃ³ yÃªu cáº§u gia háº¡n Ä‘ang chá» duyá»‡t", HttpStatus.CONFLICT);
+                        "Đã có yêu cầu gia hạn đang chờ duyệt", HttpStatus.CONFLICT);
             }
 
             ContractRenewalRequest renewal = new ContractRenewalRequest();
@@ -776,7 +776,7 @@ public class ContractService {
                 saved = renewalRequests.saveAndFlush(renewal);
             } catch (DataIntegrityViolationException concurrent) {
                 throw new BusinessException("REQUEST_ALREADY_EXISTS",
-                        "ÄÃ£ cÃ³ yÃªu cáº§u gia háº¡n Ä‘ang chá» duyá»‡t", HttpStatus.CONFLICT);
+                        "Đã có yêu cầu gia hạn đang chờ duyệt", HttpStatus.CONFLICT);
             }
 
             LocalDate start = locked.getEndDate().plusDays(1);
@@ -821,18 +821,18 @@ public class ContractService {
             Long customerId = Long.valueOf(currentUser().getUserId());
             ContractRenewalRequest request = renewalRequests.findByIdForUpdate(requestId)
                     .orElseThrow(() -> new NotFoundException("RENEWAL_REQUEST_NOT_FOUND",
-                            "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u gia háº¡n " + requestId));
+                            "Không tìm thấy yêu cầu gia hạn " + requestId));
             if (!Objects.equals(request.getRequestedBy(), customerId)) {
-                throw new AccessDeniedException("Báº¡n khÃ´ng pháº£i ngÆ°á»i gá»­i yÃªu cáº§u nÃ y");
+                throw new AccessDeniedException("Bạn không phải người gửi yêu cầu này");
             }
             if (request.getStatus() != RenewalRequestStatus.PENDING) {
                 throw new BusinessException("INVALID_STATUS",
-                        "Chá»‰ cÃ³ thá»ƒ há»§y yÃªu cáº§u gia háº¡n Ä‘ang chá» duyá»‡t", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Chỉ có thể hủy yêu cầu gia hạn đang chờ duyệt", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             request.setStatus(RenewalRequestStatus.CANCELLED);
             ContractRenewalRequest saved = renewalRequests.save(request);
             Contract old = contracts.findById(saved.getContractId()).orElseThrow(() ->
-                    new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             return RenewalRequestResponse.from(saved, old, null);
         });
     }
@@ -843,14 +843,14 @@ public class ContractService {
             HeaderUser user = currentUser();
             ContractRenewalRequest request = renewalRequests.findByIdForUpdate(requestId)
                     .orElseThrow(() -> new NotFoundException("RENEWAL_REQUEST_NOT_FOUND",
-                            "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u gia háº¡n " + requestId));
+                            "Không tìm thấy yêu cầu gia hạn " + requestId));
             Contract old = contracts.findById(request.getContractId()).orElseThrow(() ->
-                    new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             buildingScope.assertAssigned(old.getBuildingId());
 
             if (request.getStatus() != RenewalRequestStatus.PENDING) {
                 throw new BusinessException("INVALID_STATUS",
-                        "Chá»‰ cÃ³ thá»ƒ duyá»‡t yÃªu cáº§u Ä‘ang chá» duyá»‡t", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Chỉ có thể duyệt yêu cầu đang chờ duyệt", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateRenewableContract(old, LocalDate.now(clock));
 
@@ -881,14 +881,14 @@ public class ContractService {
             HeaderUser user = currentUser();
             ContractRenewalRequest renewal = renewalRequests.findByIdForUpdate(requestId)
                     .orElseThrow(() -> new NotFoundException("RENEWAL_REQUEST_NOT_FOUND",
-                            "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u gia háº¡n " + requestId));
+                            "Không tìm thấy yêu cầu gia hạn " + requestId));
             Contract old = contracts.findById(renewal.getContractId()).orElseThrow(() ->
-                    new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             buildingScope.assertAssigned(old.getBuildingId());
 
             if (renewal.getStatus() != RenewalRequestStatus.PENDING) {
                 throw new BusinessException("INVALID_STATUS",
-                        "Chá»‰ cÃ³ thá»ƒ tá»« chá»‘i yÃªu cáº§u Ä‘ang chá» duyá»‡t", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Chỉ có thể từ chối yêu cầu đang chờ duyệt", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             String reason = request != null && request.getReason() != null && !request.getReason().isBlank()
@@ -921,14 +921,14 @@ public class ContractService {
         return template.execute(status -> {
             ContractRenewalRequest request = renewalRequests.findByIdForUpdate(requestId)
                     .orElseThrow(() -> new NotFoundException("RENEWAL_REQUEST_NOT_FOUND",
-                            "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u gia háº¡n " + requestId));
+                            "Không tìm thấy yêu cầu gia hạn " + requestId));
             Contract old = contracts.findById(request.getContractId()).orElseThrow(() ->
-                    new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             buildingScope.assertAssigned(old.getBuildingId());
 
             if (request.getStatus() != RenewalRequestStatus.APPROVED) {
                 throw new BusinessException("INVALID_STATUS",
-                        "YÃªu cáº§u gia háº¡n pháº£i Ä‘Æ°á»£c duyá»‡t trÆ°á»›c khi soáº¡n há»£p Ä‘á»“ng",
+                        "Yêu cầu gia hạn phải được duyệt trước khi soạn hợp đồng",
                         HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
@@ -939,14 +939,14 @@ public class ContractService {
 
             contracts.lockNamedKey(signKey("room", old.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(old.getId()).orElseThrow(() ->
-                    new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             if (locked.getStatus() != ContractStatus.ACTIVE || locked.getEndDate() == null) {
                 throw new BusinessException("INVALID_STATUS",
-                        "Há»£p Ä‘á»“ng gá»‘c khÃ´ng cÃ²n hiá»‡u lá»±c Ä‘á»ƒ gia háº¡n", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Hợp đồng gốc không còn hiệu lực để gia hạn", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (contracts.existsNextActiveContract(locked.getRoomId(), ContractStatus.ACTIVE, locked.getEndDate())) {
                 throw new BusinessException("ROOM_ALREADY_CONTRACTED",
-                        "PhÃ²ng Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng khÃ¡c báº¯t Ä‘áº§u sau ngÃ y káº¿t thÃºc nÃ y", HttpStatus.CONFLICT);
+                        "Phòng đã có hợp đồng khác bắt đầu sau ngày kết thúc này", HttpStatus.CONFLICT);
             }
 
             LocalDate start = locked.getEndDate().plusDays(1);
@@ -957,7 +957,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception ex) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF báº£n nhÃ¡p gia háº¡n {}: {}", saved.getId(), ex.getMessage());
+                log.warn("Không thể sinh PDF bản nháp gia hạn {}: {}", saved.getId(), ex.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -1012,7 +1012,7 @@ public class ContractService {
 
     private RenewalRequestResponse toRenewalResponse(ContractRenewalRequest request) {
         Contract old = contracts.findById(request.getContractId()).orElseThrow(() ->
-                new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
         Contract renewal = contracts.findByRenewalRequestId(request.getId()).orElse(null);
         return RenewalRequestResponse.from(request, old, renewal);
     }
@@ -1027,16 +1027,16 @@ public class ContractService {
                 if (renewal.getStatus() == ContractStatus.ACTIVE
                         || renewal.getSignatureStatus() == SignatureStatus.COMPLETED) {
                     throw new BusinessException("ALREADY_RENEWED",
-                            "Há»£p Ä‘á»“ng nÃ y Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng gia háº¡n cÃ³ hiá»‡u lá»±c", HttpStatus.CONFLICT);
+                            "Hợp đồng này đã có hợp đồng gia hạn có hiệu lực", HttpStatus.CONFLICT);
                 }
                 throw new BusinessException("RENEWAL_IN_PROGRESS",
-                        "ÄÃ£ cÃ³ báº£n nhÃ¡p há»£p Ä‘á»“ng gia háº¡n. Vui lÃ²ng liÃªn há»‡ ban quáº£n lÃ½.", HttpStatus.CONFLICT);
+                        "Đã có bản nháp hợp đồng gia hạn. Vui lòng liên hệ ban quản lý.", HttpStatus.CONFLICT);
             }
         }
         if (renewalRequests.findFirstByContractIdAndStatusOrderByCreatedAtDesc(
                 contract.getId(), RenewalRequestStatus.APPROVED).isPresent()) {
             throw new BusinessException("RENEWAL_ALREADY_APPROVED",
-                    "YÃªu cáº§u gia háº¡n Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t, vui lÃ²ng chá» ban quáº£n lÃ½ gá»­i há»£p Ä‘á»“ng.",
+                    "Yêu cầu gia hạn đã được duyệt, vui lòng chờ ban quản lý gửi hợp đồng.",
                     HttpStatus.CONFLICT);
         }
     }
@@ -1205,7 +1205,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception e) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF cho báº£n nhÃ¡p gia háº¡n {}: {}", saved.getId(), e.getMessage());
+                log.warn("Không thể sinh PDF cho bản nháp gia hạn {}: {}", saved.getId(), e.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -1235,7 +1235,7 @@ public class ContractService {
             mor.setRequestedBy(locked.getCustomerId());
             mor.setRequestDate(today);
             mor.setExpectedMoveOutDate(locked.getEndDate());
-            mor.setReason("Há»£p Ä‘á»“ng háº¿t háº¡n vÃ o " + locked.getEndDate() + " vÃ  chÆ°a Ä‘Æ°á»£c gia háº¡n.");
+            mor.setReason("Hợp đồng hết hạn vào " + locked.getEndDate() + " và chưa được gia hạn.");
             mor.setStatus(MoveOutStatus.APPROVED);
             mor.setAutoGenerated(true);
             MoveOutRequest saved = moveOutRequests.save(mor);
@@ -1326,19 +1326,19 @@ public class ContractService {
 
     private void validateRenewableContract(Contract contract, LocalDate today) {
         if (contract.getStatus() != ContractStatus.ACTIVE) {
-            throw new BusinessException("INVALID_STATUS", "Chá»‰ gia háº¡n há»£p Ä‘á»“ng Ä‘ang ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_STATUS", "Chỉ gia hạn hợp đồng đang ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (contract.getEndDate() == null) {
-            throw new BusinessException("INVALID_STATUS", "Há»£p Ä‘á»“ng khÃ´ng cÃ³ ngÃ y káº¿t thÃºc", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_STATUS", "Hợp đồng không có ngày kết thúc", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (contract.getTerminationReason() != null) {
-            throw new BusinessException("CONTRACT_TERMINATING", "Há»£p Ä‘á»“ng Ä‘ang trong quÃ¡ trÃ¬nh cháº¥m dá»©t", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("CONTRACT_TERMINATING", "Hợp đồng đang trong quá trình chấm dứt", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         LocalDate minAllowed = contract.getEndDate().minusDays(30);
         if (today.isBefore(minAllowed)) {
             long daysLeft = ChronoUnit.DAYS.between(today, minAllowed);
             throw new BusinessException("TOO_EARLY_FOR_RENEWAL",
-                    "ChÆ°a Ä‘áº¿n thá»i háº¡n gia háº¡n há»£p Ä‘á»“ng. QuÃ½ khÃ¡ch chá»‰ cÃ³ thá»ƒ gá»­i yÃªu cáº§u gia háº¡n trÆ°á»›c khi há»£p Ä‘á»“ng háº¿t háº¡n 30 ngÃ y (cÃ²n " + daysLeft + " ngÃ y ná»¯a).",
+                    "Chưa đến thời hạn gia hạn hợp đồng. Quý khách chỉ có thể gửi yêu cầu gia hạn trước khi hợp đồng hết hạn 30 ngày (còn " + daysLeft + " ngày nữa).",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
@@ -1361,45 +1361,45 @@ public class ContractService {
 
     public ContractTenantResponse addTenant(Long contractId, AddTenantRequest request) {
         if (request == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Request khÃ´ng Ä‘Æ°á»£c rá»—ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Request không được rỗng", HttpStatus.BAD_REQUEST);
         }
         if (request.getCustomerId() == null || request.getJoinedAt() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u customerId hoáº·c joinedAt", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu customerId hoặc joinedAt", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
 
             buildingScope.assertAssigned(contract.getBuildingId());
 
             if (contract.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ thÃªm ngÆ°á»i á»Ÿ vÃ o há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ thêm người ở vào hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (request.getJoinedAt().isBefore(contract.getStartDate())) {
-                throw new BusinessException("INVALID_DATE", "NgÃ y vÃ o á»Ÿ trÆ°á»›c ngÃ y báº¯t Ä‘áº§u há»£p Ä‘á»“ng", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_DATE", "Ngày vào ở trước ngày bắt đầu hợp đồng", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             contracts.lockNamedKey(signKey("customer", request.getCustomerId()));
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
 
             Contract locked = contracts.findByIdForUpdate(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
             if (!Objects.equals(locked.getRoomId(), contract.getRoomId())
                     || !Objects.equals(locked.getCustomerId(), contract.getCustomerId())) {
-                throw new IllegalStateException("Há»£p Ä‘á»“ng " + contractId
-                        + " Ä‘á»•i phÃ²ng hoáº·c khÃ¡ch giá»¯a hai láº§n Ä‘á»c; khÃ´ng thá»ƒ Ä‘áº£m báº£o thá»© tá»± khÃ³a");
+                throw new IllegalStateException("Hợp đồng " + contractId
+                        + " đổi phòng hoặc khách giữa hai lần đọc; không thể đảm bảo thứ tự khóa");
             }
             if (locked.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ thÃªm ngÆ°á»i á»Ÿ vÃ o há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ thêm người ở vào hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             if (tenants.existsByContractIdAndCustomerIdAndLeftAtIsNull(contractId, request.getCustomerId())) {
-                throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM", "KhÃ¡ch Ä‘Ã£ á»Ÿ trong há»£p Ä‘á»“ng nÃ y", HttpStatus.CONFLICT);
+                throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM", "Khách đã ở trong hợp đồng này", HttpStatus.CONFLICT);
             }
             if (tenants.existsCurrentTenantInContractWithStatus(request.getCustomerId(), ContractStatus.ACTIVE)) {
-                throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM", "KhÃ¡ch Ä‘Ã£ thuá»™c má»™t há»£p Ä‘á»“ng ACTIVE khÃ¡c", HttpStatus.CONFLICT);
+                throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM", "Khách đã thuộc một hợp đồng ACTIVE khác", HttpStatus.CONFLICT);
             }
 
             Integer maxCapacity;
@@ -1408,17 +1408,17 @@ public class ContractService {
                 maxCapacity = room == null ? null : room.maxCapacity();
             } catch (BusinessException | CallNotPermittedException | RetryableException unavailable) {
                 throw new BusinessException("DEPENDENCY_UNAVAILABLE",
-                        "KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c sá»©c chá»©a phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                        "Không kiểm tra được sức chứa phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
             if (maxCapacity == null || maxCapacity < 1) {
                 throw new BusinessException("DEPENDENCY_UNAVAILABLE",
-                        "KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c sá»©c chá»©a phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                        "Không kiểm tra được sức chứa phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
 
             long occupancy = tenants.countByContractIdAndLeftAtIsNull(contractId);
             if (occupancy + 1 > maxCapacity) {
                 throw new BusinessException("ROOM_CAPACITY_EXCEEDED",
-                        "PhÃ²ng Ä‘Ã£ Ä‘á»§ sá»‘ ngÆ°á»i tá»‘i Ä‘a", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Phòng đã đủ số người tối đa", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             ContractTenant tenant = new ContractTenant();
@@ -1434,7 +1434,7 @@ public class ContractService {
             } catch (DataIntegrityViolationException race) {
                 if (isDuplicateActiveCustomer(race)) {
                     throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM",
-                            "KhÃ¡ch Ä‘Ã£ á»Ÿ trong há»£p Ä‘á»“ng nÃ y", HttpStatus.CONFLICT);
+                            "Khách đã ở trong hợp đồng này", HttpStatus.CONFLICT);
                 }
                 throw race;
             }
@@ -1452,22 +1452,22 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.executeWithoutResult(status -> {
             Contract contract = contracts.findById(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             Contract locked = contracts.findByIdForUpdate(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
 
             ContractTenant tenant = tenants.findByIdAndContractId(tenantId, contractId)
-                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i á»Ÿ " + tenantId));
+                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "Không tìm thấy người ở " + tenantId));
 
             if (tenant.getLeftAt() != null) {
-                throw new BusinessException("TENANT_NOT_ACTIVE", "NgÆ°á»i á»Ÿ Ä‘Ã£ rá»i khá»i há»£p Ä‘á»“ng", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("TENANT_NOT_ACTIVE", "Người ở đã rời khỏi hợp đồng", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             tenants.clearRepresentative(locked.getId());
             ContractTenant target = tenants.findById(tenantId)
-                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i á»Ÿ " + tenantId));
+                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "Không tìm thấy người ở " + tenantId));
             target.setRepresentative(true);
             tenants.save(target);
         });
@@ -1475,36 +1475,36 @@ public class ContractService {
 
     public ContractTenantResponse leaveTenant(Long contractId, Long tenantId, TenantLeaveRequest request) {
         if (request == null || request.getLeftAt() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u leftAt", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu leftAt", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             Contract locked = contracts.findByIdForUpdate(contractId)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + contractId));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
 
             ContractTenant tenant = tenants.findByIdAndContractId(tenantId, contractId)
-                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i á»Ÿ " + tenantId));
+                    .orElseThrow(() -> new NotFoundException("TENANT_NOT_FOUND", "Không tìm thấy người ở " + tenantId));
 
             if (tenant.getLeftAt() != null) {
-                throw new BusinessException("TENANT_NOT_ACTIVE", "NgÆ°á»i á»Ÿ Ä‘Ã£ rá»i khá»i há»£p Ä‘á»“ng", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("TENANT_NOT_ACTIVE", "Người ở đã rời khỏi hợp đồng", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (request.getLeftAt().isBefore(tenant.getJoinedAt())) {
                 throw new BusinessException("INVALID_DATE",
-                        "NgÃ y rá»i Ä‘i trÆ°á»›c ngÃ y báº¯t Ä‘áº§u á»Ÿ", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Ngày rời đi trước ngày bắt đầu ở", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (tenant.isRepresentative()) {
-                throw new BusinessException("CANNOT_REMOVE_REPRESENTATIVE", "KhÃ´ng thá»ƒ rá»i há»£p Ä‘á»“ng khi Ä‘ang lÃ  ngÆ°á»i Ä‘áº¡i diá»‡n", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("CANNOT_REMOVE_REPRESENTATIVE", "Không thể rời hợp đồng khi đang là người đại diện", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             long activeOccupants = tenants.countByContractIdAndLeftAtIsNull(locked.getId());
             if (activeOccupants <= 1 && locked.getStatus() == ContractStatus.ACTIVE) {
                 throw new BusinessException("LAST_TENANT",
-                        "KhÃ´ng thá»ƒ rá»i vÃ¬ lÃ  ngÆ°á»i á»Ÿ cuá»‘i cÃ¹ng trong há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                        "Không thể rời vì là người ở cuối cùng trong hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             tenant.setLeftAt(request.getLeftAt());
@@ -1537,7 +1537,7 @@ public class ContractService {
 
     public ContractDetailResponse getContractById(Long id) {
         Contract contract = contracts.findById(id)
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
         HeaderUser user = currentUser();
         boolean isStaffOrAdmin = user.getRoles().contains("ADMIN") || user.getRoles().contains("QUAN_LY") || user.getRoles().contains("SALE");
@@ -1562,31 +1562,31 @@ public class ContractService {
 
     public ContractResponse terminate(Long id, TerminateContractRequest request) {
         if (request == null || request.getTerminationDate() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u terminationDate", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu terminationDate", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             if (contract.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ cháº¥m dá»©t há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ chấm dứt hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateTerminationDate(request.getTerminationDate(), contract);
 
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
             if (locked.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ cháº¥m dá»©t há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ chấm dứt hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateTerminationDate(request.getTerminationDate(), locked);
 
             locked.setEndDate(request.getTerminationDate());
-            locked.setTerminationReason(request.getReason() != null ? request.getReason().trim() : "Cháº¥m dá»©t trÆ°á»›c háº¡n");
+            locked.setTerminationReason(request.getReason() != null ? request.getReason().trim() : "Chấm dứt trước hạn");
             Contract saved = contracts.save(locked);
             return ContractResponse.from(saved);
         });
@@ -1594,10 +1594,10 @@ public class ContractService {
 
     private static void validateTerminationDate(LocalDate terminationDate, Contract contract) {
         if (terminationDate.isBefore(contract.getStartDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y cháº¥m dá»©t khÃ´ng Ä‘Æ°á»£c trÆ°á»›c ngÃ y báº¯t Ä‘áº§u", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày chấm dứt không được trước ngày bắt đầu", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (contract.getEndDate() != null && terminationDate.isAfter(contract.getEndDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y cháº¥m dá»©t khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ ngÃ y káº¿t thÃºc hiá»‡n táº¡i", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày chấm dứt không được vượt quá ngày kết thúc hiện tại", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
@@ -1623,7 +1623,7 @@ public class ContractService {
 
     public MoveOutRequestResponse createMoveOutRequest(CreateMoveOutRequest request) {
         if (request == null || request.getContractId() == null || request.getExpectedMoveOutDate() == null) {
-            throw new BusinessException("VALIDATION_ERROR", "Thiáº¿u thÃ´ng tin yÃªu cáº§u tráº£ phÃ²ng", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("VALIDATION_ERROR", "Thiếu thông tin yêu cầu trả phòng", HttpStatus.BAD_REQUEST);
         }
 
         TransactionTemplate template = new TransactionTemplate(transactionManager);
@@ -1632,10 +1632,10 @@ public class ContractService {
             Long customerId = Long.valueOf(user.getUserId());
 
             Contract contract = contracts.findById(request.getContractId())
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + request.getContractId()));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + request.getContractId()));
 
             if (contract.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ táº¡o yÃªu cáº§u tráº£ phÃ²ng cho há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ tạo yêu cầu trả phòng cho hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             requireRepresentative(contract.getId(), customerId);
 
@@ -1644,9 +1644,9 @@ public class ContractService {
 
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(request.getContractId())
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             if (locked.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ táº¡o yÃªu cáº§u tráº£ phÃ²ng cho há»£p Ä‘á»“ng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ tạo yêu cầu trả phòng cho hợp đồng ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             // Both reads happened before the lock, so a concurrent representative swap, a departure, or a
@@ -1655,7 +1655,7 @@ public class ContractService {
             validateMoveOutDate(request.getExpectedMoveOutDate(), locked, today);
 
             if (moveOutRequests.existsByContractIdAndStatus(locked.getId(), MoveOutStatus.PENDING)) {
-                throw new BusinessException("REQUEST_ALREADY_EXISTS", "ÄÃ£ cÃ³ yÃªu cáº§u tráº£ phÃ²ng Ä‘ang chá» duyá»‡t", HttpStatus.CONFLICT);
+                throw new BusinessException("REQUEST_ALREADY_EXISTS", "Đã có yêu cầu trả phòng đang chờ duyệt", HttpStatus.CONFLICT);
             }
 
             MoveOutRequest mor = new MoveOutRequest();
@@ -1672,7 +1672,7 @@ public class ContractService {
             } catch (DataIntegrityViolationException race) {
                 if (violates(race, PENDING_MOVE_OUT_INDEX)) {
                     throw new BusinessException("REQUEST_ALREADY_EXISTS",
-                            "ÄÃ£ cÃ³ yÃªu cáº§u tráº£ phÃ²ng Ä‘ang chá» duyá»‡t", HttpStatus.CONFLICT);
+                            "Đã có yêu cầu trả phòng đang chờ duyệt", HttpStatus.CONFLICT);
                 }
                 throw race;
             }
@@ -1688,26 +1688,26 @@ public class ContractService {
     private void requireRepresentative(Long contractId, Long customerId) {
         ContractTenant tenant = tenants.findByContractIdAndCustomerIdAndLeftAtIsNull(contractId, customerId)
                 .orElseThrow(() -> new BusinessException("NOT_REPRESENTATIVE",
-                        "KhÃ¡ch khÃ´ng pháº£i ngÆ°á»i á»Ÿ hiá»‡n táº¡i", HttpStatus.FORBIDDEN));
+                        "Khách không phải người ở hiện tại", HttpStatus.FORBIDDEN));
         if (!tenant.isRepresentative()) {
             throw new BusinessException("NOT_REPRESENTATIVE",
-                    "Chá»‰ ngÆ°á»i Ä‘áº¡i diá»‡n má»›i Ä‘Æ°á»£c gá»­i yÃªu cáº§u tráº£ phÃ²ng", HttpStatus.FORBIDDEN);
+                    "Chỉ người đại diện mới được gửi yêu cầu trả phòng", HttpStatus.FORBIDDEN);
         }
     }
 
     private static void validateMoveOutDate(LocalDate expectedMoveOutDate, Contract contract, LocalDate today) {
         if (expectedMoveOutDate.isBefore(today)) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y dá»± kiáº¿n tráº£ phÃ²ng pháº£i tá»« hÃ´m nay", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày dự kiến trả phòng phải từ hôm nay", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         validateMoveOutDateAgainstContract(expectedMoveOutDate, contract);
     }
 
     private static void validateMoveOutDateAgainstContract(LocalDate expectedMoveOutDate, Contract contract) {
         if (expectedMoveOutDate.isBefore(contract.getStartDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y dá»± kiáº¿n tráº£ phÃ²ng khÃ´ng Ä‘Æ°á»£c trÆ°á»›c ngÃ y báº¯t Ä‘áº§u", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày dự kiến trả phòng không được trước ngày bắt đầu", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (contract.getEndDate() != null && expectedMoveOutDate.isAfter(contract.getEndDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y dá»± kiáº¿n tráº£ phÃ²ng khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ ngÃ y káº¿t thÃºc hiá»‡n táº¡i", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày dự kiến trả phòng không được vượt quá ngày kết thúc hiện tại", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
@@ -1722,9 +1722,9 @@ public class ContractService {
 
     public MoveOutRequestResponse markMoveOutRead(Long id) {
         MoveOutRequest req = moveOutRequests.findById(id)
-                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + id));
+                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + id));
         Contract c = contracts.findById(req.getContractId())
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
         buildingScope.assertAssigned(c.getBuildingId());
         if (req.getReadAt() == null) {
             req.setReadAt(Instant.now(clock));
@@ -1737,24 +1737,24 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             MoveOutRequest mor = moveOutRequests.findById(id)
-                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + id));
+                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + id));
             Contract contract = contracts.findById(mor.getContractId())
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             // Lock order stays room advisory -> contract row -> request row, so terminate/renew (which take
             // room + contract) cannot interleave with approve and rewrite end_date from stale data.
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(contract.getId())
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             MoveOutRequest lockedMor = moveOutRequests.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + id));
+                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + id));
 
             if (lockedMor.getStatus() != MoveOutStatus.PENDING) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ duyá»‡t yÃªu cáº§u á»Ÿ tráº¡ng thÃ¡i PENDING", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ duyệt yêu cầu ở trạng thái PENDING", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             if (locked.getStatus() != ContractStatus.ACTIVE) {
-                throw new BusinessException("INVALID_STATUS", "Há»£p Ä‘á»“ng khÃ´ng á»Ÿ tráº¡ng thÃ¡i ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Hợp đồng không ở trạng thái ACTIVE", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateMoveOutDateAgainstContract(lockedMor.getExpectedMoveOutDate(), locked);
 
@@ -1781,16 +1781,16 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             MoveOutRequest mor = moveOutRequests.findById(id)
-                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + id));
+                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + id));
             Contract contract = contracts.findById(mor.getContractId())
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             MoveOutRequest lockedMor = moveOutRequests.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + id));
+                    .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + id));
 
             if (lockedMor.getStatus() != MoveOutStatus.PENDING) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ tá»« chá»‘i yÃªu cáº§u á»Ÿ tráº¡ng thÃ¡i PENDING", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ từ chối yêu cầu ở trạng thái PENDING", HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
             if (request != null && request.getReason() != null && !request.getReason().isBlank()) {
@@ -1804,9 +1804,9 @@ public class ContractService {
 
     public String uploadMoveOutRefundReceipt(Long moveOutId, MultipartFile file) {
         MoveOutRequest mor = moveOutRequests.findById(moveOutId)
-                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + moveOutId));
+                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + moveOutId));
         Contract contract = contracts.findById(mor.getContractId())
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
         buildingScope.assertAssigned(contract.getBuildingId());
 
         String key = documentStorage.uploadMoveOutRefundReceipt(moveOutId, file);
@@ -1817,13 +1817,13 @@ public class ContractService {
 
     public MoveOutRequestResponse settleMoveOutRefund(Long moveOutId, SettleMoveOutRefundRequest request) {
         MoveOutRequest mor = moveOutRequests.findById(moveOutId)
-                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + moveOutId));
+                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + moveOutId));
         Contract contract = contracts.findById(mor.getContractId())
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
         buildingScope.assertAssigned(contract.getBuildingId());
 
         if (mor.getStatus() != MoveOutStatus.APPROVED && mor.getStatus() != MoveOutStatus.COMPLETED) {
-            throw new BusinessException("INVALID_STATUS", "Chá»‰ quyáº¿t toÃ¡n cá»c cho yÃªu cáº§u Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t hoáº·c hoÃ n táº¥t", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_STATUS", "Chỉ quyết toán cọc cho yêu cầu đã được duyệt hoặc hoàn tất", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         BigDecimal refundAmt = (request != null && request.refundAmount() != null)
@@ -1843,13 +1843,13 @@ public class ContractService {
 
     public ContractDocumentStorage.Download openMoveOutRefundReceipt(Long moveOutId) {
         MoveOutRequest mor = moveOutRequests.findById(moveOutId)
-                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u tráº£ phÃ²ng " + moveOutId));
+                .orElseThrow(() -> new NotFoundException("MOVE_OUT_NOT_FOUND", "Không tìm thấy yêu cầu trả phòng " + moveOutId));
         Contract contract = contracts.findById(mor.getContractId())
-                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng"));
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng"));
         assertCanView(contract);
 
         if (mor.getRefundReceiptImageKey() == null) {
-            throw new NotFoundException("RECEIPT_NOT_FOUND", "ChÆ°a cÃ³ áº£nh biÃªn lai hoÃ n cá»c cho yÃªu cáº§u nÃ y");
+            throw new NotFoundException("RECEIPT_NOT_FOUND", "Chưa có ảnh biên lai hoàn cọc cho yêu cầu này");
         }
         return documentStorage.open(mor.getRefundReceiptImageKey());
     }
@@ -1938,10 +1938,10 @@ public class ContractService {
                 PropertyClient.RoomInfo room = properties.getRoom(locked.getRoomId());
                 maxCapacity = room == null ? null : room.maxCapacity();
             } catch (Exception unavailable) {
-                throw new BusinessException("DEPENDENCY_UNAVAILABLE", "KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c sá»©c chá»©a phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Không kiểm tra được sức chứa phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
             if (maxCapacity == null || maxCapacity < 1) {
-                throw new BusinessException("DEPENDENCY_UNAVAILABLE", "KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c sá»©c chá»©a phÃ²ng", HttpStatus.SERVICE_UNAVAILABLE);
+                throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Không kiểm tra được sức chứa phòng", HttpStatus.SERVICE_UNAVAILABLE);
             }
 
             long currentOccupancy = tenants.countByContractIdAndLeftAtIsNull(locked.getId());
@@ -1969,7 +1969,7 @@ public class ContractService {
                 members.add(savedTenant);
                 documentService.generateAddendum(locked, members, savedTenant);
             } catch (Exception ex) {
-                log.warn("KhÃ´ng thá»ƒ sinh phá»¥ lá»¥c thÃªm ngÆ°á» i á»Ÿ cho há»£p Ä‘á»“ng {}: {}",
+                log.warn("Không thể sinh phụ lục thêm người ở cho hợp đồng {}: {}",
                         locked.getId(), ex.getMessage());
             }
 
@@ -1984,32 +1984,32 @@ public class ContractService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             Contract contract = contracts.findById(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
             buildingScope.assertAssigned(contract.getBuildingId());
 
             if (contract.getStatus() != ContractStatus.DRAFT) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ kÃ½ há»£p Ä‘á»“ng á»Ÿ tráº¡ng thÃ¡i DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ ký hợp đồng ở trạng thái DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateSigningFields(contract);
 
             contracts.lockNamedKey(signKey("customer", contract.getCustomerId()));
             contracts.lockNamedKey(signKey("room", contract.getRoomId()));
             Contract locked = contracts.findByIdForUpdate(id)
-                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "KhÃ´ng tÃ¬m tháº¥y há»£p Ä‘á»“ng " + id));
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + id));
 
             if (locked.getStatus() != ContractStatus.DRAFT) {
-                throw new BusinessException("INVALID_STATUS", "Chá»‰ kÃ½ há»£p Ä‘á»“ng á»Ÿ tráº¡ng thÃ¡i DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new BusinessException("INVALID_STATUS", "Chỉ ký hợp đồng ở trạng thái DRAFT", HttpStatus.UNPROCESSABLE_ENTITY);
             }
             validateSigningFields(locked);
 
             if (contracts.existsActiveOverlappingContract(locked.getRoomId(), ContractStatus.ACTIVE,
                     locked.getStartDate(), locked.getEndDate(), locked.getId())) {
                 throw new BusinessException("ROOM_ALREADY_CONTRACTED",
-                        "PhÃ²ng Ä‘Ã£ cÃ³ há»£p Ä‘á»“ng ACTIVE trÃ¹ng khoáº£ng thá»i gian", HttpStatus.CONFLICT);
+                        "Phòng đã có hợp đồng ACTIVE trùng khoảng thời gian", HttpStatus.CONFLICT);
             }
             if (tenants.existsCurrentTenantInContractWithStatus(locked.getCustomerId(), ContractStatus.ACTIVE)) {
                 throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM",
-                        "KhÃ¡ch Ä‘Ã£ thuá»™c má»™t há»£p Ä‘á»“ng ACTIVE khÃ¡c", HttpStatus.CONFLICT);
+                        "Khách đã thuộc một hợp đồng ACTIVE khác", HttpStatus.CONFLICT);
             }
 
             locked.setStatus(ContractStatus.ACTIVE);
@@ -2021,7 +2021,7 @@ public class ContractService {
             } catch (DataIntegrityViolationException race) {
                 if (violates(race, DUPLICATE_CUSTOMER_INDEX) || violates(race, REPRESENTATIVE_INDEX)) {
                     throw new BusinessException("CUSTOMER_ALREADY_IN_ROOM",
-                            "KhÃ¡ch Ä‘Ã£ thuá»™c má»™t há»£p Ä‘á»“ng ACTIVE khÃ¡c", HttpStatus.CONFLICT);
+                            "Khách đã thuộc một hợp đồng ACTIVE khác", HttpStatus.CONFLICT);
                 }
                 throw race;
             }
@@ -2040,7 +2040,7 @@ public class ContractService {
             try {
                 documentService.generate(saved, pdfTenants(saved));
             } catch (Exception ex) {
-                log.warn("KhÃ´ng thá»ƒ sinh PDF sau khi kÃ½: {}", ex.getMessage());
+                log.warn("Không thể sinh PDF sau khi ký: {}", ex.getMessage());
             }
             return ContractResponse.from(saved);
         });
@@ -2049,13 +2049,13 @@ public class ContractService {
     private static void validateSigningFields(Contract contract) {
         if (contract.getStartDate() == null || contract.getEndDate() == null) {
             throw new BusinessException("CONTRACT_INCOMPLETE",
-                    "Há»£p Ä‘á»“ng thiáº¿u ngÃ y báº¯t Ä‘áº§u hoáº·c ngÃ y káº¿t thÃºc", HttpStatus.UNPROCESSABLE_ENTITY);
+                    "Hợp đồng thiếu ngày bắt đầu hoặc ngày kết thúc", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (!contract.getEndDate().isAfter(contract.getStartDate())) {
-            throw new BusinessException("INVALID_DATE", "NgÃ y káº¿t thÃºc pháº£i sau ngÃ y báº¯t Ä‘áº§u", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("INVALID_DATE", "Ngày kết thúc phải sau ngày bắt đầu", HttpStatus.UNPROCESSABLE_ENTITY);
         }
         if (contract.getRentAmount() == null || contract.getRentAmount().signum() <= 0) {
-            throw new BusinessException("CONTRACT_INCOMPLETE", "Há»£p Ä‘á»“ng thiáº¿u giÃ¡ thuÃª há»£p lá»‡", HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new BusinessException("CONTRACT_INCOMPLETE", "Hợp đồng thiếu giá thuê hợp lệ", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
@@ -2144,12 +2144,12 @@ public class ContractService {
         if (tenants.existsByContractIdAndCustomerIdAndLeftAtIsNull(contract.getId(), customerId)) {
             return;
         }
-        throw new AccessDeniedException("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p há»£p Ä‘á»“ng nÃ y");
+        throw new AccessDeniedException("Bạn không có quyền truy cập hợp đồng này");
     }
 
     private static void assertTenantOwnsContract(Contract contract, Long customerId) {
         if (!Objects.equals(contract.getCustomerId(), customerId)) {
-            throw new AccessDeniedException("Báº¡n khÃ´ng pháº£i ngÆ°á»i Ä‘á»©ng tÃªn há»£p Ä‘á»“ng nÃ y");
+            throw new AccessDeniedException("Bạn không phải người đứng tên hợp đồng này");
         }
     }
 
@@ -2158,6 +2158,6 @@ public class ContractService {
         if (auth != null && auth.getPrincipal() instanceof HeaderUser hu) {
             return hu;
         }
-        throw new AccessDeniedException("ChÆ°a Ä‘Äƒng nháº­p");
+        throw new AccessDeniedException("Chưa đăng nhập");
     }
 }

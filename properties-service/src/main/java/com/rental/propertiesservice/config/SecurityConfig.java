@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -29,7 +28,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
  * Authorization for property endpoints. Role checks for write operations live on the controllers
- * ({@code @PreAuthorize}, spec 6.2); these chains only separate public reads, occupant reads and
+ * ({@code @PreAuthorize}, spec 6.2); this chain separates public reads, occupant reads and
  * authenticated routes, rebuilding identity from the Gateway headers via
  * {@link PropertyHeaderAuthenticationFilter}.
  */
@@ -45,8 +44,7 @@ public class SecurityConfig {
     private static final Set<String> STAFF_ROLES = Set.of("ROLE_QUAN_LY", "ROLE_SALE", "ROLE_KY_THUAT");
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain occupantReadSecurity(HttpSecurity http) throws Exception {
+    public SecurityFilterChain security(HttpSecurity http) throws Exception {
         RequestMatcher occupantReads = request -> {
             String path = path(request.getRequestURI(), request.getContextPath());
             return path.equals(STATISTICS_PATH) || ROOM_READ.matcher(path).matches()
@@ -54,15 +52,14 @@ public class SecurityConfig {
         };
 
         ObjectMapper json = new ObjectMapper();
-        http.securityMatcher(occupantReads)
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .anyRequest().access((authentication, context) -> {
+                        .requestMatchers(occupantReads).access((authentication, context) -> {
                             Authentication user = authentication.get();
                             String path = path(context.getRequest().getRequestURI(),
                                     context.getRequest().getContextPath());
@@ -86,29 +83,7 @@ public class SecurityConfig {
                             boolean customer = hasRole(user, "ROLE_CUSTOMER");
                             return new org.springframework.security.authorization.AuthorizationDecision(
                                     admin || (customer && own.matches() && own.group(1).equals(userIdOf(user))));
-                        }))
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, ex) ->
-                                writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED,
-                                        ErrorCode.UNAUTHENTICATED, "Chưa đăng nhập", json))
-                        .accessDeniedHandler((request, response, ex) ->
-                                writeError(request, response, HttpServletResponse.SC_FORBIDDEN,
-                                        ErrorCode.FORBIDDEN, "Không đủ quyền", json)))
-                .addFilterBefore(new PropertyHeaderAuthenticationFilter(), AuthorizationFilter.class);
-        return http.build();
-    }
-
-    @Bean
-    @Order(2)
-    public SecurityFilterChain propertySecurity(HttpSecurity http) throws Exception {
-        ObjectMapper json = new ObjectMapper();
-        http.csrf(AbstractHttpConfigurer::disable)
-                .requestCache(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        })
                         .requestMatchers("/internal/**", "/actuator/**", "/v3/api-docs/**",
                                 "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/locations/**", "/api/v1/provinces/**",
