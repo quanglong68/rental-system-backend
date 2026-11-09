@@ -17,4 +17,5 @@ public class PaymentResponse {
     Instant paidAt;
     String note;
     Long recordedBy;
+    String txnRef;
 }

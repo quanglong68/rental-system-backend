@@ -70,6 +70,16 @@ billing:
   closing-day: ${BILLING_CLOSING_DAY:1}
   due-days: ${BILLING_DUE_DAYS:7}
 
+# VNPay Sandbox Configuration
+vnpay:
+  tmn-code: ${VNPAY_TMN_CODE:HNJAWPZ8}
+  hash-secret: ${VNPAY_HASH_SECRET:Q78M2SN95OZRMDVJPWIX5FEL37TXG9UL}
+  api-url: ${VNPAY_API_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  api-query-url: ${VNPAY_API_QUERY_URL:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+  allowed-return-urls: ${VNPAY_ALLOWED_RETURN_URLS:http://localhost:3000/payment/vnpay-return,https://rental-system-frontend-ten.vercel.app/payment/vnpay-return}
+  ipn-url: ${VNPAY_IPN_URL:https://quaintly-ageless-corina.ngrok-free.dev/api/v1/payments/vnpay-ipn}
+  default-client-ip: ${VNPAY_DEFAULT_CLIENT_IP:127.0.0.1}
+
 # Mui gio he thong UTC; scheduler doi sang Asia/Ho_Chi_Minh bang zone trong @Scheduled.
 management:
   endpoints:

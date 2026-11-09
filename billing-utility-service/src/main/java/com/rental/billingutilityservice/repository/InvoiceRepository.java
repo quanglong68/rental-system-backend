@@ -12,7 +12,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.repository.query.Param;
+
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from Invoice i where i.id = :id")
+    Optional<Invoice> findByIdForUpdate(@Param("id") Long id);
+
     Optional<Invoice> findByContractTenantIdAndMonthAndYear(Long contractTenantId, Integer month, Integer year);
 
     boolean existsByContractTenantIdAndMonthAndYear(Long contractTenantId, Integer month, Integer year);

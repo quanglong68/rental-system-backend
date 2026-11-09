@@ -40,6 +40,9 @@ public class Payment {
     @Column(name = "recorded_by", nullable = false)
     private Long recordedBy;
 
+    @Column(name = "txn_ref", length = 100)
+    private String txnRef;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

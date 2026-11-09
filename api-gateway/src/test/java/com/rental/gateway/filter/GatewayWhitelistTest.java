@@ -19,4 +19,23 @@ class GatewayWhitelistTest {
             assertThat(whitelist.isPublic(HttpMethod.POST, path)).as(path).isFalse();
         }
     }
+
+    @Test
+    void minioImagesChoPhepMoiMethodKhongCanToken() {
+        for (String path : List.of("/property-images/rooms/1.jpg", "/property-images/buildings/2.png",
+                "/report-images/incident-1.webp")) {
+            assertThat(whitelist.isPublic(HttpMethod.GET, path)).as(path).isTrue();
+            assertThat(whitelist.isPublic(HttpMethod.PUT, path)).as(path).isTrue();
+            assertThat(whitelist.isPublic(HttpMethod.HEAD, path)).as(path).isTrue();
+        }
+    }
+
+    @Test
+    void vnpayEndpointsChoPhepMoiMethodKhongCanToken() {
+        for (String path : List.of("/api/v1/payments/vnpay-ipn", "/api/v1/payments/vnpay-ipn/",
+                "/api/v1/payments/vnpay/confirm", "/api/v1/payments/vnpay/confirm/")) {
+            assertThat(whitelist.isPublic(HttpMethod.GET, path)).as(path).isTrue();
+            assertThat(whitelist.isPublic(HttpMethod.POST, path)).as(path).isTrue();
+        }
+    }
 }

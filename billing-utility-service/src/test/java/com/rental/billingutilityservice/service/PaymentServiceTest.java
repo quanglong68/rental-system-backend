@@ -8,6 +8,9 @@ import com.rental.billingutilityservice.outbox.BillingEventPublisher;
 import com.rental.billingutilityservice.repository.InvoiceRepository;
 import com.rental.billingutilityservice.repository.PaymentRepository;
 import com.rental.billingutilityservice.support.AuthSupport;
+import com.rental.billingutilityservice.vnpay.VnpayClient;
+import com.rental.billingutilityservice.vnpay.VnpayProperties;
+import com.rental.billingutilityservice.vnpay.VnpaySigner;
 import com.rental.common.error.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +42,12 @@ class PaymentServiceTest {
     private BillingEventPublisher events;
     @Mock
     private AuthSupport auth;
+    @Mock
+    private VnpayClient vnpayClient;
+    @Mock
+    private VnpayProperties vnpayProperties;
+    @Mock
+    private VnpaySigner vnpaySigner;
 
     @InjectMocks
     private PaymentService service;
@@ -132,5 +141,123 @@ class PaymentServiceTest {
         service.create(request);
 
         verify(roomInvoices).recomputeForShare(invoice);
+    }
+
+    @Test
+    void createVnpayPaymentUrlSuccess() {
+        Invoice invoice = invoice(new BigDecimal("3000000"), BigDecimal.ZERO, InvoiceStatus.UNPAID);
+        invoice.setId(10L);
+        when(invoices.findById(10L)).thenReturn(Optional.of(invoice));
+        when(vnpayProperties.getDefaultReturnUrl()).thenReturn("http://localhost:3000/payment/vnpay-return");
+        when(vnpayClient.buildPaymentUrl(any(), any(Long.class), any(), any(), any()))
+                .thenReturn("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?test=1");
+
+        com.rental.billingutilityservice.dto.request.CreateVnpayPaymentRequest request =
+                new com.rental.billingutilityservice.dto.request.CreateVnpayPaymentRequest();
+        request.setInvoiceId(10L);
+
+        com.rental.common.security.HeaderUser principal =
+                new com.rental.common.security.HeaderUser("42", "CUSTOMER", java.util.List.of("CUSTOMER"));
+
+        var response = service.createVnpayPaymentUrl(request, principal);
+        org.junit.jupiter.api.Assertions.assertNotNull(response.getPaymentUrl());
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("3000000"), response.getAmount());
+        org.junit.jupiter.api.Assertions.assertTrue(response.getTxnRef().startsWith("INV10_"));
+    }
+
+    @Test
+    void confirmVnpayPaymentSuccessMovesToPaid() {
+        Invoice invoice = invoice(new BigDecimal("2000000"), BigDecimal.ZERO, InvoiceStatus.UNPAID);
+        invoice.setId(15L);
+        when(invoices.findByIdForUpdate(15L)).thenReturn(Optional.of(invoice));
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(true);
+        when(payments.findByTxnRef("INV15_12345")).thenReturn(Optional.empty());
+        when(payments.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV15_12345");
+        params.put("vnp_ResponseCode", "00");
+        params.put("vnp_Amount", "200000000"); // 2,000,000 * 100
+        params.put("vnp_TransactionNo", "149999");
+        params.put("vnp_BankCode", "NCB");
+
+        var response = service.confirmVnpayPayment(params);
+        org.junit.jupiter.api.Assertions.assertTrue(response.isSuccess());
+        org.junit.jupiter.api.Assertions.assertEquals(InvoiceStatus.PAID, invoice.getStatus());
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("2000000"), invoice.getPaidAmount());
+        verify(events).publishPaymentReceived(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void confirmVnpayPaymentFailsOnInvalidSignature() {
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(false);
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV15_12345");
+        params.put("vnp_ResponseCode", "00");
+
+        var response = service.confirmVnpayPayment(params);
+        org.junit.jupiter.api.Assertions.assertFalse(response.isSuccess());
+    }
+
+    @Test
+    void handleVnpayIpnIdempotentWhenAlreadyPaid() {
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(true);
+        Invoice invoice = invoice(new BigDecimal("2000000"), new BigDecimal("2000000"), InvoiceStatus.PAID);
+        invoice.setId(15L);
+        when(invoices.findByIdForUpdate(15L)).thenReturn(Optional.of(invoice));
+        when(payments.existsByTxnRef("INV15_12345")).thenReturn(true);
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV15_12345");
+        params.put("vnp_ResponseCode", "00");
+        params.put("vnp_Amount", "200000000");
+
+        var result = service.handleVnpayIpn(params);
+        org.junit.jupiter.api.Assertions.assertEquals("02", result.get("RspCode"));
+    }
+
+    @Test
+    void handleVnpayIpnReturns04OnInvalidAmount() {
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(true);
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV15_12345");
+        params.put("vnp_ResponseCode", "00");
+        params.put("vnp_Amount", "0");
+
+        var result = service.handleVnpayIpn(params);
+        org.junit.jupiter.api.Assertions.assertEquals("04", result.get("RspCode"));
+    }
+
+    @Test
+    void handleVnpayIpnReturns01WhenOrderNotFound() {
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(true);
+        when(invoices.findByIdForUpdate(99L)).thenReturn(Optional.empty());
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV99_12345");
+        params.put("vnp_ResponseCode", "00");
+        params.put("vnp_Amount", "100000000");
+
+        var result = service.handleVnpayIpn(params);
+        org.junit.jupiter.api.Assertions.assertEquals("01", result.get("RspCode"));
+    }
+
+    @Test
+    void handleVnpayIpnReturns97OnBadSignature() {
+        when(vnpayProperties.getHashSecret()).thenReturn("SECRET123");
+        when(vnpaySigner.verify(any(), any())).thenReturn(false);
+
+        java.util.Map<String, String> params = new java.util.HashMap<>();
+        params.put("vnp_TxnRef", "INV15_12345");
+
+        var result = service.handleVnpayIpn(params);
+        org.junit.jupiter.api.Assertions.assertEquals("97", result.get("RspCode"));
     }
 }

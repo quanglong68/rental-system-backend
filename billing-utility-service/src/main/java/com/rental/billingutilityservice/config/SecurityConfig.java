@@ -39,14 +39,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers("/actuator/**", "/internal/**", "/v3/api-docs/**", "/swagger-ui/**",
-                                "/swagger-ui.html").permitAll()
+                                "/swagger-ui.html", "/api/v1/payments/vnpay-ipn", "/api/v1/payments/vnpay-ipn/**",
+                                "/api/v1/payments/vnpay/confirm", "/api/v1/payments/vnpay/confirm/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new HeaderAuthenticationFilter() {
                     @Override
                     protected boolean isSkipped(String path) {
                         return super.isSkipped(path)
                                 || path != null
-                                        && (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui"));
+                                        && (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")
+                                                || path.equals("/api/v1/payments/vnpay-ipn") || path.startsWith("/api/v1/payments/vnpay-ipn")
+                                                || path.equals("/api/v1/payments/vnpay/confirm") || path.startsWith("/api/v1/payments/vnpay/confirm"));
                     }
                 }, AuthorizationFilter.class)
                 .exceptionHandling(handling -> handling
