@@ -18,6 +18,11 @@
 .DS_Store
 Thumbs.db
 
+.gradle-user-home
+.gradle
+
+/build
+
 # ===== Logs & temp =====
 *.log
 *.tmp
