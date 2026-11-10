@@ -1,4 +1,4 @@
-﻿param(
+param(
     [switch]$SkipSeed
 )
 
@@ -91,3 +91,4 @@ Write-Host "   HE THONG DA DUOC RESET VA SEED DATA MOI SACH SE 100%!            
 Write-Host "   Bootstrap admin : e2e.admin@example.com / E2ePass123!               " -ForegroundColor Green
 Write-Host "   Tai khoan seed  : seed.*@test.local / Test@12345                    " -ForegroundColor Green
 Write-Host "======================================================================" -ForegroundColor Green
+

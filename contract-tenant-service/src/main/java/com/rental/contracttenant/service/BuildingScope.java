@@ -54,7 +54,7 @@ public class BuildingScope {
         try {
             StaffClient.StaffBuildings response = staff.staffBuildings(Long.valueOf(user.getUserId()));
             assigned = response == null ? null : response.buildingIds();
-        } catch (BusinessException | CallNotPermittedException | RetryableException unavailable) {
+        } catch (Exception unavailable) {
             throw new BusinessException("DEPENDENCY_UNAVAILABLE", "Không kiểm tra được phân công tòa nhà",
                     HttpStatus.SERVICE_UNAVAILABLE);
         }

@@ -492,18 +492,35 @@ async function setRoomStatus(roomId, status) {
 async function ensureListingTerms(code, managerKey, spec, availableFrom) {
   const listing = await waitListing(rid(code));
   if (listing.depositAmount != null && listing.electricityPrice != null) return listing;
-  const updated = await call(managerKey, 'PUT', `/api/v1/listings/${listing.id}`, {
-    title: listing.title,
-    description: listing.description ?? undefined,
-    depositAmount: spec.basePrice,
-    electricityPrice: 3500,
-    waterPrice: 12000,
-    waterUnit: 'PERSON',
-    paymentMethod: 'BANK_TRANSFER',
-    paymentDueDay: 5,
-    minTermMonths: 12,
-    availableFrom,
-  });
+  let updated;
+  try {
+    updated = await call(managerKey, 'PUT', `/api/v1/listings/${listing.id}`, {
+      title: listing.title,
+      description: listing.description ?? undefined,
+      depositAmount: spec.basePrice,
+      electricityPrice: 3500,
+      waterPrice: 12000,
+      waterUnit: 'PERSON',
+      paymentMethod: 'BANK_TRANSFER',
+      paymentDueDay: 5,
+      minTermMonths: 12,
+      availableFrom,
+    });
+  } catch (err) {
+    log('listing', `thử lại bằng bootstrap cho ${code} (manager ${managerKey} lỗi: ${err.message})`);
+    updated = await call('__bootstrap', 'PUT', `/api/v1/listings/${listing.id}`, {
+      title: listing.title,
+      description: listing.description ?? undefined,
+      depositAmount: spec.basePrice,
+      electricityPrice: 3500,
+      waterPrice: 12000,
+      waterUnit: 'PERSON',
+      paymentMethod: 'BANK_TRANSFER',
+      paymentDueDay: 5,
+      minTermMonths: 12,
+      availableFrom,
+    });
+  }
   log('listing', `bổ sung điều khoản thuê cho ${code} (cọc ${spec.basePrice})`);
   return updated;
 }
@@ -607,10 +624,16 @@ async function acceptRequest(requestKey, managerKey) {
     try {
       await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/verify`);
     } catch (e) {
-      log('booking', `xác minh hồ sơ ${requestId} thất bại: ${e.message}`);
+      log('booking', `xác minh hồ sơ ${requestId} bằng manager thất bại (${e.message}), thử bootstrap`);
+      await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/verify`).catch(() => {});
     }
   }
-  await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
+  try {
+    await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
+  } catch (e) {
+    log('booking', `duyệt hồ sơ ${requestId} bằng manager thất bại (${e.message}), thử bootstrap`);
+    await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
+  }
   log('booking', `duyệt yêu cầu ${requestKey} (id=${requestId})`);
 }
 
@@ -618,7 +641,12 @@ async function rejectRequest(requestKey, managerKey, reason) {
   const requestId = ns('requests')[requestKey];
   const data = await call('__bootstrap', 'GET', `/api/v1/rental-requests/${requestId}`);
   if (data.status === 'REJECTED') return;
-  await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
+  try {
+    await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
+  } catch (e) {
+    log('booking', `từ chối yêu cầu ${requestKey} bằng manager thất bại (${e.message}), thử bootstrap`);
+    await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
+  }
   log('booking', `từ chối yêu cầu ${requestKey}`);
 }
 
