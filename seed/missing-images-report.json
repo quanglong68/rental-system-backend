@@ -1,0 +1,2978 @@
+{
+  "generatedAt": "2026-11-09T13:33:18.600Z",
+  "uploaded": 45,
+  "skipped": 0,
+  "failures": [],
+  "report": {
+    "generatedAt": "2026-11-03T08:57:10.442Z",
+    "uploaded": 45,
+    "skipped": 0,
+    "failures": [],
+    "report": {
+      "generatedAt": "2026-11-03T08:35:25.726Z",
+      "uploaded": 45,
+      "skipped": 0,
+      "failures": [],
+      "report": {
+        "generatedAt": "2026-11-03T08:29:50.471Z",
+        "uploaded": 45,
+        "skipped": 0,
+        "failures": [],
+        "report": {
+          "generatedAt": "2026-11-03T04:15:14.239Z",
+          "uploaded": 45,
+          "skipped": 0,
+          "failures": [],
+          "report": {
+            "generatedAt": "2026-11-03T03:53:16.555Z",
+            "uploaded": 45,
+            "skipped": 0,
+            "failures": [],
+            "report": {
+              "generatedAt": "2026-11-03T03:48:52.148Z",
+              "uploaded": 45,
+              "skipped": 0,
+              "failures": [],
+              "report": {
+                "generatedAt": "2026-11-03T02:46:53.839Z",
+                "uploaded": 45,
+                "skipped": 0,
+                "failures": [],
+                "report": {
+                  "generatedAt": "2026-10-30T04:54:05.264Z",
+                  "uploaded": 75,
+                  "skipped": 63,
+                  "failures": [],
+                  "report": {
+                    "buildings": {
+                      "Seed House B": {
+                        "ownerId": "903856398469693440",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A": {
+                        "ownerId": "903856397781827584",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "E2E Building 631462 updated": {
+                        "ownerId": "903569815875092480",
+                        "uploadedFiles": [
+                          "nha-tro-2-tang-6.jpg",
+                          "nha-tro-gac-lung-4.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903569815875092480/4413a285-e8c9-40fa-9216-85ed5838e021.jpg",
+                          "http://localhost:9000/property-images/building/903569815875092480/23ab5d51-9957-4bb9-a440-53a3ff8bd0d4.jpg",
+                          "http://localhost:9000/property-images/building/903569815875092480/31b6eda7-edab-4d27-b935-99529343a9ac.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 598901 updated": {
+                        "ownerId": "903569679304359936",
+                        "uploadedFiles": [
+                          "nha-tro-gac-lung-4.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903569679304359936/bbd46188-1d69-4442-b8d6-b34aba746756.jpg",
+                          "http://localhost:9000/property-images/building/903569679304359936/845b465a-d2d8-4937-8f9e-2db78bb55fb0.jpg",
+                          "http://localhost:9000/property-images/building/903569679304359936/8d3d1abd-54c7-4d00-b349-b0fc742053d0.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 446198 updated": {
+                        "ownerId": "903569038800584704",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903569038800584704/ee623318-d584-43d1-ae22-fca4e9e00929.jpg",
+                          "http://localhost:9000/property-images/building/903569038800584704/d88ed842-d651-45b7-83d4-9f6d3a0dbdbd.jpg",
+                          "http://localhost:9000/property-images/building/903569038800584704/85fcad7a-04fa-4353-8ede-0015fbfc4da2.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 169354 updated": {
+                        "ownerId": "903567877817237504",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903567877817237504/02960b7b-3365-4752-a8d9-679814656a9f.jpg",
+                          "http://localhost:9000/property-images/building/903567877817237504/b40a0a9a-32fc-4b78-97b1-fccedff3b9b3.jpg",
+                          "http://localhost:9000/property-images/building/903567877817237504/c2ad7881-3ac0-4c5d-abc1-103326e73918.webp"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 624309 updated": {
+                        "ownerId": "903565591334354944",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                          "nha-tro-2-tang-2.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903565591334354944/db4b0f0d-7e22-4caf-8b7a-c0bbbdaa98c6.jpg",
+                          "http://localhost:9000/property-images/building/903565591334354944/6bdab65c-f9e4-4981-8bb1-1e0857b3361b.webp",
+                          "http://localhost:9000/property-images/building/903565591334354944/18b18a39-6579-4ea5-870d-7ebb2eb68f80.webp"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 856490 updated": {
+                        "ownerId": "903562370742222848",
+                        "uploadedFiles": [
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                          "nha-tro-2-tang-2.webp",
+                          "nha-tro-2-tang-6.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903562370742222848/dbb17987-09d0-41a7-a0ea-54605dced39a.webp",
+                          "http://localhost:9000/property-images/building/903562370742222848/3c20f7ad-0e03-4a52-ba33-a886342f2115.webp",
+                          "http://localhost:9000/property-images/building/903562370742222848/a6174b26-ba24-459b-99ff-2b447ef84516.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 0829 updated": {
+                        "ownerId": "903562296322686976",
+                        "uploadedFiles": [
+                          "nha-tro-2-tang-2.webp",
+                          "nha-tro-2-tang-6.jpg",
+                          "nha-tro-gac-lung-4.jpg",
+                          "nha-tro-2-tang-6.jpg",
+                          "nha-tro-gac-lung-4.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/903562296322686976/2cb373c8-2c02-4143-9c6e-7bbb62334f1c.webp",
+                          "http://localhost:9000/property-images/building/903562296322686976/4a86c906-8f9f-4bd6-9d08-242dcd6648b9.jpg",
+                          "http://localhost:9000/property-images/building/903562296322686976/2a66f5bf-b2bb-4cd3-8346-123a558fd6d4.jpg",
+                          "http://localhost:9000/property-images/building/903562267633647616/605cfe15-6775-47ff-ac29-c3f491156541.jpg",
+                          "http://localhost:9000/property-images/building/903562267633647616/4f54b860-fb0a-40f5-a195-9b653a865bac.jpg",
+                          "http://localhost:9000/property-images/building/903562267633647616/afc6e777-7314-4acf-bd37-c474e015f256.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "Lam Garden": {
+                        "ownerId": "3",
+                        "uploadedFiles": [
+                          "nha-tro-gac-lung-4.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/3/9479f5e2-7652-4856-b1d9-2e48d875d846.jpg",
+                          "http://localhost:9000/property-images/building/3/d3395e8f-2f08-40cc-b473-372b6f1aab6f.jpg",
+                          "http://localhost:9000/property-images/building/3/37f9ead5-0db5-41f6-81a7-bd00bad59555.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House": {
+                        "ownerId": "1",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/1/bc1aa2b9-6fde-4b9b-86fc-534bba430c83.jpg",
+                          "http://localhost:9000/property-images/building/1/6f697e7b-357d-474b-9103-8950d94ed0c3.jpg",
+                          "http://localhost:9000/property-images/building/1/3652783a-86fa-4162-af62-f48ddbf97522.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "Mộc Residence": {
+                        "ownerId": "2",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/building/2/2d338027-661e-4e2a-b9ee-2853338b862c.jpg",
+                          "http://localhost:9000/property-images/building/2/578bd183-23b0-47e2-a3e1-a03d7166e34a.jpg",
+                          "http://localhost:9000/property-images/building/2/6b99b104-71f7-451c-8b0a-a7abcc938ca4.webp"
+                        ],
+                        "before": 0
+                      }
+                    },
+                    "rooms": {
+                      "Seed House B / B205": {
+                        "ownerId": "903857108959625216",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House B / B204": {
+                        "ownerId": "903857104563994624",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House B / B203": {
+                        "ownerId": "903857100197724160",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House B / B202": {
+                        "ownerId": "903857095823065088",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House B / B201": {
+                        "ownerId": "903857091419045888",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A108": {
+                        "ownerId": "903857087019220992",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A107": {
+                        "ownerId": "903857082648756224",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A106": {
+                        "ownerId": "903857078274097152",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A105": {
+                        "ownerId": "903857073916215296",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A104": {
+                        "ownerId": "903857069516390400",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A103": {
+                        "ownerId": "903857065108176896",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A102": {
+                        "ownerId": "903857060699963392",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Seed House A / A101": {
+                        "ownerId": "903857056136560640",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "E2E Building 631462 updated / E2E-631462": {
+                        "ownerId": "903569816080613376",
+                        "uploadedFiles": [
+                          "images (7).jpg",
+                          "images.jpg",
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903569816080613376/15a77618-9a43-4a65-8f41-bf4bf65cf1e0.jpg",
+                          "http://localhost:9000/property-images/room/903569816080613376/ff03be3c-646b-450d-85f2-264f707110b4.jpg",
+                          "http://localhost:9000/property-images/room/903569816080613376/9efaf82c-2526-4574-831e-1bda9c09374a.webp"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 598901 updated / E2E-598901": {
+                        "ownerId": "903569679484715008",
+                        "uploadedFiles": [
+                          "images.jpg",
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                          "nha-tro-2-tang-2.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903569679484715008/ea38dc97-e3e4-4d34-815e-252c2a8cef3d.jpg",
+                          "http://localhost:9000/property-images/room/903569679484715008/3b5617bc-77ae-430c-9740-9785eb75c4f8.webp",
+                          "http://localhost:9000/property-images/room/903569679484715008/e9ebc207-b43e-49a0-94e3-fb61eccab05b.webp"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 446198 updated / E2E-446198": {
+                        "ownerId": "903569038997716992",
+                        "uploadedFiles": [
+                          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                          "nha-tro-2-tang-2.webp",
+                          "nha-tro-2-tang-6.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903569038997716992/86467811-eb60-4af3-a94e-91ee2f55f776.webp",
+                          "http://localhost:9000/property-images/room/903569038997716992/b3bdf685-0f39-4b58-b0e6-dbfa88c27954.webp",
+                          "http://localhost:9000/property-images/room/903569038997716992/efe929db-6088-4b90-ae34-1fc1a1a58199.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 169354 updated / E2E-169354": {
+                        "ownerId": "903567878219890688",
+                        "uploadedFiles": [
+                          "nha-tro-2-tang-2.webp",
+                          "nha-tro-2-tang-6.jpg",
+                          "nha-tro-gac-lung-4.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903567878219890688/2f01c050-60fe-4565-9b92-1a67c80442d0.webp",
+                          "http://localhost:9000/property-images/room/903567878219890688/cbd8b17b-07dd-4aa1-b2a0-525b1315a834.jpg",
+                          "http://localhost:9000/property-images/room/903567878219890688/374f0fde-c6f6-42a7-8f68-13d89cb07a0e.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 624309 updated / E2E-624309": {
+                        "ownerId": "903565591648927744",
+                        "uploadedFiles": [
+                          "nha-tro-2-tang-6.jpg",
+                          "nha-tro-gac-lung-4.jpg",
+                          "phong-tro-co-gac-lung-8.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903565591648927744/43adb401-23ae-4f9d-be4d-e90469f68d7a.jpg",
+                          "http://localhost:9000/property-images/room/903565591648927744/dbe58b58-3f56-416e-8226-af5eaefc5a0f.jpg",
+                          "http://localhost:9000/property-images/room/903565591648927744/33492ebb-fab2-42f9-ae8f-6d1f2556182e.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "E2E Building 856490 updated / E2E-856490": {
+                        "ownerId": "903562371237150720",
+                        "uploadedFiles": [
+                          "nha-tro-gac-lung-4.jpg",
+                          "phong-tro-co-gac-lung-8.jpg",
+                          "phong-tro-dep.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903562371237150720/d808f21f-9ad5-4301-9e07-4bb1f38f4659.jpg",
+                          "http://localhost:9000/property-images/room/903562371237150720/70f8186b-6b05-4128-97d9-53513e969a02.jpg",
+                          "http://localhost:9000/property-images/room/903562371237150720/aaa2a2c8-d1e1-475d-83fa-0b9fcbda0312.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "Lam Garden / P.302": {
+                        "ownerId": "302",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "The Fern House / E2E-C-637343": {
+                        "ownerId": "903569840596320256",
+                        "uploadedFiles": [
+                          "phong-tro-dep.jpg",
+                          "phong-tro-duoc-bo-tri-hop-ly-651cda72c9649b0ef5c6f87a.webp",
+                          "phong-tro-duoc-bo-tri-theo-phong-cach-chung-cu-mini-651cda69c9649b0ef5c6f538.webp"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903569840596320256/e2bded8c-b7f5-4d0e-9cee-b6db9ac56beb.jpg",
+                          "http://localhost:9000/property-images/room/903569840596320256/027b53c7-e064-4af3-b9c0-d15abb68dde7.webp",
+                          "http://localhost:9000/property-images/room/903569840596320256/e73f98ed-c125-4987-a2d4-96ec6d4d63ca.webp"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-451947": {
+                        "ownerId": "903569062942998528",
+                        "uploadedFiles": [
+                          "phong-tro-duoc-bo-tri-hop-ly-651cda72c9649b0ef5c6f87a.webp",
+                          "phong-tro-duoc-bo-tri-theo-phong-cach-chung-cu-mini-651cda69c9649b0ef5c6f538.webp",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903569062942998528/fa3ca784-7cd7-415d-8960-27b19802b11f.webp",
+                          "http://localhost:9000/property-images/room/903569062942998528/1eec16aa-5080-4378-9308-be8897e1c026.webp",
+                          "http://localhost:9000/property-images/room/903569062942998528/7df1eb45-3d60-46ec-9b6e-79e2b56a36ed.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-176913": {
+                        "ownerId": "903567909303877632",
+                        "uploadedFiles": [
+                          "phong-tro-duoc-bo-tri-theo-phong-cach-chung-cu-mini-651cda69c9649b0ef5c6f538.webp",
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903567909303877632/625b8d31-ffe5-45b3-b980-ebfdf39b1aa2.webp",
+                          "http://localhost:9000/property-images/room/903567909303877632/2d5ce4f5-0144-4711-8408-13cd98224eb3.jpg",
+                          "http://localhost:9000/property-images/room/903567909303877632/2bc34841-faa9-4a8f-880b-2d87acb17c38.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-629272": {
+                        "ownerId": "903565612196823040",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903565612196823040/f108dc32-1b83-4014-a7c0-02ac297721e7.jpg",
+                          "http://localhost:9000/property-images/room/903565612196823040/c4b22b3a-9e8a-4f73-b639-732825200f21.jpg",
+                          "http://localhost:9000/property-images/room/903565612196823040/683a8dc8-13a6-46a2-8200-f6d955235b21.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-274770": {
+                        "ownerId": "903564125286694912",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+                          "thiet-ke-noi-that-phong-tro-16.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903564125286694912/4dd04372-8ac0-4358-b892-bbd8036b41c3.jpg",
+                          "http://localhost:9000/property-images/room/903564125286694912/a46ceb06-fb20-444b-9f28-b58b5c36ac84.jpg",
+                          "http://localhost:9000/property-images/room/903564125286694912/c95abe4b-67ec-49f0-ba54-fdaee38035af.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-060798": {
+                        "ownerId": "903563227714027520",
+                        "uploadedFiles": [
+                          "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+                          "thiet-ke-noi-that-phong-tro-16.jpg",
+                          "thiet-ke-noi-that-phong-tro-19.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903563227714027520/bd21d674-ee27-48cc-8cce-24f2e13bc9d4.jpg",
+                          "http://localhost:9000/property-images/room/903563227714027520/7ebb0987-1fb8-41e2-b2e7-aef969065d39.jpg",
+                          "http://localhost:9000/property-images/room/903563227714027520/40dc4425-f7d2-4468-a7cf-cf56fb654bf5.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-964463": {
+                        "ownerId": "903562823659945984",
+                        "uploadedFiles": [
+                          "thiet-ke-noi-that-phong-tro-16.jpg",
+                          "thiet-ke-noi-that-phong-tro-19.jpg",
+                          "thiet-ke-noi-that-phong-tro-35.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903562823659945984/d345b01c-f0c2-4e31-9f64-e071c0586d59.jpg",
+                          "http://localhost:9000/property-images/room/903562823659945984/35363b69-f9dc-4afe-bc53-aef2abdf4ca2.jpg",
+                          "http://localhost:9000/property-images/room/903562823659945984/0fc42df0-261c-4045-899c-26da37b8cf39.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / E2E-C-907936": {
+                        "ownerId": "903562586727907328",
+                        "uploadedFiles": [
+                          "thiet-ke-noi-that-phong-tro-19.jpg",
+                          "thiet-ke-noi-that-phong-tro-35.jpg",
+                          "thiet-ke-noi-that-phong-tro-41.jpg"
+                        ],
+                        "imageUrls": [
+                          "http://localhost:9000/property-images/room/903562586727907328/31893996-d34b-49c2-b896-a896cd3b2d13.jpg",
+                          "http://localhost:9000/property-images/room/903562586727907328/df68d3ee-b3c2-4a3f-afad-9fa8d590334f.jpg",
+                          "http://localhost:9000/property-images/room/903562586727907328/a6e9b4e2-7991-4a0e-825e-08db8e720976.jpg"
+                        ],
+                        "before": 0
+                      },
+                      "The Fern House / P.102": {
+                        "ownerId": "102",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "The Fern House / P.101": {
+                        "ownerId": "101",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 4
+                      },
+                      "The Fern House / P.201": {
+                        "ownerId": "201",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Mộc Residence / P.301": {
+                        "ownerId": "301",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      },
+                      "Mộc Residence / P.202": {
+                        "ownerId": "202",
+                        "uploadedFiles": [],
+                        "imageUrls": [],
+                        "before": 3
+                      }
+                    }
+                  },
+                  "verify": [
+                    {
+                      "building": "Seed House B",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "B205",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "B204",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "B203",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "B202",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "B201",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "Seed House A",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "A108",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A107",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A106",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A105",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A104",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A103",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A102",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "A101",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 631462 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-631462",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 598901 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-598901",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 446198 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-446198",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 169354 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-169354",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 624309 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-624309",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 856490 updated",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-856490",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "E2E Building 0829 updated",
+                      "buildingImages": 3,
+                      "rooms": []
+                    },
+                    {
+                      "building": "E2E Building 0829 updated",
+                      "buildingImages": 3,
+                      "rooms": []
+                    },
+                    {
+                      "building": "Lam Garden",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "P.302",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "The Fern House",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "E2E-C-637343",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-451947",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-176913",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-629272",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-274770",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-060798",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-964463",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "E2E-C-907936",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "P.102",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "P.101",
+                          "count": 4
+                        },
+                        {
+                          "roomCode": "P.201",
+                          "count": 3
+                        }
+                      ]
+                    },
+                    {
+                      "building": "Mộc Residence",
+                      "buildingImages": 3,
+                      "rooms": [
+                        {
+                          "roomCode": "P.301",
+                          "count": 3
+                        },
+                        {
+                          "roomCode": "P.202",
+                          "count": 3
+                        }
+                      ]
+                    }
+                  ],
+                  "buildings": {
+                    "Seed House B": {
+                      "ownerId": "905283932499476480",
+                      "uploadedFiles": [
+                        "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                        "nha-tro-2-tang-2.webp",
+                        "nha-tro-2-tang-6.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/building/905283932499476480/a6f9a47b-108f-4b6e-bd6e-3f26d767bbca.webp",
+                        "http://localhost:9000/property-images/building/905283932499476480/e1f800de-c6fe-4805-9596-4dbddbdb907a.webp",
+                        "http://localhost:9000/property-images/building/905283932499476480/1409e15b-4b05-4fe2-8766-b17d83f779f5.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A": {
+                      "ownerId": "905283931945828352",
+                      "uploadedFiles": [
+                        "nha-tro-2-tang-2.webp",
+                        "nha-tro-2-tang-6.jpg",
+                        "nha-tro-gac-lung-4.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/building/905283931945828352/da4315a3-5e70-4dae-9462-6a5cfffd1557.webp",
+                        "http://localhost:9000/property-images/building/905283931945828352/c6e76849-467a-4380-ad57-2c10551d0712.jpg",
+                        "http://localhost:9000/property-images/building/905283931945828352/22c6b852-267a-4dde-8521-b6b2174ab446.jpg"
+                      ],
+                      "before": 0
+                    }
+                  },
+                  "rooms": {
+                    "Seed House B / B205": {
+                      "ownerId": "905283992889065472",
+                      "uploadedFiles": [
+                        "Nhatro.6.jpg",
+                        "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                        "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283992889065472/5bd87fdf-c510-4105-8cec-dcf79f59b5d9.jpg",
+                        "http://localhost:9000/property-images/room/905283992889065472/513837bc-2a3a-4fda-a238-32036059f1f5.jpg",
+                        "http://localhost:9000/property-images/room/905283992889065472/b8085c22-ba37-4bf2-b232-66e2919a0279.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House B / B204": {
+                      "ownerId": "905283988329857024",
+                      "uploadedFiles": [
+                        "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                        "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                        "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283988329857024/4d0c628c-5432-48bb-ac2a-a8bcf57c4a32.jpg",
+                        "http://localhost:9000/property-images/room/905283988329857024/0603ed90-5d41-472c-9b41-f1581077e58f.jpg",
+                        "http://localhost:9000/property-images/room/905283988329857024/c92e77b1-c3ab-4ecf-aaba-e801a6fcef02.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House B / B203": {
+                      "ownerId": "905283983732899840",
+                      "uploadedFiles": [
+                        "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                        "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                        "decor-phong-tro-102.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283983732899840/2d5bbc1b-be9c-4ad9-96ce-e025213bd59f.jpg",
+                        "http://localhost:9000/property-images/room/905283983732899840/13a8e830-6d8c-4d30-8873-98be93f1b45e.jpg",
+                        "http://localhost:9000/property-images/room/905283983732899840/454ae95b-29f4-4734-ad92-094672451efa.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House B / B202": {
+                      "ownerId": "905283979148525568",
+                      "uploadedFiles": [
+                        "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                        "decor-phong-tro-102.jpg",
+                        "decor-phong-tro-104.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283979148525568/8ddffbd3-8baa-4905-a865-24c6c495304f.jpg",
+                        "http://localhost:9000/property-images/room/905283979148525568/e83bbfdf-3833-4111-8249-398c9790762b.jpg",
+                        "http://localhost:9000/property-images/room/905283979148525568/576c87d6-6ad1-43bc-a724-dda9717ea991.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House B / B201": {
+                      "ownerId": "905283974455099392",
+                      "uploadedFiles": [
+                        "decor-phong-tro-102.jpg",
+                        "decor-phong-tro-104.jpg",
+                        "decor-phong-tro-116.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283974455099392/40762bec-eaea-4356-b195-708cb1e6e37d.jpg",
+                        "http://localhost:9000/property-images/room/905283974455099392/b0d81320-c0c9-434b-8ed2-e8c0b02aeba3.jpg",
+                        "http://localhost:9000/property-images/room/905283974455099392/4e2e15a6-fb1b-4e08-b0a3-81064b59f0a5.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A108": {
+                      "ownerId": "905283969925251072",
+                      "uploadedFiles": [
+                        "decor-phong-tro-104.jpg",
+                        "decor-phong-tro-116.jpg",
+                        "images (1).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283969925251072/ed6e3aef-111c-4359-be92-081c8bfbfd41.jpg",
+                        "http://localhost:9000/property-images/room/905283969925251072/745f8889-1e07-4f1c-956f-44bc477b1960.jpg",
+                        "http://localhost:9000/property-images/room/905283969925251072/a03e4c32-7ffc-4fe8-a380-357183ac6a5f.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A107": {
+                      "ownerId": "905283965428957184",
+                      "uploadedFiles": [
+                        "decor-phong-tro-116.jpg",
+                        "images (1).jpg",
+                        "images (2).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283965428957184/e151b903-973e-46bd-81e1-30e34a8f2a0c.jpg",
+                        "http://localhost:9000/property-images/room/905283965428957184/16d0e867-58b6-42bc-9b37-66e174264860.jpg",
+                        "http://localhost:9000/property-images/room/905283965428957184/926a073d-d510-4776-bca3-a318db09498b.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A106": {
+                      "ownerId": "905283960949440512",
+                      "uploadedFiles": [
+                        "images (1).jpg",
+                        "images (2).jpg",
+                        "images (3).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283960949440512/e7f834eb-42f1-4d9d-9547-51c1988e2f60.jpg",
+                        "http://localhost:9000/property-images/room/905283960949440512/d02c8247-ec7a-4cca-983b-9666e269ae41.jpg",
+                        "http://localhost:9000/property-images/room/905283960949440512/3abe58a3-3240-4fa8-8f56-1b58c19ce413.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A105": {
+                      "ownerId": "905283956448952320",
+                      "uploadedFiles": [
+                        "images (2).jpg",
+                        "images (3).jpg",
+                        "images (4).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283956448952320/89166ded-f3b4-4675-9a5e-1ea59eddf2a4.jpg",
+                        "http://localhost:9000/property-images/room/905283956448952320/48211d38-5b06-47e6-a59a-989bcbef2e26.jpg",
+                        "http://localhost:9000/property-images/room/905283956448952320/54b4110d-6a0c-4ee2-a29a-71ebd2e9f3a4.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A104": {
+                      "ownerId": "905283951860383744",
+                      "uploadedFiles": [
+                        "images (3).jpg",
+                        "images (4).jpg",
+                        "images (5).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283951860383744/0b5cae42-ae16-43fb-a112-18dfd26dd1b0.jpg",
+                        "http://localhost:9000/property-images/room/905283951860383744/56308449-7365-4c3c-91ee-37fd49b9760b.jpg",
+                        "http://localhost:9000/property-images/room/905283951860383744/19799b2f-7074-40ac-9e13-f1043b80b3ff.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A103": {
+                      "ownerId": "905283947284398080",
+                      "uploadedFiles": [
+                        "images (4).jpg",
+                        "images (5).jpg",
+                        "images (6).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283947284398080/58a83cba-b9d2-4602-b2c7-b247d31f82f5.jpg",
+                        "http://localhost:9000/property-images/room/905283947284398080/f88674c8-c70f-4a2e-9d7b-39ef17be14e2.jpg",
+                        "http://localhost:9000/property-images/room/905283947284398080/05f78465-c101-4d48-bad1-6cec7895135f.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A102": {
+                      "ownerId": "905283942754549760",
+                      "uploadedFiles": [
+                        "images (5).jpg",
+                        "images (6).jpg",
+                        "images (7).jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283942754549760/ef9ae14e-38b6-4ad3-b8d9-57c9de541264.jpg",
+                        "http://localhost:9000/property-images/room/905283942754549760/5eddda69-2d1e-48bb-93dd-d15c97160e96.jpg",
+                        "http://localhost:9000/property-images/room/905283942754549760/9fd05d22-339a-4370-a1bf-4ef9920e0d59.jpg"
+                      ],
+                      "before": 0
+                    },
+                    "Seed House A / A101": {
+                      "ownerId": "905283937738162176",
+                      "uploadedFiles": [
+                        "images (6).jpg",
+                        "images (7).jpg",
+                        "images.jpg"
+                      ],
+                      "imageUrls": [
+                        "http://localhost:9000/property-images/room/905283937738162176/ceea9d46-e8bb-44b0-9184-a0331bd798ce.jpg",
+                        "http://localhost:9000/property-images/room/905283937738162176/e28bd4c9-e8a2-4a80-82a2-8ae25e79f48e.jpg",
+                        "http://localhost:9000/property-images/room/905283937738162176/51ec91b6-216e-413f-91d2-46c0ce8db164.jpg"
+                      ],
+                      "before": 0
+                    }
+                  }
+                },
+                "verify": [
+                  {
+                    "building": "Seed House B",
+                    "buildingImages": 3,
+                    "rooms": [
+                      {
+                        "roomCode": "B205",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "B204",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "B203",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "B202",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "B201",
+                        "count": 3
+                      }
+                    ]
+                  },
+                  {
+                    "building": "Seed House A",
+                    "buildingImages": 3,
+                    "rooms": [
+                      {
+                        "roomCode": "A108",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A107",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A106",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A105",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A104",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A103",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A102",
+                        "count": 3
+                      },
+                      {
+                        "roomCode": "A101",
+                        "count": 3
+                      }
+                    ]
+                  }
+                ],
+                "buildings": {
+                  "Seed House B": {
+                    "ownerId": "905302321687166976",
+                    "uploadedFiles": [
+                      "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                      "nha-tro-2-tang-2.webp",
+                      "nha-tro-2-tang-6.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/building/905302321687166976/a1aac8e3-7a55-46be-a1d9-e9cabe04b649.webp",
+                      "http://localhost:9000/property-images/building/905302321687166976/1ff52076-4ea7-44d8-a5bc-543acaec2ba5.webp",
+                      "http://localhost:9000/property-images/building/905302321687166976/f2bf3959-e6a2-41d6-8fa6-958759d632b9.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A": {
+                    "ownerId": "905302320915415040",
+                    "uploadedFiles": [
+                      "nha-tro-2-tang-2.webp",
+                      "nha-tro-2-tang-6.jpg",
+                      "nha-tro-gac-lung-4.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/building/905302320915415040/b01c95c9-4404-4995-8337-1366491441f5.webp",
+                      "http://localhost:9000/property-images/building/905302320915415040/ef175cc1-6cf0-47ab-8e99-c492a5260e0c.jpg",
+                      "http://localhost:9000/property-images/building/905302320915415040/4d73e748-8c8e-4ee2-a61c-413d2352f8a4.jpg"
+                    ],
+                    "before": 0
+                  }
+                },
+                "rooms": {
+                  "Seed House B / B205": {
+                    "ownerId": "905302380428394496",
+                    "uploadedFiles": [
+                      "Nhatro.6.jpg",
+                      "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                      "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302380428394496/ac73e50c-f50d-4b5d-99c8-9eff7e7bc4d1.jpg",
+                      "http://localhost:9000/property-images/room/905302380428394496/8ff9d44a-cf76-4bde-9eb7-54ce4f2016ac.jpg",
+                      "http://localhost:9000/property-images/room/905302380428394496/d52f85e7-2c19-4ced-b144-8c0c6fd37bea.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House B / B204": {
+                    "ownerId": "905302375999209472",
+                    "uploadedFiles": [
+                      "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                      "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                      "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302375999209472/50316c76-1d29-40a3-99e6-ef7e4e1af286.jpg",
+                      "http://localhost:9000/property-images/room/905302375999209472/bce0adf5-69a6-44ed-bb41-6cc8f6ba35a4.jpg",
+                      "http://localhost:9000/property-images/room/905302375999209472/94884b50-16e8-4c55-8060-e810cb9f6c5e.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House B / B203": {
+                    "ownerId": "905302371498721280",
+                    "uploadedFiles": [
+                      "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                      "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                      "decor-phong-tro-102.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302371498721280/ece2cd3d-aa95-4d64-8ba2-39d1cd4eb6cb.jpg",
+                      "http://localhost:9000/property-images/room/905302371498721280/dd29eac3-085b-4070-b43d-f5d6d959a067.jpg",
+                      "http://localhost:9000/property-images/room/905302371498721280/af44b768-31d6-4c53-83a4-ed0820af4d44.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House B / B202": {
+                    "ownerId": "905302366981455872",
+                    "uploadedFiles": [
+                      "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                      "decor-phong-tro-102.jpg",
+                      "decor-phong-tro-104.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302366981455872/a2a7d687-97c6-4b72-9192-a9b9c6b08f5d.jpg",
+                      "http://localhost:9000/property-images/room/905302366981455872/ea551432-a547-4db9-9841-854dd281d55f.jpg",
+                      "http://localhost:9000/property-images/room/905302366981455872/60170f38-dce1-4d8e-b59e-a01ecd8bdcde.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House B / B201": {
+                    "ownerId": "905302362514522112",
+                    "uploadedFiles": [
+                      "decor-phong-tro-102.jpg",
+                      "decor-phong-tro-104.jpg",
+                      "decor-phong-tro-116.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302362514522112/785f418e-7c57-47bc-8e01-24887c94fae9.jpg",
+                      "http://localhost:9000/property-images/room/905302362514522112/bbf562ae-c63a-4242-a07a-0b558901911e.jpg",
+                      "http://localhost:9000/property-images/room/905302362514522112/578efa27-778b-445b-8c25-e7eee398ebf7.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A108": {
+                    "ownerId": "905302358051782656",
+                    "uploadedFiles": [
+                      "decor-phong-tro-104.jpg",
+                      "decor-phong-tro-116.jpg",
+                      "images (1).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302358051782656/515f9013-f13c-45ce-8c51-bb518a693f91.jpg",
+                      "http://localhost:9000/property-images/room/905302358051782656/0ea02b24-98ff-4232-8737-258231778bfd.jpg",
+                      "http://localhost:9000/property-images/room/905302358051782656/40e1f10f-4980-492f-9b2b-9e4512623548.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A107": {
+                    "ownerId": "905302353555488768",
+                    "uploadedFiles": [
+                      "decor-phong-tro-116.jpg",
+                      "images (1).jpg",
+                      "images (2).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302353555488768/b926de79-521f-4fc9-844c-189c31112b7d.jpg",
+                      "http://localhost:9000/property-images/room/905302353555488768/83c860cd-4f4b-451c-814d-2326955f09d1.jpg",
+                      "http://localhost:9000/property-images/room/905302353555488768/0a9f12ac-b0a3-4d16-aada-7bf8c61f3b84.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A106": {
+                    "ownerId": "905302349017251840",
+                    "uploadedFiles": [
+                      "images (1).jpg",
+                      "images (2).jpg",
+                      "images (3).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302349017251840/ce58f3b2-5e66-49c1-8154-4a193af2da0d.jpg",
+                      "http://localhost:9000/property-images/room/905302349017251840/a1c67b7a-b948-4aa2-97df-4983d34a5d1a.jpg",
+                      "http://localhost:9000/property-images/room/905302349017251840/af49f22c-7442-4734-b565-e833a1ff912b.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A105": {
+                    "ownerId": "905302344504180736",
+                    "uploadedFiles": [
+                      "images (2).jpg",
+                      "images (3).jpg",
+                      "images (4).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302344504180736/8a1a3e09-82f2-4d25-8b62-d037a321e677.jpg",
+                      "http://localhost:9000/property-images/room/905302344504180736/a316a27d-3194-4089-86ad-55ac2c009410.jpg",
+                      "http://localhost:9000/property-images/room/905302344504180736/695a37ae-66b4-4f1d-8bda-341b839eacb1.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A104": {
+                    "ownerId": "905302339924000768",
+                    "uploadedFiles": [
+                      "images (3).jpg",
+                      "images (4).jpg",
+                      "images (5).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302339924000768/0a14fdf5-bc1b-4e05-8166-aedec3c2b4cc.jpg",
+                      "http://localhost:9000/property-images/room/905302339924000768/37acf847-31d7-43c2-9952-4fb1823ce446.jpg",
+                      "http://localhost:9000/property-images/room/905302339924000768/a3df3b42-6e0b-4103-8054-6b4b3a9f4137.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A103": {
+                    "ownerId": "905302335452872704",
+                    "uploadedFiles": [
+                      "images (4).jpg",
+                      "images (5).jpg",
+                      "images (6).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302335452872704/4d8dd9cc-7d63-467c-a2ac-39ce3dd81ed0.jpg",
+                      "http://localhost:9000/property-images/room/905302335452872704/f6e16886-158d-43f2-8442-bdc4b446b611.jpg",
+                      "http://localhost:9000/property-images/room/905302335452872704/ca9c773e-65d0-4ae9-afac-561741113d32.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A102": {
+                    "ownerId": "905302330977550336",
+                    "uploadedFiles": [
+                      "images (5).jpg",
+                      "images (6).jpg",
+                      "images (7).jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302330977550336/8b4d0b5e-b7cf-4006-beac-4c50aa48956e.jpg",
+                      "http://localhost:9000/property-images/room/905302330977550336/8abfaeb9-2ed1-419d-8c71-020819111ff7.jpg",
+                      "http://localhost:9000/property-images/room/905302330977550336/f3c82710-1a73-4b3f-aca3-4dbf14b70da2.jpg"
+                    ],
+                    "before": 0
+                  },
+                  "Seed House A / A101": {
+                    "ownerId": "905302326162489344",
+                    "uploadedFiles": [
+                      "images (6).jpg",
+                      "images (7).jpg",
+                      "images.jpg"
+                    ],
+                    "imageUrls": [
+                      "http://localhost:9000/property-images/room/905302326162489344/a186d443-16a3-4058-9fb6-758660ce1a30.jpg",
+                      "http://localhost:9000/property-images/room/905302326162489344/5ce6dbbc-2301-458b-b9d9-9cb5b66ff27f.jpg",
+                      "http://localhost:9000/property-images/room/905302326162489344/b5db7b90-e536-4466-a5f1-978337992bff.jpg"
+                    ],
+                    "before": 0
+                  }
+                }
+              },
+              "verify": [
+                {
+                  "building": "Seed House B",
+                  "buildingImages": 3,
+                  "rooms": [
+                    {
+                      "roomCode": "B205",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "B204",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "B203",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "B202",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "B201",
+                      "count": 3
+                    }
+                  ]
+                },
+                {
+                  "building": "Seed House A",
+                  "buildingImages": 3,
+                  "rooms": [
+                    {
+                      "roomCode": "A108",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A107",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A106",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A105",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A104",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A103",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A102",
+                      "count": 3
+                    },
+                    {
+                      "roomCode": "A101",
+                      "count": 3
+                    }
+                  ]
+                }
+              ],
+              "buildings": {
+                "Seed House B": {
+                  "ownerId": "905303345537744896",
+                  "uploadedFiles": [
+                    "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                    "nha-tro-2-tang-2.webp",
+                    "nha-tro-2-tang-6.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/building/905303345537744896/0cce7872-342f-4c3c-b866-1aabe8baefe7.webp",
+                    "http://localhost:9000/property-images/building/905303345537744896/de8e2923-a319-46af-97be-9831ff93a0d8.webp",
+                    "http://localhost:9000/property-images/building/905303345537744896/92697c16-d304-4ab1-9f83-3f755dd4b8fc.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A": {
+                  "ownerId": "905303344875044864",
+                  "uploadedFiles": [
+                    "nha-tro-2-tang-2.webp",
+                    "nha-tro-2-tang-6.jpg",
+                    "nha-tro-gac-lung-4.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/building/905303344875044864/829a617d-0156-46a8-a5de-308c6c48024c.webp",
+                    "http://localhost:9000/property-images/building/905303344875044864/e87bc6eb-b10e-4e38-bd2d-f3204eaf89ce.jpg",
+                    "http://localhost:9000/property-images/building/905303344875044864/cd2d5014-7a0a-4fd6-b6da-dd48c805abc8.jpg"
+                  ],
+                  "before": 0
+                }
+              },
+              "rooms": {
+                "Seed House B / B205": {
+                  "ownerId": "905303413581938688",
+                  "uploadedFiles": [
+                    "Nhatro.6.jpg",
+                    "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                    "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303413581938688/b61f3c26-7bdd-4d96-858d-9998da62d65a.jpg",
+                    "http://localhost:9000/property-images/room/905303413581938688/6be88533-8099-41fc-935c-fc60956c7e18.jpg",
+                    "http://localhost:9000/property-images/room/905303413581938688/26fc8852-cb65-4364-8d6e-74aea7dd6ceb.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House B / B204": {
+                  "ownerId": "905303409073061888",
+                  "uploadedFiles": [
+                    "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                    "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                    "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303409073061888/00934f19-a4d1-4da7-bf0a-3df4c0db8882.jpg",
+                    "http://localhost:9000/property-images/room/905303409073061888/d9ed5c94-b886-4ff1-abdd-d3ccb34c7f17.jpg",
+                    "http://localhost:9000/property-images/room/905303409073061888/aace12b7-7469-4b38-88a3-851db905401a.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House B / B203": {
+                  "ownerId": "905303404568379392",
+                  "uploadedFiles": [
+                    "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                    "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                    "decor-phong-tro-102.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303404568379392/0b635dd1-f8b0-4faf-8043-9debf24d79ca.jpg",
+                    "http://localhost:9000/property-images/room/905303404568379392/38b91e03-ec61-4ae0-bd22-b939ad44654f.jpg",
+                    "http://localhost:9000/property-images/room/905303404568379392/cb525dd3-8232-4b88-9773-764845968864.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House B / B202": {
+                  "ownerId": "905303399967227904",
+                  "uploadedFiles": [
+                    "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                    "decor-phong-tro-102.jpg",
+                    "decor-phong-tro-104.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303399967227904/0775fca7-afe0-4aa6-82b4-0e4e1ab7e4dc.jpg",
+                    "http://localhost:9000/property-images/room/905303399967227904/0770a72b-249e-4eb0-93f7-7e0560a941f9.jpg",
+                    "http://localhost:9000/property-images/room/905303399967227904/6383c5e4-61bc-4d37-9c16-0f057633590a.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House B / B201": {
+                  "ownerId": "905303395420602368",
+                  "uploadedFiles": [
+                    "decor-phong-tro-102.jpg",
+                    "decor-phong-tro-104.jpg",
+                    "decor-phong-tro-116.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303395420602368/29639c43-b7f0-4d31-bcf0-21fee6ed18b9.jpg",
+                    "http://localhost:9000/property-images/room/905303395420602368/fb23c2ee-cc2b-4e0f-ae75-9b80bb78f4d4.jpg",
+                    "http://localhost:9000/property-images/room/905303395420602368/cbf9f284-bc47-46d6-926a-d5866497ea6a.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A108": {
+                  "ownerId": "905303390936891392",
+                  "uploadedFiles": [
+                    "decor-phong-tro-104.jpg",
+                    "decor-phong-tro-116.jpg",
+                    "images (1).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303390936891392/4bfef85b-be7f-4950-934f-009275dd5332.jpg",
+                    "http://localhost:9000/property-images/room/905303390936891392/e26cb1a7-879e-4852-ad34-21f64c40a315.jpg",
+                    "http://localhost:9000/property-images/room/905303390936891392/6f922582-cf77-4ae7-86ca-fbcf33237add.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A107": {
+                  "ownerId": "905303386390265856",
+                  "uploadedFiles": [
+                    "decor-phong-tro-116.jpg",
+                    "images (1).jpg",
+                    "images (2).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303386390265856/fa789851-e887-404b-82e1-2748d4d2dea2.jpg",
+                    "http://localhost:9000/property-images/room/905303386390265856/82352586-1e8b-449b-a6f0-5b8c4c9cb801.jpg",
+                    "http://localhost:9000/property-images/room/905303386390265856/f269c057-3d06-4b63-804b-4c3eb3ac9162.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A106": {
+                  "ownerId": "905303381826863104",
+                  "uploadedFiles": [
+                    "images (1).jpg",
+                    "images (2).jpg",
+                    "images (3).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303381826863104/e52979b6-e652-449c-8a1e-99978fd08376.jpg",
+                    "http://localhost:9000/property-images/room/905303381826863104/a64d1eea-f3a8-413f-b5eb-e6c5e3cb28bc.jpg",
+                    "http://localhost:9000/property-images/room/905303381826863104/2cecb81d-4437-4e7a-9808-c846adcf12d7.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A105": {
+                  "ownerId": "905303377150214144",
+                  "uploadedFiles": [
+                    "images (2).jpg",
+                    "images (3).jpg",
+                    "images (4).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303377150214144/6ee912e1-f2a4-4108-a82e-d79c62cd8da8.jpg",
+                    "http://localhost:9000/property-images/room/905303377150214144/fd4bac00-3f38-43ce-be80-0a5a995f3dec.jpg",
+                    "http://localhost:9000/property-images/room/905303377150214144/65cb7c31-83ea-4b71-84d8-d1d6d899a323.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A104": {
+                  "ownerId": "905303372591005696",
+                  "uploadedFiles": [
+                    "images (3).jpg",
+                    "images (4).jpg",
+                    "images (5).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303372591005696/d8d3e205-0097-42b1-a467-a6ea510c127e.jpg",
+                    "http://localhost:9000/property-images/room/905303372591005696/2f2cd8cb-5c02-40ac-9fd4-537f53684b94.jpg",
+                    "http://localhost:9000/property-images/room/905303372591005696/630562ab-e6f7-419c-8db3-9d76db608fdb.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A103": {
+                  "ownerId": "905303368006631424",
+                  "uploadedFiles": [
+                    "images (4).jpg",
+                    "images (5).jpg",
+                    "images (6).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303368006631424/0ddfd8af-53d2-4e83-bdfd-c2d8fccd43da.jpg",
+                    "http://localhost:9000/property-images/room/905303368006631424/7d18ecab-2fc9-4f1d-9462-a593539a33e7.jpg",
+                    "http://localhost:9000/property-images/room/905303368006631424/fa7e2679-d28e-4d6e-8531-aba446bd0602.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A102": {
+                  "ownerId": "905303363518726144",
+                  "uploadedFiles": [
+                    "images (5).jpg",
+                    "images (6).jpg",
+                    "images (7).jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303363518726144/f65cb5cf-440c-4305-88ca-360b479ce5f8.jpg",
+                    "http://localhost:9000/property-images/room/905303363518726144/ea93840c-e209-4d9b-91b6-783a21bf4643.jpg",
+                    "http://localhost:9000/property-images/room/905303363518726144/2265454d-4aa5-49e3-b7bd-bb43d476916a.jpg"
+                  ],
+                  "before": 0
+                },
+                "Seed House A / A101": {
+                  "ownerId": "905303353934741504",
+                  "uploadedFiles": [
+                    "images (6).jpg",
+                    "images (7).jpg",
+                    "images.jpg"
+                  ],
+                  "imageUrls": [
+                    "http://localhost:9000/property-images/room/905303353934741504/b4c3f510-5391-45d8-9c8d-7d4789b22819.jpg",
+                    "http://localhost:9000/property-images/room/905303353934741504/fb9930d3-8807-493c-a5bb-a61a4cb830b4.jpg",
+                    "http://localhost:9000/property-images/room/905303353934741504/727462d3-1ab0-48f4-b684-db437c8484f2.jpg"
+                  ],
+                  "before": 0
+                }
+              }
+            },
+            "verify": [
+              {
+                "building": "Seed House B",
+                "buildingImages": 3,
+                "rooms": [
+                  {
+                    "roomCode": "B205",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "B204",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "B203",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "B202",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "B201",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "building": "Seed House A",
+                "buildingImages": 3,
+                "rooms": [
+                  {
+                    "roomCode": "A108",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A107",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A106",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A105",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A104",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A103",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A102",
+                    "count": 3
+                  },
+                  {
+                    "roomCode": "A101",
+                    "count": 3
+                  }
+                ]
+              }
+            ],
+            "buildings": {
+              "Seed House B": {
+                "ownerId": "905308953263472640",
+                "uploadedFiles": [
+                  "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                  "nha-tro-2-tang-2.webp",
+                  "nha-tro-2-tang-6.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/building/905308953263472640/8b100341-e07c-4a7c-ab3a-81ae14eaca93.webp",
+                  "http://localhost:9000/property-images/building/905308953263472640/6eb2924e-ed35-4669-812e-bafbcbd4329a.webp",
+                  "http://localhost:9000/property-images/building/905308953263472640/bb9532b6-d38d-4a3d-b7d8-f384149c8230.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A": {
+                "ownerId": "905308952747573248",
+                "uploadedFiles": [
+                  "nha-tro-2-tang-2.webp",
+                  "nha-tro-2-tang-6.jpg",
+                  "nha-tro-gac-lung-4.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/building/905308952747573248/a11fa280-b4f0-4cf6-ba5f-6b3cd3e48f22.webp",
+                  "http://localhost:9000/property-images/building/905308952747573248/14d41a45-8e32-4c9e-8d9e-55d8d1afb7ab.jpg",
+                  "http://localhost:9000/property-images/building/905308952747573248/e877882d-e2d9-4cd0-a400-8999d743b26b.jpg"
+                ],
+                "before": 0
+              }
+            },
+            "rooms": {
+              "Seed House B / B205": {
+                "ownerId": "905309017067225088",
+                "uploadedFiles": [
+                  "Nhatro.6.jpg",
+                  "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                  "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905309017067225088/5d50a284-72b4-4356-8936-75ccc3a03c03.jpg",
+                  "http://localhost:9000/property-images/room/905309017067225088/0e1b518f-dabf-4686-88b6-215866e97ea3.jpg",
+                  "http://localhost:9000/property-images/room/905309017067225088/a2b3b368-1d65-4e35-8ba4-1b7a2b35ea1d.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House B / B204": {
+                "ownerId": "905309012608679936",
+                "uploadedFiles": [
+                  "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                  "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                  "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905309012608679936/99b21651-be1e-47b0-9942-ecc7912b53be.jpg",
+                  "http://localhost:9000/property-images/room/905309012608679936/d908198a-de68-44f4-9519-734362dac1e7.jpg",
+                  "http://localhost:9000/property-images/room/905309012608679936/d144349b-d686-4c1a-a6fb-374a4a159abc.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House B / B203": {
+                "ownerId": "905309008166912000",
+                "uploadedFiles": [
+                  "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                  "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                  "decor-phong-tro-102.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905309008166912000/e5598a7e-9967-40b0-a766-cc8cd9780f51.jpg",
+                  "http://localhost:9000/property-images/room/905309008166912000/3ad8dcc9-b109-4e49-951a-e2ded159b509.jpg",
+                  "http://localhost:9000/property-images/room/905309008166912000/4c80d158-ffd4-48d4-9c36-e37b0efc3d73.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House B / B202": {
+                "ownerId": "905309003704172544",
+                "uploadedFiles": [
+                  "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                  "decor-phong-tro-102.jpg",
+                  "decor-phong-tro-104.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905309003704172544/8c7264b9-c8f3-4672-bdaa-0df5872e4947.jpg",
+                  "http://localhost:9000/property-images/room/905309003704172544/c713efae-9e22-4ffa-b69f-f3269d0c2a67.jpg",
+                  "http://localhost:9000/property-images/room/905309003704172544/56f032bf-ffb2-4a69-8ade-a733000b16ff.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House B / B201": {
+                "ownerId": "905308999182712832",
+                "uploadedFiles": [
+                  "decor-phong-tro-102.jpg",
+                  "decor-phong-tro-104.jpg",
+                  "decor-phong-tro-116.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308999182712832/e68b31e6-d6cf-4cc9-a3a6-1092ca5ab03a.jpg",
+                  "http://localhost:9000/property-images/room/905308999182712832/b702f9f2-5151-42c6-a92f-21ee446eeab8.jpg",
+                  "http://localhost:9000/property-images/room/905308999182712832/114ca2fa-3bb8-42c2-8614-19cc6898ba47.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A108": {
+                "ownerId": "905308994652864512",
+                "uploadedFiles": [
+                  "decor-phong-tro-104.jpg",
+                  "decor-phong-tro-116.jpg",
+                  "images (1).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308994652864512/078f4486-56bc-4760-bb01-61a96bb4ca99.jpg",
+                  "http://localhost:9000/property-images/room/905308994652864512/6b2196cd-ce7e-4924-8d04-410b93ba3574.jpg",
+                  "http://localhost:9000/property-images/room/905308994652864512/b71af686-ee03-46d7-aced-1cf11197f4ec.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A107": {
+                "ownerId": "905308990156570624",
+                "uploadedFiles": [
+                  "decor-phong-tro-116.jpg",
+                  "images (1).jpg",
+                  "images (2).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308990156570624/38c5ab30-43a8-4bef-8ec1-af424ac0ba91.jpg",
+                  "http://localhost:9000/property-images/room/905308990156570624/a52f7762-8ad6-4dae-b278-d8cd6164da76.jpg",
+                  "http://localhost:9000/property-images/room/905308990156570624/b3c26db4-9596-46fc-8312-138d9891f57d.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A106": {
+                "ownerId": "905308985593167872",
+                "uploadedFiles": [
+                  "images (1).jpg",
+                  "images (2).jpg",
+                  "images (3).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308985593167872/060ce07d-c0f6-4312-8529-cee16816e901.jpg",
+                  "http://localhost:9000/property-images/room/905308985593167872/3e0b9440-e887-41a4-8230-8aa21471d80c.jpg",
+                  "http://localhost:9000/property-images/room/905308985593167872/c7dd49fa-7f8a-440f-9c47-4b7c9a954383.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A105": {
+                "ownerId": "905308981080096768",
+                "uploadedFiles": [
+                  "images (2).jpg",
+                  "images (3).jpg",
+                  "images (4).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308981080096768/8f32ef7e-5efa-4097-a5a2-4dfedf31f48e.jpg",
+                  "http://localhost:9000/property-images/room/905308981080096768/44a2182e-d2d6-4afc-90d3-24e8e54224d0.jpg",
+                  "http://localhost:9000/property-images/room/905308981080096768/3afd1295-32e2-4c96-9f2c-78ad608c682c.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A104": {
+                "ownerId": "905308976629940224",
+                "uploadedFiles": [
+                  "images (3).jpg",
+                  "images (4).jpg",
+                  "images (5).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308976629940224/e1be8afa-1d9a-4db2-bd30-2b5534bf21e6.jpg",
+                  "http://localhost:9000/property-images/room/905308976629940224/69614ec3-97f4-45b0-a464-38cf4b7a5807.jpg",
+                  "http://localhost:9000/property-images/room/905308976629940224/3cef1e7d-9183-48ea-bc2f-96b0132db46b.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A103": {
+                "ownerId": "905308972142034944",
+                "uploadedFiles": [
+                  "images (4).jpg",
+                  "images (5).jpg",
+                  "images (6).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308972142034944/4bbbd293-5b1e-4422-b9d2-aa4ee54c8ece.jpg",
+                  "http://localhost:9000/property-images/room/905308972142034944/25d9037f-df13-452b-b62d-2e7a0648ad39.jpg",
+                  "http://localhost:9000/property-images/room/905308972142034944/00b19d11-9beb-41ad-bbd3-ddab72828adc.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A102": {
+                "ownerId": "905308967528300544",
+                "uploadedFiles": [
+                  "images (5).jpg",
+                  "images (6).jpg",
+                  "images (7).jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308967528300544/361b4808-a848-4edc-9ae7-5c83093e1fb9.jpg",
+                  "http://localhost:9000/property-images/room/905308967528300544/b68c6c35-11b6-452e-80e5-7d936c27e4c8.jpg",
+                  "http://localhost:9000/property-images/room/905308967528300544/5a640490-d0a8-4ead-aee3-5dd6dcd66193.jpg"
+                ],
+                "before": 0
+              },
+              "Seed House A / A101": {
+                "ownerId": "905308958275665920",
+                "uploadedFiles": [
+                  "images (6).jpg",
+                  "images (7).jpg",
+                  "images.jpg"
+                ],
+                "imageUrls": [
+                  "http://localhost:9000/property-images/room/905308958275665920/e456a16d-4820-4cca-b662-a859a1879610.jpg",
+                  "http://localhost:9000/property-images/room/905308958275665920/5023de19-7ee2-4494-b7a5-5cbc99d67f62.jpg",
+                  "http://localhost:9000/property-images/room/905308958275665920/addbaba4-6235-4030-ab5c-b3acf64b6c8e.jpg"
+                ],
+                "before": 0
+              }
+            }
+          },
+          "verify": [
+            {
+              "building": "Seed House B",
+              "buildingImages": 3,
+              "rooms": [
+                {
+                  "roomCode": "B205",
+                  "count": 3
+                },
+                {
+                  "roomCode": "B204",
+                  "count": 3
+                },
+                {
+                  "roomCode": "B203",
+                  "count": 3
+                },
+                {
+                  "roomCode": "B202",
+                  "count": 3
+                },
+                {
+                  "roomCode": "B201",
+                  "count": 3
+                }
+              ]
+            },
+            {
+              "building": "Seed House A",
+              "buildingImages": 3,
+              "rooms": [
+                {
+                  "roomCode": "A108",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A107",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A106",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A105",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A104",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A103",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A102",
+                  "count": 3
+                },
+                {
+                  "roomCode": "A101",
+                  "count": 3
+                }
+              ]
+            }
+          ],
+          "buildings": {
+            "Seed House B": {
+              "ownerId": "905372998251315200",
+              "uploadedFiles": [
+                "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+                "nha-tro-2-tang-2.webp",
+                "nha-tro-2-tang-6.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/building/905372998251315200/fd18f110-19b3-4ba3-8865-cff2cfb7f162.webp",
+                "http://localhost:9000/property-images/building/905372998251315200/d30171d9-01a9-4a3e-ae14-94889495d4f4.webp",
+                "http://localhost:9000/property-images/building/905372998251315200/6cbe7c34-7f51-444c-ad89-0f0d9b143a1d.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A": {
+              "ownerId": "905372997659918336",
+              "uploadedFiles": [
+                "nha-tro-2-tang-2.webp",
+                "nha-tro-2-tang-6.jpg",
+                "nha-tro-gac-lung-4.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/building/905372997659918336/fcdd3f7a-fee9-417f-b02f-2f44c1921b94.webp",
+                "http://localhost:9000/property-images/building/905372997659918336/a1dfab83-57aa-4853-a64a-b840aa0ce6d3.jpg",
+                "http://localhost:9000/property-images/building/905372997659918336/6aa5ff30-cf30-4923-a09e-2aa674a0ae1e.jpg"
+              ],
+              "before": 0
+            }
+          },
+          "rooms": {
+            "Seed House B / B205": {
+              "ownerId": "905373057588133888",
+              "uploadedFiles": [
+                "Nhatro.6.jpg",
+                "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373057588133888/d2538b12-0483-47d7-97fe-c1034a6fe74d.jpg",
+                "http://localhost:9000/property-images/room/905373057588133888/8cab8aa9-2ef7-419f-92d1-92dca507fcbc.jpg",
+                "http://localhost:9000/property-images/room/905373057588133888/a2178d40-bbd1-4f2a-961a-84397349000f.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House B / B204": {
+              "ownerId": "905373053125394432",
+              "uploadedFiles": [
+                "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+                "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373053125394432/1adec2f1-5729-4b9f-94e2-bc6f19ce9867.jpg",
+                "http://localhost:9000/property-images/room/905373053125394432/12d35673-d450-4c55-b9ee-029fac4118c1.jpg",
+                "http://localhost:9000/property-images/room/905373053125394432/aef539f1-7191-4f55-b839-128ecef201e6.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House B / B203": {
+              "ownerId": "905373048700403712",
+              "uploadedFiles": [
+                "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+                "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                "decor-phong-tro-102.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373048700403712/9afe2e39-9288-4f05-b65c-057b78373b4a.jpg",
+                "http://localhost:9000/property-images/room/905373048700403712/8da0ef4d-6642-4b6f-9b37-021843a7bfc9.jpg",
+                "http://localhost:9000/property-images/room/905373048700403712/4fbccd83-c62a-4e34-a1e1-b6e87c3892e7.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House B / B202": {
+              "ownerId": "905373044258635776",
+              "uploadedFiles": [
+                "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+                "decor-phong-tro-102.jpg",
+                "decor-phong-tro-104.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373044258635776/4b51d0d1-ee15-4e48-a5d4-9571a25983bc.jpg",
+                "http://localhost:9000/property-images/room/905373044258635776/aa964c28-ef45-49b4-8e61-83d7140a1531.jpg",
+                "http://localhost:9000/property-images/room/905373044258635776/746e7118-fdaf-4133-96cd-3a02a02540aa.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House B / B201": {
+              "ownerId": "905373039766536192",
+              "uploadedFiles": [
+                "decor-phong-tro-102.jpg",
+                "decor-phong-tro-104.jpg",
+                "decor-phong-tro-116.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373039766536192/20c6ecc1-189d-4e12-8f92-48fb11485344.jpg",
+                "http://localhost:9000/property-images/room/905373039766536192/3351a128-a39d-4725-b989-2bb3d768d5ca.jpg",
+                "http://localhost:9000/property-images/room/905373039766536192/acf4044a-f230-41bb-8d04-d875a1327cf4.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A108": {
+              "ownerId": "905373035232493568",
+              "uploadedFiles": [
+                "decor-phong-tro-104.jpg",
+                "decor-phong-tro-116.jpg",
+                "images (1).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373035232493568/5e51422d-143b-49d1-a931-ab07f3ea9a1f.jpg",
+                "http://localhost:9000/property-images/room/905373035232493568/4fb5f8bb-a64e-4928-a197-91e06f16f4be.jpg",
+                "http://localhost:9000/property-images/room/905373035232493568/2cc8f583-8694-412b-b31e-065f0ef46437.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A107": {
+              "ownerId": "905373030727811072",
+              "uploadedFiles": [
+                "decor-phong-tro-116.jpg",
+                "images (1).jpg",
+                "images (2).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373030727811072/64ee685c-55fe-404e-8853-af25c3ccf6ac.jpg",
+                "http://localhost:9000/property-images/room/905373030727811072/f963433f-3cdb-43ce-b0f4-bd389305b8ea.jpg",
+                "http://localhost:9000/property-images/room/905373030727811072/43ad7aeb-01f8-46bc-8bad-e4f4f18f9706.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A106": {
+              "ownerId": "905373026248294400",
+              "uploadedFiles": [
+                "images (1).jpg",
+                "images (2).jpg",
+                "images (3).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373026248294400/c684d13d-eb9d-47a5-aa49-24d16a9a3c87.jpg",
+                "http://localhost:9000/property-images/room/905373026248294400/937d52a2-3bf6-4baa-b8d1-1b5d40e28ba3.jpg",
+                "http://localhost:9000/property-images/room/905373026248294400/0cdca0ed-806a-4ae4-8366-570d5167f7e0.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A105": {
+              "ownerId": "905373021747806208",
+              "uploadedFiles": [
+                "images (2).jpg",
+                "images (3).jpg",
+                "images (4).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373021747806208/0f0a879a-29ce-4e74-8cb0-7bd17fea3d0b.jpg",
+                "http://localhost:9000/property-images/room/905373021747806208/23516a39-4152-418f-bf58-ff663d8c3240.jpg",
+                "http://localhost:9000/property-images/room/905373021747806208/af8ae6c8-c855-4b4a-8ddf-e02ab539b379.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A104": {
+              "ownerId": "905373017255706624",
+              "uploadedFiles": [
+                "images (3).jpg",
+                "images (4).jpg",
+                "images (5).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373017255706624/a54ec0f0-15b1-4dd8-af83-2ca26635c541.jpg",
+                "http://localhost:9000/property-images/room/905373017255706624/c1a3efa6-8b2b-4fe2-9357-bbfc3bb920e4.jpg",
+                "http://localhost:9000/property-images/room/905373017255706624/fcbdda70-bdf7-47dd-a5cc-0dedfb0a1f38.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A103": {
+              "ownerId": "905373012742635520",
+              "uploadedFiles": [
+                "images (4).jpg",
+                "images (5).jpg",
+                "images (6).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373012742635520/ad76f992-1f2b-4fef-9b45-7dc2a999375a.jpg",
+                "http://localhost:9000/property-images/room/905373012742635520/6dc0a9fc-f413-4b4e-bae8-32cba56998ae.jpg",
+                "http://localhost:9000/property-images/room/905373012742635520/e5b10913-b8c2-4a72-b6ef-fcafa744d9bb.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A102": {
+              "ownerId": "905373008305061888",
+              "uploadedFiles": [
+                "images (5).jpg",
+                "images (6).jpg",
+                "images (7).jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373008305061888/2b623d72-0f8c-4a20-88b8-c26e07ca0b11.jpg",
+                "http://localhost:9000/property-images/room/905373008305061888/082a09ed-0bb7-4de5-9741-2a7f3c212c4b.jpg",
+                "http://localhost:9000/property-images/room/905373008305061888/1239ea8e-db15-474f-8b9e-0c65e867d1f3.jpg"
+              ],
+              "before": 0
+            },
+            "Seed House A / A101": {
+              "ownerId": "905373003490000896",
+              "uploadedFiles": [
+                "images (6).jpg",
+                "images (7).jpg",
+                "images.jpg"
+              ],
+              "imageUrls": [
+                "http://localhost:9000/property-images/room/905373003490000896/6a09ffcd-ca4b-4371-85ca-5d39adc5be6f.jpg",
+                "http://localhost:9000/property-images/room/905373003490000896/5e167a9d-d05a-433d-92d1-058b836acbda.jpg",
+                "http://localhost:9000/property-images/room/905373003490000896/b57844b4-2c4f-442e-be94-cbe37badd17b.jpg"
+              ],
+              "before": 0
+            }
+          }
+        },
+        "verify": [
+          {
+            "building": "Seed House B",
+            "buildingImages": 3,
+            "rooms": [
+              {
+                "roomCode": "B205",
+                "count": 3
+              },
+              {
+                "roomCode": "B204",
+                "count": 3
+              },
+              {
+                "roomCode": "B203",
+                "count": 3
+              },
+              {
+                "roomCode": "B202",
+                "count": 3
+              },
+              {
+                "roomCode": "B201",
+                "count": 3
+              }
+            ]
+          },
+          {
+            "building": "Seed House A",
+            "buildingImages": 3,
+            "rooms": [
+              {
+                "roomCode": "A108",
+                "count": 3
+              },
+              {
+                "roomCode": "A107",
+                "count": 3
+              },
+              {
+                "roomCode": "A106",
+                "count": 3
+              },
+              {
+                "roomCode": "A105",
+                "count": 3
+              },
+              {
+                "roomCode": "A104",
+                "count": 3
+              },
+              {
+                "roomCode": "A103",
+                "count": 3
+              },
+              {
+                "roomCode": "A102",
+                "count": 3
+              },
+              {
+                "roomCode": "A101",
+                "count": 3
+              }
+            ]
+          }
+        ],
+        "buildings": {
+          "Seed House B": {
+            "ownerId": "905374426973863936",
+            "uploadedFiles": [
+              "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+              "nha-tro-2-tang-2.webp",
+              "nha-tro-2-tang-6.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/building/905374426973863936/bfefbc36-936d-4481-9304-7c0c7450c4b3.webp",
+              "http://localhost:9000/property-images/building/905374426973863936/626fcf13-a1c5-4b40-b882-08a35dc1ba1d.webp",
+              "http://localhost:9000/property-images/building/905374426973863936/68e58a39-60cd-4a30-8879-a1dfa1ad35b0.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A": {
+            "ownerId": "905374426558627840",
+            "uploadedFiles": [
+              "nha-tro-2-tang-2.webp",
+              "nha-tro-2-tang-6.jpg",
+              "nha-tro-gac-lung-4.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/building/905374426558627840/4ddce428-d043-4c4e-97b1-11497ea86b38.webp",
+              "http://localhost:9000/property-images/building/905374426558627840/7f4684ac-0f07-4b9c-9566-0e6b70d7c2ec.jpg",
+              "http://localhost:9000/property-images/building/905374426558627840/d41efbf1-f178-4b4d-ba6a-5960c15d8cef.jpg"
+            ],
+            "before": 0
+          }
+        },
+        "rooms": {
+          "Seed House B / B205": {
+            "ownerId": "905374486126133248",
+            "uploadedFiles": [
+              "Nhatro.6.jpg",
+              "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+              "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374486126133248/6081b9f9-596f-4c02-9b28-9aeda2e7a4a5.jpg",
+              "http://localhost:9000/property-images/room/905374486126133248/e29d74cf-607a-462a-a7a9-08fd9288cfba.jpg",
+              "http://localhost:9000/property-images/room/905374486126133248/45408d41-f343-47c2-9fc5-65327d823807.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House B / B204": {
+            "ownerId": "905374481692753920",
+            "uploadedFiles": [
+              "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+              "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+              "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374481692753920/269245d9-d8b9-47c2-ba3c-414e787f51c8.jpg",
+              "http://localhost:9000/property-images/room/905374481692753920/1097ca53-42bc-48b1-8d37-16deca0690a6.jpg",
+              "http://localhost:9000/property-images/room/905374481692753920/c1fbc155-a278-469b-8452-27fd96930802.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House B / B203": {
+            "ownerId": "905374477217431552",
+            "uploadedFiles": [
+              "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+              "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+              "decor-phong-tro-102.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374477217431552/8f360820-b779-4318-835b-bf5d4998e76d.jpg",
+              "http://localhost:9000/property-images/room/905374477217431552/3b2db5f9-dcb1-4b46-ae4b-d65114f383c5.jpg",
+              "http://localhost:9000/property-images/room/905374477217431552/9a3eb41f-4b97-4640-aa34-629ee378a393.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House B / B202": {
+            "ownerId": "905374472742109184",
+            "uploadedFiles": [
+              "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+              "decor-phong-tro-102.jpg",
+              "decor-phong-tro-104.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374472742109184/32326114-377e-4659-8ab8-951d458672ed.jpg",
+              "http://localhost:9000/property-images/room/905374472742109184/40e87bcd-744d-4a84-8f1f-45daa9817eb1.jpg",
+              "http://localhost:9000/property-images/room/905374472742109184/c5f0dab4-3cc4-449a-b8f2-b14f2f0a672f.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House B / B201": {
+            "ownerId": "905374468136763392",
+            "uploadedFiles": [
+              "decor-phong-tro-102.jpg",
+              "decor-phong-tro-104.jpg",
+              "decor-phong-tro-116.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374468136763392/883ebbfb-b3e0-4718-a9db-e60227e147c0.jpg",
+              "http://localhost:9000/property-images/room/905374468136763392/e8ac8b61-8c26-45ec-95ea-81e0b8a4430e.jpg",
+              "http://localhost:9000/property-images/room/905374468136763392/075082cd-837b-4635-b124-8fff1cdbf6be.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A108": {
+            "ownerId": "905374463502057472",
+            "uploadedFiles": [
+              "decor-phong-tro-104.jpg",
+              "decor-phong-tro-116.jpg",
+              "images (1).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374463502057472/c5f5cf5a-0e17-4d2c-9681-e886f3ae0c6d.jpg",
+              "http://localhost:9000/property-images/room/905374463502057472/c0031a07-664c-42c0-af1b-30e263342769.jpg",
+              "http://localhost:9000/property-images/room/905374463502057472/4beb87da-4d4c-4cfc-9cde-547296a5820f.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A107": {
+            "ownerId": "905374458963820544",
+            "uploadedFiles": [
+              "decor-phong-tro-116.jpg",
+              "images (1).jpg",
+              "images (2).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374458963820544/fc5fdd8d-6ca9-424f-a093-e30851c1cb40.jpg",
+              "http://localhost:9000/property-images/room/905374458963820544/e444fab9-479b-4e48-b058-798790ec437f.jpg",
+              "http://localhost:9000/property-images/room/905374458963820544/336fba1e-e78f-4de1-ae30-311056febdce.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A106": {
+            "ownerId": "905374454501081088",
+            "uploadedFiles": [
+              "images (1).jpg",
+              "images (2).jpg",
+              "images (3).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374454501081088/7dbb289f-9af1-4869-aff4-a8afefb07733.jpg",
+              "http://localhost:9000/property-images/room/905374454501081088/68d68c0b-0b8b-4705-86af-613f7dcbd3df.jpg",
+              "http://localhost:9000/property-images/room/905374454501081088/4a81d8e7-a263-4760-beb1-424e4fbb1d97.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A105": {
+            "ownerId": "905374450017370112",
+            "uploadedFiles": [
+              "images (2).jpg",
+              "images (3).jpg",
+              "images (4).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374450017370112/f63e2faa-aa2d-465b-8f95-64295519c3dc.jpg",
+              "http://localhost:9000/property-images/room/905374450017370112/19a44280-ecbd-4568-b4f5-779fee69a3cc.jpg",
+              "http://localhost:9000/property-images/room/905374450017370112/65e3b126-afcd-405a-98bf-79970a12e783.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A104": {
+            "ownerId": "905374445558824960",
+            "uploadedFiles": [
+              "images (3).jpg",
+              "images (4).jpg",
+              "images (5).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374445558824960/6bda707d-6d14-4dd5-9b9b-f918d66019b2.jpg",
+              "http://localhost:9000/property-images/room/905374445558824960/288e1073-257f-46b5-9db6-8164f25c93f8.jpg",
+              "http://localhost:9000/property-images/room/905374445558824960/7d29d4a4-88c2-4167-bdfb-04b888b87fbd.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A103": {
+            "ownerId": "905374441096085504",
+            "uploadedFiles": [
+              "images (4).jpg",
+              "images (5).jpg",
+              "images (6).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374441096085504/390f9a59-88a8-40d2-8184-79513f155d27.jpg",
+              "http://localhost:9000/property-images/room/905374441096085504/33bbcf0c-0462-4312-9c3a-ca2601933037.jpg",
+              "http://localhost:9000/property-images/room/905374441096085504/6f59fb53-9324-4aa4-bc9a-2f9ab1bf7261.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A102": {
+            "ownerId": "905374436616568832",
+            "uploadedFiles": [
+              "images (5).jpg",
+              "images (6).jpg",
+              "images (7).jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374436616568832/31d161bc-9c89-4156-bcee-ef88fdf05af4.jpg",
+              "http://localhost:9000/property-images/room/905374436616568832/5f7e95bd-61ad-4eab-a9b1-6852619f502d.jpg",
+              "http://localhost:9000/property-images/room/905374436616568832/4ecc8ff7-03cc-4b51-ab8e-762316595583.jpg"
+            ],
+            "before": 0
+          },
+          "Seed House A / A101": {
+            "ownerId": "905374431788924928",
+            "uploadedFiles": [
+              "images (6).jpg",
+              "images (7).jpg",
+              "images.jpg"
+            ],
+            "imageUrls": [
+              "http://localhost:9000/property-images/room/905374431788924928/b1610681-6996-430d-b4da-668941636094.jpg",
+              "http://localhost:9000/property-images/room/905374431788924928/d87bebbb-4728-44b6-8672-24976661194b.jpg",
+              "http://localhost:9000/property-images/room/905374431788924928/705302ef-3637-4813-a46d-dae436fe9b78.jpg"
+            ],
+            "before": 0
+          }
+        }
+      },
+      "verify": [
+        {
+          "building": "Seed House B",
+          "buildingImages": 3,
+          "rooms": [
+            {
+              "roomCode": "B205",
+              "count": 3
+            },
+            {
+              "roomCode": "B204",
+              "count": 3
+            },
+            {
+              "roomCode": "B203",
+              "count": 3
+            },
+            {
+              "roomCode": "B202",
+              "count": 3
+            },
+            {
+              "roomCode": "B201",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "building": "Seed House A",
+          "buildingImages": 3,
+          "rooms": [
+            {
+              "roomCode": "A108",
+              "count": 3
+            },
+            {
+              "roomCode": "A107",
+              "count": 3
+            },
+            {
+              "roomCode": "A106",
+              "count": 3
+            },
+            {
+              "roomCode": "A105",
+              "count": 3
+            },
+            {
+              "roomCode": "A104",
+              "count": 3
+            },
+            {
+              "roomCode": "A103",
+              "count": 3
+            },
+            {
+              "roomCode": "A102",
+              "count": 3
+            },
+            {
+              "roomCode": "A101",
+              "count": 3
+            }
+          ]
+        }
+      ],
+      "buildings": {
+        "Seed House B": {
+          "ownerId": "905379904592281600",
+          "uploadedFiles": [
+            "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+            "nha-tro-2-tang-2.webp",
+            "nha-tro-2-tang-6.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/building/905379904592281600/abbfc69d-88fe-44a9-bbe5-21f70fad1181.webp",
+            "http://localhost:9000/property-images/building/905379904592281600/cf1314b9-8d2a-462f-a9ff-b1742079cc37.webp",
+            "http://localhost:9000/property-images/building/905379904592281600/2d864472-e987-4b7e-aa0b-b63f90df79a9.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A": {
+          "ownerId": "905379904005079040",
+          "uploadedFiles": [
+            "nha-tro-2-tang-2.webp",
+            "nha-tro-2-tang-6.jpg",
+            "nha-tro-gac-lung-4.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/building/905379904005079040/79c31ddb-4563-4356-9429-edc433b6e3ef.webp",
+            "http://localhost:9000/property-images/building/905379904005079040/a2baa4e6-9b15-4114-a074-461da98e6ae1.jpg",
+            "http://localhost:9000/property-images/building/905379904005079040/c51e0646-69f3-4ca4-bbd4-052e63977b82.jpg"
+          ],
+          "before": 0
+        }
+      },
+      "rooms": {
+        "Seed House B / B205": {
+          "ownerId": "905379963224457216",
+          "uploadedFiles": [
+            "Nhatro.6.jpg",
+            "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+            "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379963224457216/bd6ac732-7627-4bb9-9f6d-a4e28d063b6e.jpg",
+            "http://localhost:9000/property-images/room/905379963224457216/9a0fbfff-89e5-4128-afce-5bbd683c526d.jpg",
+            "http://localhost:9000/property-images/room/905379963224457216/c15c65ca-a715-4a8e-aa7b-e0b006b68c8d.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House B / B204": {
+          "ownerId": "905379958753329152",
+          "uploadedFiles": [
+            "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+            "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+            "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379958753329152/94dc08f7-1271-402e-969f-04f01c91510f.jpg",
+            "http://localhost:9000/property-images/room/905379958753329152/2b3e8902-0887-419a-9165-a4f0ef3619cc.jpg",
+            "http://localhost:9000/property-images/room/905379958753329152/ef8a917a-32d5-4814-9b84-b5f6b77e8552.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House B / B203": {
+          "ownerId": "905379954265423872",
+          "uploadedFiles": [
+            "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+            "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+            "decor-phong-tro-102.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379954265423872/a529d977-867a-4002-98e2-63c233fe04de.jpg",
+            "http://localhost:9000/property-images/room/905379954265423872/84a731c1-fabf-451a-b557-6bfa546c0776.jpg",
+            "http://localhost:9000/property-images/room/905379954265423872/043e1238-dd38-4d0c-b04a-a983964dd282.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House B / B202": {
+          "ownerId": "905379949781712896",
+          "uploadedFiles": [
+            "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+            "decor-phong-tro-102.jpg",
+            "decor-phong-tro-104.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379949781712896/06f6470b-ef86-42fa-a680-7a6a02cf3181.jpg",
+            "http://localhost:9000/property-images/room/905379949781712896/d139ca3c-e6b6-4679-a202-cac4f2e4b64a.jpg",
+            "http://localhost:9000/property-images/room/905379949781712896/695014ac-7443-4347-98d5-c34616db2974.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House B / B201": {
+          "ownerId": "905379945277030400",
+          "uploadedFiles": [
+            "decor-phong-tro-102.jpg",
+            "decor-phong-tro-104.jpg",
+            "decor-phong-tro-116.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379945277030400/d77ed932-c6d5-4ca0-ad43-004900bc5fdf.jpg",
+            "http://localhost:9000/property-images/room/905379945277030400/3b936aa1-c923-4a90-96f6-1415808404bf.jpg",
+            "http://localhost:9000/property-images/room/905379945277030400/7af398d5-00b9-45f5-a288-b6cbd6dbed8c.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A108": {
+          "ownerId": "905379940797513728",
+          "uploadedFiles": [
+            "decor-phong-tro-104.jpg",
+            "decor-phong-tro-116.jpg",
+            "images (1).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379940797513728/891eb1f2-c255-4bd9-8a14-85400f49425c.jpg",
+            "http://localhost:9000/property-images/room/905379940797513728/b4fd11ed-079f-4fc5-8cca-d678c1a4e56d.jpg",
+            "http://localhost:9000/property-images/room/905379940797513728/8bcfc50f-78c7-4518-82ae-ee00ca942052.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A107": {
+          "ownerId": "905379936359940096",
+          "uploadedFiles": [
+            "decor-phong-tro-116.jpg",
+            "images (1).jpg",
+            "images (2).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379936359940096/8a4063ac-f5a1-4433-8451-da35a978998b.jpg",
+            "http://localhost:9000/property-images/room/905379936359940096/e4173299-a3ab-4a7d-9260-3730f0093be2.jpg",
+            "http://localhost:9000/property-images/room/905379936359940096/fc11fc4d-b45c-4aeb-8228-ccb72784568c.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A106": {
+          "ownerId": "905379931893006336",
+          "uploadedFiles": [
+            "images (1).jpg",
+            "images (2).jpg",
+            "images (3).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379931893006336/9cfa8c3e-df74-453b-8962-9d84474b34d2.jpg",
+            "http://localhost:9000/property-images/room/905379931893006336/5c3b99f6-60b2-4dae-9da2-c72cb1882cd1.jpg",
+            "http://localhost:9000/property-images/room/905379931893006336/46e1863d-6cd0-4386-bafe-5332e2afda1a.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A105": {
+          "ownerId": "905379927392518144",
+          "uploadedFiles": [
+            "images (2).jpg",
+            "images (3).jpg",
+            "images (4).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379927392518144/f1cd5cb4-cc31-4a22-9a9d-21ed34490731.jpg",
+            "http://localhost:9000/property-images/room/905379927392518144/2aa521d5-50c2-4865-b612-b77404843fed.jpg",
+            "http://localhost:9000/property-images/room/905379927392518144/c1a7a130-96b7-44d0-a2d0-73600bbd461f.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A104": {
+          "ownerId": "905379922933972992",
+          "uploadedFiles": [
+            "images (3).jpg",
+            "images (4).jpg",
+            "images (5).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379922933972992/c4835ca9-f7ca-474b-bc81-ce71bf2a4079.jpg",
+            "http://localhost:9000/property-images/room/905379922933972992/0a0f17db-e57c-471a-b215-7456170dc483.jpg",
+            "http://localhost:9000/property-images/room/905379922933972992/4705d159-4712-4f92-b59d-9afe4948c496.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A103": {
+          "ownerId": "905379918492205056",
+          "uploadedFiles": [
+            "images (4).jpg",
+            "images (5).jpg",
+            "images (6).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379918492205056/55c269e3-585b-490e-aa5f-3f8fb319503d.jpg",
+            "http://localhost:9000/property-images/room/905379918492205056/04a9a314-e853-4398-a709-53ff6c29707e.jpg",
+            "http://localhost:9000/property-images/room/905379918492205056/0308621a-98a7-41a1-95b3-1717825b32a9.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A102": {
+          "ownerId": "905379913983328256",
+          "uploadedFiles": [
+            "images (5).jpg",
+            "images (6).jpg",
+            "images (7).jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379913983328256/837a53de-61e0-4a9c-ba8f-bf36fd6c7df5.jpg",
+            "http://localhost:9000/property-images/room/905379913983328256/7186ec6b-23e2-416c-b9aa-b66e68123339.jpg",
+            "http://localhost:9000/property-images/room/905379913983328256/ad6e9f50-7e91-436c-8d92-12cd60411332.jpg"
+          ],
+          "before": 0
+        },
+        "Seed House A / A101": {
+          "ownerId": "905379909172461568",
+          "uploadedFiles": [
+            "images (6).jpg",
+            "images (7).jpg",
+            "images.jpg"
+          ],
+          "imageUrls": [
+            "http://localhost:9000/property-images/room/905379909172461568/3dec6d04-3560-4144-af4f-53f10c06874d.jpg",
+            "http://localhost:9000/property-images/room/905379909172461568/6b8e4e5b-cf60-445b-adeb-3d5c988cffb9.jpg",
+            "http://localhost:9000/property-images/room/905379909172461568/364b71b2-3d42-413b-a7c5-846264159cbd.jpg"
+          ],
+          "before": 0
+        }
+      }
+    },
+    "verify": [
+      {
+        "building": "Seed House B",
+        "buildingImages": 3,
+        "rooms": [
+          {
+            "roomCode": "B205",
+            "count": 3
+          },
+          {
+            "roomCode": "B204",
+            "count": 3
+          },
+          {
+            "roomCode": "B203",
+            "count": 3
+          },
+          {
+            "roomCode": "B202",
+            "count": 3
+          },
+          {
+            "roomCode": "B201",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "building": "Seed House A",
+        "buildingImages": 3,
+        "rooms": [
+          {
+            "roomCode": "A108",
+            "count": 3
+          },
+          {
+            "roomCode": "A107",
+            "count": 3
+          },
+          {
+            "roomCode": "A106",
+            "count": 3
+          },
+          {
+            "roomCode": "A105",
+            "count": 3
+          },
+          {
+            "roomCode": "A104",
+            "count": 3
+          },
+          {
+            "roomCode": "A103",
+            "count": 3
+          },
+          {
+            "roomCode": "A102",
+            "count": 3
+          },
+          {
+            "roomCode": "A101",
+            "count": 3
+          }
+        ]
+      }
+    ],
+    "buildings": {
+      "Seed House B": {
+        "ownerId": "907623635550732288",
+        "uploadedFiles": [
+          "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+          "nha-tro-2-tang-2.webp",
+          "nha-tro-2-tang-6.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623635550732288/dd18a56e-105d-41cf-93db-b65d403e23e1.webp",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623635550732288/242fa6bf-8375-4037-96db-9709c74ccc45.webp",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623635550732288/38fd7641-ac6f-434d-aaaa-dd1c4ba51a4a.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A": {
+        "ownerId": "907623634732843008",
+        "uploadedFiles": [
+          "nha-tro-2-tang-2.webp",
+          "nha-tro-2-tang-6.jpg",
+          "nha-tro-gac-lung-4.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623634732843008/26e07cfe-0977-480f-9dcd-13a1788be0e0.webp",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623634732843008/8fbf09b5-a51a-42d0-8c11-fc6577b51d85.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/building/907623634732843008/92e9480c-259c-4e0d-9f70-95a723bec4b8.jpg"
+        ],
+        "before": 0
+      }
+    },
+    "rooms": {
+      "Seed House B / B205": {
+        "ownerId": "907623697139892224",
+        "uploadedFiles": [
+          "Nhatro.6.jpg",
+          "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+          "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623697139892224/3ef92183-6464-436e-b0d6-1ec6e5377780.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623697139892224/f14532bd-56c5-4085-8da0-e9c1f8e78555.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623697139892224/bed3a073-8cfb-47ff-b4e0-0f15b04b82bf.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House B / B204": {
+        "ownerId": "907623692651986944",
+        "uploadedFiles": [
+          "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+          "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+          "d857bad5a73f58e0789cd16b94b4baa0.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623692651986944/faed60f6-5379-42a0-869e-485736dc000c.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623692651986944/a54a92e0-cc8b-4f12-9d5c-dea128dd9ba2.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623692651986944/4fec54b9-b2e3-4b22-ba06-dd5914e32515.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House B / B203": {
+        "ownerId": "907623688155693056",
+        "uploadedFiles": [
+          "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg",
+          "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+          "decor-phong-tro-102.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623688155693056/ea74b366-1284-4471-aaa3-1b77a53f3940.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623688155693056/a8cd1693-12c3-4ed1-95f5-72de3e1c2b2c.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623688155693056/17205809-6f11-4e62-a857-96c001eb54e5.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House B / B202": {
+        "ownerId": "907623683604873216",
+        "uploadedFiles": [
+          "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+          "decor-phong-tro-102.jpg",
+          "decor-phong-tro-104.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623683604873216/dc0e02e7-523d-44a8-a38e-add940ccf486.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623683604873216/61971a79-590b-406b-928b-8924aa877535.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623683604873216/e86da63c-933e-44c8-bbf5-2b440f4aa2df.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House B / B201": {
+        "ownerId": "907623679033081856",
+        "uploadedFiles": [
+          "decor-phong-tro-102.jpg",
+          "decor-phong-tro-104.jpg",
+          "decor-phong-tro-116.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623679033081856/a72d44c4-9f31-4315-9d8e-ac695733320f.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623679033081856/4af39014-7b75-4f5c-be34-37903395565f.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623679033081856/b48bdbb2-afc7-4314-840f-41d130e7de95.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A108": {
+        "ownerId": "907623674482262016",
+        "uploadedFiles": [
+          "decor-phong-tro-104.jpg",
+          "decor-phong-tro-116.jpg",
+          "images (1).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623674482262016/7b78d1e9-4373-4aca-9f47-5439698eae07.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623674482262016/f7512809-2f4e-489b-bd93-a9d7449d3897.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623674482262016/39ca2bdb-524a-4200-b06f-68a2117971a5.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A107": {
+        "ownerId": "907623669952413696",
+        "uploadedFiles": [
+          "decor-phong-tro-116.jpg",
+          "images (1).jpg",
+          "images (2).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623669952413696/587c0065-f2b9-45bb-b4e1-06be16ce07bc.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623669952413696/9cf0a569-0c91-4078-a967-1611bebadd66.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623669952413696/293fcc2c-f617-4ba5-82e2-c53235ad7a0f.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A106": {
+        "ownerId": "907623665443536896",
+        "uploadedFiles": [
+          "images (1).jpg",
+          "images (2).jpg",
+          "images (3).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623665443536896/28bc166d-445c-4fd9-81da-5606fe4612a8.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623665443536896/aa68d5fb-439e-4736-af10-755c6d1337d2.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623665443536896/e0551dd6-d88c-4d53-a438-869af6bc2723.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A105": {
+        "ownerId": "907623660905299968",
+        "uploadedFiles": [
+          "images (2).jpg",
+          "images (3).jpg",
+          "images (4).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623660905299968/a7f357b4-6cdc-46e5-a562-7a78f6041dc2.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623660905299968/a22a9e21-8a59-45ad-863e-979143ec80c6.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623660905299968/276d1086-865b-4282-8429-efa185618853.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A104": {
+        "ownerId": "907623656388034560",
+        "uploadedFiles": [
+          "images (3).jpg",
+          "images (4).jpg",
+          "images (5).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623656388034560/c2aa7fc0-cbaf-4a77-9be0-ec9722b62175.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623656388034560/a0e26513-2c3d-435b-b90a-17e8b9b52c3f.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623656388034560/52e1b055-a12e-40e7-bf0a-e71983d56ffa.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A103": {
+        "ownerId": "907623651786883072",
+        "uploadedFiles": [
+          "images (4).jpg",
+          "images (5).jpg",
+          "images (6).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623651786883072/57122a7d-a933-45b6-975f-35f721cc6431.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623651786883072/3008ec47-9d2a-4f98-a93e-7febe700f686.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623651786883072/236e2db8-8a6b-4e18-9d58-463eecd2ad74.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A102": {
+        "ownerId": "907623647194120192",
+        "uploadedFiles": [
+          "images (5).jpg",
+          "images (6).jpg",
+          "images (7).jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623647194120192/007f3437-c65a-4526-95c2-da605a5f6658.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623647194120192/6f8a6f53-e2a8-4aa8-955e-8d2729e0dc4d.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623647194120192/e130cde3-f966-4c36-b7cd-1d2071659d8c.jpg"
+        ],
+        "before": 0
+      },
+      "Seed House A / A101": {
+        "ownerId": "907623641972211712",
+        "uploadedFiles": [
+          "images (6).jpg",
+          "images (7).jpg",
+          "images.jpg"
+        ],
+        "imageUrls": [
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623641972211712/63d2c0c7-2fe2-4a20-8bd3-629be98d3476.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623641972211712/0ec4537e-c34f-42fc-90a7-d837516fa19e.jpg",
+          "https://quaintly-ageless-corina.ngrok-free.dev/property-images/room/907623641972211712/924e36bb-6908-4367-8335-eedbef85019f.jpg"
+        ],
+        "before": 0
+      }
+    }
+  },
+  "verify": [
+    {
+      "building": "Seed House B",
+      "buildingImages": 3,
+      "rooms": [
+        {
+          "roomCode": "B205",
+          "count": 3
+        },
+        {
+          "roomCode": "B204",
+          "count": 3
+        },
+        {
+          "roomCode": "B203",
+          "count": 3
+        },
+        {
+          "roomCode": "B202",
+          "count": 3
+        },
+        {
+          "roomCode": "B201",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "building": "Seed House A",
+      "buildingImages": 3,
+      "rooms": [
+        {
+          "roomCode": "A108",
+          "count": 3
+        },
+        {
+          "roomCode": "A107",
+          "count": 3
+        },
+        {
+          "roomCode": "A106",
+          "count": 3
+        },
+        {
+          "roomCode": "A105",
+          "count": 3
+        },
+        {
+          "roomCode": "A104",
+          "count": 3
+        },
+        {
+          "roomCode": "A103",
+          "count": 3
+        },
+        {
+          "roomCode": "A102",
+          "count": 3
+        },
+        {
+          "roomCode": "A101",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,541 @@
+{
+  "generatedAt": "2026-10-30T04:46:41.241Z",
+  "uploaded": 6,
+  "skipped": 39,
+  "failures": [],
+  "rooms": {
+    "A101": {
+      "roomId": "903857056136560640",
+      "uploadedFiles": [
+        "Nhatro.6.jpg",
+        "cach-decor-phong-tro-dep-nhu-can-ho-mini-gia-sinh-vien-hinh-anh-dep-7.jpg",
+        "cach-trang-tri-phong-tro-cho-sinh-vien-duoi-5-trieu (3).jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857056136560640/8df71d4d-754c-45e4-8df3-c89c58d8a8ca.jpg",
+        "http://localhost:9000/property-images/room/903857056136560640/298710fe-8aea-41a4-9e9b-b04ff6c81a91.jpg",
+        "http://localhost:9000/property-images/room/903857056136560640/3e3e75f6-87ba-4d4c-a5dd-5dd8717d5ae0.jpg"
+      ]
+    },
+    "A102": {
+      "roomId": "903857060699963392",
+      "uploadedFiles": [
+        "d857bad5a73f58e0789cd16b94b4baa0.jpg",
+        "decor-phong-tro-102.jpg",
+        "decor-phong-tro-104.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857060699963392/83ee29cf-b24f-400f-a5df-e5e05347dd8a.jpg",
+        "http://localhost:9000/property-images/room/903857060699963392/9182e802-23c4-4430-bff0-626ebffed3da.jpg",
+        "http://localhost:9000/property-images/room/903857060699963392/c7853c3b-4caa-4254-b6fc-7544bdc5810b.jpg"
+      ]
+    },
+    "A103": {
+      "roomId": "903857065108176896",
+      "uploadedFiles": [
+        "decor-phong-tro-116.jpg",
+        "images (1).jpg",
+        "images (2).jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857065108176896/de6806c6-e8b8-41d1-95c6-e49a67784669.jpg",
+        "http://localhost:9000/property-images/room/903857065108176896/4b2c3555-f276-4cfe-9d13-4c9e8fb4fafa.jpg",
+        "http://localhost:9000/property-images/room/903857065108176896/338c0edb-8656-41f4-81d0-8d0278f9958b.jpg"
+      ]
+    },
+    "A104": {
+      "roomId": "903857069516390400",
+      "uploadedFiles": [
+        "images (3).jpg",
+        "images (4).jpg",
+        "images (5).jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857069516390400/a183876f-7d74-414c-80e5-061fa007893f.jpg",
+        "http://localhost:9000/property-images/room/903857069516390400/6f271731-108b-47f5-9cd0-0ad66edaa30b.jpg",
+        "http://localhost:9000/property-images/room/903857069516390400/1352218d-4d10-44a6-932f-a661d55e9207.jpg"
+      ]
+    },
+    "A105": {
+      "roomId": "903857073916215296",
+      "uploadedFiles": [
+        "images (6).jpg",
+        "images (7).jpg",
+        "images.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857073916215296/41f500bc-c512-4556-9d36-22fc2b904862.jpg",
+        "http://localhost:9000/property-images/room/903857073916215296/474e4d04-7a61-4c82-96bf-f976ba7b0923.jpg",
+        "http://localhost:9000/property-images/room/903857073916215296/3220f891-1108-486f-8684-671acfc14d58.jpg"
+      ]
+    },
+    "A106": {
+      "roomId": "903857078274097152",
+      "uploadedFiles": [
+        "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+        "nha-tro-2-tang-2.webp",
+        "nha-tro-2-tang-6.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857078274097152/a6428990-d395-4ba3-a8cd-f483f1d8aaa7.webp",
+        "http://localhost:9000/property-images/room/903857078274097152/81e39065-6fca-4e54-af10-cb65ad08a6f7.webp",
+        "http://localhost:9000/property-images/room/903857078274097152/bf188b96-4055-4e51-9e35-4561252a51fe.jpg"
+      ]
+    },
+    "A107": {
+      "roomId": "903857082648756224",
+      "uploadedFiles": [
+        "nha-tro-gac-lung-4.jpg",
+        "phong-tro-co-gac-lung-8.jpg",
+        "phong-tro-dep.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857082648756224/bb705ce0-ca6a-438b-b39e-6554f6de0afe.jpg",
+        "http://localhost:9000/property-images/room/903857082648756224/13c2f40a-0c4e-47a1-86ed-c92a52fb7754.jpg",
+        "http://localhost:9000/property-images/room/903857082648756224/cd453652-012b-4479-8f1b-6a07290f9920.jpg"
+      ]
+    },
+    "A108": {
+      "roomId": "903857087019220992",
+      "uploadedFiles": [
+        "phong-tro-duoc-bo-tri-hop-ly-651cda72c9649b0ef5c6f87a.webp",
+        "phong-tro-duoc-bo-tri-theo-phong-cach-chung-cu-mini-651cda69c9649b0ef5c6f538.webp",
+        "thiet-ke-nha-tro-dep-2020-bandon-0.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857087019220992/f0495815-cc15-4443-97af-e8ad58e77965.webp",
+        "http://localhost:9000/property-images/room/903857087019220992/9aa90a77-6197-4454-aa17-b2608c046e8f.webp",
+        "http://localhost:9000/property-images/room/903857087019220992/7bf0cadd-a640-4426-8ae2-7c5ff8e327fc.jpg"
+      ]
+    },
+    "B201": {
+      "roomId": "903857091419045888",
+      "uploadedFiles": [
+        "thiet-ke-nha-tro-dep-2020-bandon-18.jpg",
+        "thiet-ke-nha-tro-dep-2020-bandon-28.jpg",
+        "thiet-ke-noi-that-phong-tro-16.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857091419045888/aea9702e-168a-4e20-b5bc-bb0f4d57c750.jpg",
+        "http://localhost:9000/property-images/room/903857091419045888/d0272bce-6577-4411-9785-e937602c9008.jpg",
+        "http://localhost:9000/property-images/room/903857091419045888/82966356-fe28-4438-b572-6aaab43b0ba7.jpg"
+      ]
+    },
+    "B202": {
+      "roomId": "903857095823065088",
+      "uploadedFiles": [
+        "thiet-ke-noi-that-phong-tro-19.jpg",
+        "thiet-ke-noi-that-phong-tro-35.jpg",
+        "thiet-ke-noi-that-phong-tro-41.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857095823065088/6170c19e-638d-43ce-83fb-c3053da2b3a9.jpg",
+        "http://localhost:9000/property-images/room/903857095823065088/d0ad50d6-f706-4a21-9acb-d72b0a04c175.jpg",
+        "http://localhost:9000/property-images/room/903857095823065088/cef511e9-124b-470a-9d02-22cbc77d4795.jpg"
+      ]
+    },
+    "B203": {
+      "roomId": "903857100197724160",
+      "uploadedFiles": [
+        "thiet-ke-noi-that-phong-tro-43.jpg",
+        "thiet-ke-phong-tro-dep-3.jpg",
+        "thiet-ke-phong-tro-dep-45.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857100197724160/9a65f467-584e-4c63-9ca6-a3e605a0762d.jpg",
+        "http://localhost:9000/property-images/room/903857100197724160/9ed094e2-9a28-41cb-9b89-ff8ad0b18660.jpg",
+        "http://localhost:9000/property-images/room/903857100197724160/85deaec9-7635-4cce-98b8-1d216a82d703.jpg"
+      ]
+    },
+    "B204": {
+      "roomId": "903857104563994624",
+      "uploadedFiles": [
+        "thiet-ke-phong-tro-dep-54.jpg",
+        "thiet-ke-phong-tro-dep-7.jpg",
+        "thiet-ke-phong-tro-nho-dep.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857104563994624/bc849122-e842-454b-889f-75f00c8bcd65.jpg",
+        "http://localhost:9000/property-images/room/903857104563994624/d1db9fac-4165-4522-bc35-ac72650cdbef.jpg",
+        "http://localhost:9000/property-images/room/903857104563994624/549c3134-4d7c-40ca-a7eb-10da53a63b57.jpg"
+      ]
+    },
+    "B205": {
+      "roomId": "903857108959625216",
+      "uploadedFiles": [
+        "studios\\hinh-anh-can-ho-studio-vinhomes-ocean-park-thiet-ke-mat-bang-chi-tiet-so-1.jpg",
+        "studios\\images.jpg",
+        "studios\\studio-1-1.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/room/903857108959625216/2218df1b-ee57-4fe7-a5e0-96607741e082.jpg",
+        "http://localhost:9000/property-images/room/903857108959625216/9181880a-0181-4da9-99e5-749173765a20.jpg",
+        "http://localhost:9000/property-images/room/903857108959625216/5caccd42-849a-4993-aa72-13a4b35b4102.jpg"
+      ]
+    }
+  },
+  "buildings": {
+    "A": {
+      "buildingId": "903856397781827584",
+      "uploadedFiles": [
+        "mau-thiet-ke-day-du-tien-nghi-651cda6ec9649b0ef5c6f750.webp",
+        "nha-tro-2-tang-2.webp",
+        "nha-tro-2-tang-6.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/building/903856397781827584/60c32d86-026e-4adb-9570-ab124caafc4e.webp",
+        "http://localhost:9000/property-images/building/903856397781827584/6ec09ce9-854b-4095-b683-647394d85bba.webp",
+        "http://localhost:9000/property-images/building/903856397781827584/ae990936-7dce-44d3-b9f0-28df22530b2c.jpg"
+      ]
+    },
+    "B": {
+      "buildingId": "903856398469693440",
+      "uploadedFiles": [
+        "nha-tro-gac-lung-4.jpg",
+        "thiet-ke-nha-tro-dep-2020-bandon-0.jpg",
+        "thiet-ke-nha-tro-dep-2020-bandon-18.jpg"
+      ],
+      "imageUrls": [
+        "http://localhost:9000/property-images/building/903856398469693440/22c1602c-d947-4340-a0fd-62de8cbb9d9b.jpg",
+        "http://localhost:9000/property-images/building/903856398469693440/f23862ed-a077-49bc-bf8f-01c4674f65c7.jpg",
+        "http://localhost:9000/property-images/building/903856398469693440/c455cec3-2da0-4304-ae2a-3608a6694ae0.jpg"
+      ]
+    }
+  },
+  "verify": [
+    {
+      "roomCode": "A101",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857056136560640/8df71d4d-754c-45e4-8df3-c89c58d8a8ca.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857056136560640/8df71d4d-754c-45e4-8df3-c89c58d8a8ca.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857056136560640/298710fe-8aea-41a4-9e9b-b04ff6c81a91.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857056136560640/3e3e75f6-87ba-4d4c-a5dd-5dd8717d5ae0.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A102",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857060699963392/83ee29cf-b24f-400f-a5df-e5e05347dd8a.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857060699963392/83ee29cf-b24f-400f-a5df-e5e05347dd8a.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857060699963392/9182e802-23c4-4430-bff0-626ebffed3da.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857060699963392/c7853c3b-4caa-4254-b6fc-7544bdc5810b.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A103",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857065108176896/de6806c6-e8b8-41d1-95c6-e49a67784669.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857065108176896/de6806c6-e8b8-41d1-95c6-e49a67784669.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857065108176896/4b2c3555-f276-4cfe-9d13-4c9e8fb4fafa.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857065108176896/338c0edb-8656-41f4-81d0-8d0278f9958b.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A104",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857069516390400/a183876f-7d74-414c-80e5-061fa007893f.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857069516390400/a183876f-7d74-414c-80e5-061fa007893f.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857069516390400/6f271731-108b-47f5-9cd0-0ad66edaa30b.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857069516390400/1352218d-4d10-44a6-932f-a661d55e9207.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A105",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857073916215296/41f500bc-c512-4556-9d36-22fc2b904862.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857073916215296/41f500bc-c512-4556-9d36-22fc2b904862.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857073916215296/474e4d04-7a61-4c82-96bf-f976ba7b0923.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857073916215296/3220f891-1108-486f-8684-671acfc14d58.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A106",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857078274097152/a6428990-d395-4ba3-a8cd-f483f1d8aaa7.webp",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857078274097152/a6428990-d395-4ba3-a8cd-f483f1d8aaa7.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857078274097152/81e39065-6fca-4e54-af10-cb65ad08a6f7.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857078274097152/bf188b96-4055-4e51-9e35-4561252a51fe.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A107",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857082648756224/bb705ce0-ca6a-438b-b39e-6554f6de0afe.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857082648756224/bb705ce0-ca6a-438b-b39e-6554f6de0afe.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857082648756224/13c2f40a-0c4e-47a1-86ed-c92a52fb7754.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857082648756224/cd453652-012b-4479-8f1b-6a07290f9920.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "A108",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857087019220992/f0495815-cc15-4443-97af-e8ad58e77965.webp",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857087019220992/f0495815-cc15-4443-97af-e8ad58e77965.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857087019220992/9aa90a77-6197-4454-aa17-b2608c046e8f.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857087019220992/7bf0cadd-a640-4426-8ae2-7c5ff8e327fc.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "B201",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857091419045888/aea9702e-168a-4e20-b5bc-bb0f4d57c750.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857091419045888/aea9702e-168a-4e20-b5bc-bb0f4d57c750.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857091419045888/d0272bce-6577-4411-9785-e937602c9008.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857091419045888/82966356-fe28-4438-b572-6aaab43b0ba7.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "B202",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857095823065088/6170c19e-638d-43ce-83fb-c3053da2b3a9.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857095823065088/6170c19e-638d-43ce-83fb-c3053da2b3a9.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857095823065088/d0ad50d6-f706-4a21-9acb-d72b0a04c175.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857095823065088/cef511e9-124b-470a-9d02-22cbc77d4795.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "B203",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857100197724160/9a65f467-584e-4c63-9ca6-a3e605a0762d.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857100197724160/9a65f467-584e-4c63-9ca6-a3e605a0762d.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857100197724160/9ed094e2-9a28-41cb-9b89-ff8ad0b18660.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857100197724160/85deaec9-7635-4cce-98b8-1d216a82d703.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "B204",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857104563994624/bc849122-e842-454b-889f-75f00c8bcd65.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857104563994624/bc849122-e842-454b-889f-75f00c8bcd65.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857104563994624/d1db9fac-4165-4522-bc35-ac72650cdbef.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857104563994624/549c3134-4d7c-40ca-a7eb-10da53a63b57.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "roomCode": "B205",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/room/903857108959625216/2218df1b-ee57-4fe7-a5e0-96607741e082.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857108959625216/2218df1b-ee57-4fe7-a5e0-96607741e082.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857108959625216/9181880a-0181-4da9-99e5-749173765a20.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/room/903857108959625216/5caccd42-849a-4993-aa72-13a4b35b4102.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    }
+  ],
+  "verifyBuildings": [
+    {
+      "buildingCode": "A",
+      "buildingId": "903856397781827584",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/building/903856397781827584/60c32d86-026e-4adb-9570-ab124caafc4e.webp",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856397781827584/60c32d86-026e-4adb-9570-ab124caafc4e.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856397781827584/6ec09ce9-854b-4095-b683-647394d85bba.webp",
+          "status": 200,
+          "contentType": "image/webp"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856397781827584/ae990936-7dce-44d3-b9f0-28df22530b2c.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "buildingCode": "B",
+      "buildingId": "903856398469693440",
+      "count": 3,
+      "primary": "http://localhost:9000/property-images/building/903856398469693440/22c1602c-d947-4340-a0fd-62de8cbb9d9b.jpg",
+      "checks": [
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856398469693440/22c1602c-d947-4340-a0fd-62de8cbb9d9b.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856398469693440/f23862ed-a077-49bc-bf8f-01c4674f65c7.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        },
+        {
+          "imageUrl": "http://localhost:9000/property-images/building/903856398469693440/c455cec3-2da0-4304-ae2a-3608a6694ae0.jpg",
+          "status": 200,
+          "contentType": "image/jpeg"
+        }
+      ]
+    }
+  ]
+}
