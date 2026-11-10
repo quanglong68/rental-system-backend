@@ -227,4 +227,38 @@ class ChatContextResolverTest {
                 .extracting(error -> ((BusinessException) error).getCode())
                 .isEqualTo(ErrorCode.FORBIDDEN.name());
     }
+
+    @Test
+    void staff_managerCanOpenConversationWithSale() {
+        UserClient.StaffSummary saleB = new UserClient.StaffSummary(30L, "Sale B", "SALE", false);
+        when(users.staff(List.of(30L))).thenReturn(List.of(saleB));
+        when(users.staff(List.of(20L))).thenReturn(List.of(managerA));
+
+        ConversationContext context = resolver.resolve(manager,
+                new CreateConversationRequest("STAFF", 30L, 30L, null));
+
+        assertThat(context.dedupKey()).isEqualTo("STAFF:20:30");
+        assertThat(context.self().userId()).isEqualTo(20L);
+        assertThat(context.self().role()).isEqualTo("QUAN_LY");
+        assertThat(context.peer().userId()).isEqualTo(30L);
+        assertThat(context.peer().role()).isEqualTo("SALE");
+    }
+
+    @Test
+    void staff_customerCannotOpenStaffConversation() {
+        assertThatThrownBy(() -> resolver.resolve(owner,
+                new CreateConversationRequest("STAFF", 20L, 20L, null)))
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getCode())
+                .isEqualTo(ErrorCode.FORBIDDEN.name());
+    }
+
+    @Test
+    void staff_cannotMessageSelf() {
+        assertThatThrownBy(() -> resolver.resolve(manager,
+                new CreateConversationRequest("STAFF", 20L, 20L, null)))
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getCode())
+                .isEqualTo(ErrorCode.VALIDATION_ERROR.name());
+    }
 }

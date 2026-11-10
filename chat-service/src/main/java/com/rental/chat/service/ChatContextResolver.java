@@ -47,6 +47,7 @@ public class ChatContextResolver {
             case VIEWING -> viewing(user, userId, request);
             case BOOKING -> booking(user, userId, request);
             case BUILDING_MANAGER -> buildingManager(user, userId, request);
+            case STAFF -> staff(user, userId, request);
         };
     }
 
@@ -57,7 +58,7 @@ public class ChatContextResolver {
         Long userId = Long.parseLong(user.getUserId());
         String type = normalize(contextType);
         return switch (ChatContextType.valueOf(type)) {
-            case ROOMMATE_APPLICATION, ROOMMATE_POST -> List.of();
+            case ROOMMATE_APPLICATION, ROOMMATE_POST, STAFF -> List.of();
             case LISTING -> {
                 ListingBookingClient.ListingContext ctx = call(
                         () -> listing.listing(requireContextId(contextId, "tin đăng")),
@@ -231,6 +232,41 @@ public class ChatContextResolver {
         String label = join("Quản lý tòa", place(roomNumber, buildingName));
         String dedupKey = "BUILDING_MANAGER:" + buildingId + ":" + staffId + ":" + customerId;
         return context("BUILDING_MANAGER", buildingId, dedupKey, label, buildingId, null, self, peer);
+    }
+
+    private ConversationContext staff(HeaderUser user, Long userId, CreateConversationRequest request) {
+        if (isCustomer(user)) {
+            throw forbidden("Chỉ nhân viên mới có thể nhắn tin nội bộ");
+        }
+        Long peerStaffId = request.staffId() != null ? request.staffId() : request.contextId();
+        if (peerStaffId == null) {
+            throw validation("Thiếu thông tin nhân viên cần nhắn tin");
+        }
+        if (peerStaffId.equals(userId)) {
+            throw validation("Không thể tự nhắn tin cho chính mình");
+        }
+        UserClient.StaffSummary peerStaff = users.staff(List.of(peerStaffId)).stream()
+                .filter(item -> item.id().equals(peerStaffId))
+                .findFirst()
+                .orElseThrow(() -> notFound("Không tìm thấy nhân viên"));
+
+        UserClient.StaffSummary selfStaff = users.staff(List.of(userId)).stream()
+                .filter(item -> item.id().equals(userId))
+                .findFirst()
+                .orElse(null);
+
+        String selfRole = selfStaff != null && selfStaff.position() != null ? selfStaff.position() : "STAFF";
+        String peerRole = peerStaff.position() != null ? peerStaff.position() : "STAFF";
+
+        ContextParticipant self = staffParticipant(userId, selfRole);
+        ContextParticipant peer = staffParticipant(peerStaffId, peerRole);
+
+        Long minId = Math.min(userId, peerStaffId);
+        Long maxId = Math.max(userId, peerStaffId);
+        String dedupKey = "STAFF:" + minId + ":" + maxId;
+        String label = "Trao đổi nội bộ";
+
+        return context("STAFF", peerStaffId, dedupKey, label, null, null, self, peer);
     }
 
     private ContractClient.ActiveContract activeContract(Long customerId) {

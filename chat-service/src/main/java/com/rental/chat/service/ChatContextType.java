@@ -6,5 +6,6 @@ public enum ChatContextType {
     LISTING,
     VIEWING,
     BOOKING,
-    BUILDING_MANAGER
+    BUILDING_MANAGER,
+    STAFF
 }

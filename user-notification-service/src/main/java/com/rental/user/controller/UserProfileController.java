@@ -51,7 +51,7 @@ public class UserProfileController {
      * lịch hẹn xem phòng (POST /api/v1/appointments yêu cầu staffId). Service tự giới hạn theo
      * buildingIds của người gọi, nên SALE không xem được nhân sự ngoài phạm vi phân công.
      */
-    @GetMapping("/staff") @PreAuthorize("hasAnyRole('ADMIN','QUAN_LY','SALE')")
+    @GetMapping("/staff") @PreAuthorize("hasAnyRole('ADMIN','QUAN_LY','SALE','KY_THUAT')")
     public PageResponse<UserProfileResponse> staff(@RequestParam(required = false) Long buildingId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
