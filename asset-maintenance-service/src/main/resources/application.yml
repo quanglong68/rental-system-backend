@@ -6,7 +6,7 @@ spring:
   datasource:
     url: ${ASSET_DB_URL:jdbc:postgresql://localhost:5432/asset_db}
     username: ${ASSET_DB_USER:asset_svc}
-    password: ${ASSET_DB_PASSWORD:changeit}
+    password: ${ASSET_DB_PASSWORD:change_me_in_dot_env}
   jpa:
     hibernate.ddl-auto: validate
     open-in-view: false
@@ -25,6 +25,7 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
+    prefer-ip-address: true
     # Dev local: heartbeat nhanh de Gateway thay instance vua restart trong ~5-10s.
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 15
@@ -33,7 +34,7 @@ asset:
     public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
     region: ${MINIO_REGION:us-east-1}
     access-key: ${MINIO_ROOT_USER:minioadmin}
-    secret-key: ${MINIO_ROOT_PASSWORD:changeit}
+    secret-key: ${MINIO_ROOT_PASSWORD:change_me_in_dot_env}
     bucket: ${MINIO_BUCKET:report-images}
 management:
   endpoints.web.exposure.include: health,info

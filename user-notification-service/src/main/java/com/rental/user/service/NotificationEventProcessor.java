@@ -108,6 +108,7 @@ public class NotificationEventProcessor {
             case CUSTOMER_STAFF_BUILDING -> {
                 add(result, number(p, "customerId")); addStaffAndAdmins(result, number(p, "buildingId"));
             }
+            case MANAGER_BUILDING -> addManagersAndAdmins(result, number(p, "buildingId"));
         }
         return result;
     }
@@ -115,6 +116,21 @@ public class NotificationEventProcessor {
     private void addStaffAndAdmins(Set<Long> result, long buildingId) {
         if (buildingId <= 0) return;
         assignments.findByIdBuildingId(buildingId).forEach(a -> result.add(a.getId().getStaffId()));
+        staff.findByAdminTrue().forEach(s -> result.add(s.getId()));
+    }
+
+    private void addManagersAndAdmins(Set<Long> result, long buildingId) {
+        if (buildingId > 0) {
+            assignments.findByIdBuildingId(buildingId).forEach(a -> {
+                Long staffId = a.getId().getStaffId();
+                staff.findById(staffId).ifPresent(s -> {
+                    String pos = s.getPosition() == null ? "" : s.getPosition().trim().toUpperCase();
+                    if (s.isAdmin() || pos.isBlank() || (!pos.equals("KY_THUAT") && !pos.equals("SALE"))) {
+                        result.add(staffId);
+                    }
+                });
+            });
+        }
         staff.findByAdminTrue().forEach(s -> result.add(s.getId()));
     }
 
@@ -128,6 +144,8 @@ public class NotificationEventProcessor {
             case "RentalRequestCreated", "MoveOutRequested", "ReportCreated", "MeterReadingMissing", "ContractRenewalRequested",
                     "MeterReadingHandoverDue" ->
                     new NotificationSpec(Audience.STAFF_BUILDING, ref(event), idField(event));
+            case "ContractDepositPaid", "ContractTenantSigned" ->
+                    new NotificationSpec(Audience.MANAGER_BUILDING, "Contract", "contractId");
             case "MeterReadingReminder" -> new NotificationSpec(Audience.STAFF_BUILDING, "Building", "buildingId");
             case "InvoiceOverdue" -> new NotificationSpec(Audience.CUSTOMER_STAFF_BUILDING, "Invoice", "invoiceId");
             case "RentalRequestAccepted", "RentalRequestRejected", "PaymentReceived", "InvoiceIssued", "ReportRejected",
@@ -183,6 +201,8 @@ public class NotificationEventProcessor {
             case "RoommateApplicationCreated" -> "Có người đăng ký ở ghép";
             case "RoommateApplicationRejected" -> "Đơn ở ghép đã bị từ chối";
             case "ContractSigned" -> "Hợp đồng thuê phòng đã được ký";
+            case "ContractDepositPaid" -> "Khách đã thanh toán tiền cọc hợp đồng";
+            case "ContractTenantSigned" -> "Khách đã ký hợp đồng · Chờ quản lý ký";
             case "ContractRenewed" -> "Hợp đồng thuê phòng đã được gia hạn";
             case "TenantAdded" -> "Đã thêm người ở vào hợp đồng";
             case "TenantRemoved" -> "Người thuê đã rời hợp đồng";
@@ -195,7 +215,7 @@ public class NotificationEventProcessor {
             case "PaymentReceived" -> "Đã ghi nhận thanh toán";
             case "InvoiceOverdue" -> "Hóa đơn đã quá hạn thanh toán";
             case "MeterReadingMissing" -> "Phòng còn thiếu chỉ số công tơ";
-            case "MeterReadingHandoverDue" -> "Cần ghi chỉ số điện nước bàn giao hôm nay";
+            case "MeterReadingHandoverDue" -> "Cần ghi chỉ số điện nước bàn giao";
             case "MeterReadingReminder" -> "Nhắc nhập chỉ số điện nước cuối tháng";
 
             case "ReportCreated" -> "Có báo hư hỏng mới";
@@ -237,13 +257,56 @@ public class NotificationEventProcessor {
                     + " nhận bàn giao ngày " + dateValue(p, "moveInDate")
                     + ". Vui lòng ghi chỉ số điện nước bàn giao trước khi giao phòng.";
             case "MeterReadingReminder" -> "Tòa " + buildingLabel(p) + " còn "
-                    + value(p, "roomCount") + " phòng chưa nhập chỉ số tháng "
+                    + value(p, "roomCount") + " phòng chưa nhập chỉ số kỳ "
                     + value(p, "month") + "/" + value(p, "year") + ": " + stringList(p, "roomNumbers") + ".";
+            case "ContractDepositPaid" -> "Khách thuê " + personLabel(p, "tenantFullName", "customerId")
+                    + " đã thanh toán " + moneyValue(p, "depositAmount") + " đ tiền cọc qua "
+                    + depositMethodLabel(p) + " cho Hợp đồng #" + value(p, "contractId")
+                    + " - Phòng " + roomLabel(p) + buildingSuffix(p) + txnRefSuffix(p) + ".";
+            case "ContractTenantSigned" -> "Khách thuê " + personLabel(p, "tenantFullName", "customerId")
+                    + " đã ký Hợp đồng #" + value(p, "contractId")
+                    + " - Phòng " + roomLabel(p) + buildingSuffix(p)
+                    + " (" + depositSummaryLabel(p) + "). Vui lòng vào kiểm tra và ký kích hoạt hợp đồng.";
             case "TenantAddRejected" -> "Không thể thêm người ở: " + value(p, "reason") + ".";
             default -> "Có cập nhật mới liên quan đến " + ref(event) + " #" + value(p, idField(event)) + ".";
         };
     }
     private static String value(JsonNode p, String field) { String v = optionalText(p, field); return v == null ? "" : v; }
+    private static String personLabel(JsonNode p, String nameField, String idField) {
+        String name = optionalText(p, nameField);
+        if (name != null && !name.isBlank()) return name;
+        String id = value(p, idField);
+        return id.isBlank() ? "khách thuê" : "#" + id;
+    }
+    private static String moneyValue(JsonNode p, String field) {
+        JsonNode n = p.get(field);
+        if (n == null || n.isNull()) return "0";
+        try {
+            long v = new java.math.BigDecimal(n.asText()).longValue();
+            return java.text.NumberFormat.getInstance(java.util.Locale.forLanguageTag("vi-VN")).format(v);
+        } catch (Exception ex) {
+            return n.asText("0");
+        }
+    }
+    private static String depositMethodLabel(JsonNode p) {
+        String method = optionalText(p, "depositPaymentMethod");
+        if (method == null || method.isBlank() || "VNPAY".equalsIgnoreCase(method)) return "VNPay";
+        if ("MANUAL_TRANSFER".equalsIgnoreCase(method) || "BANK_TRANSFER".equalsIgnoreCase(method)) {
+            return "chuyển khoản";
+        }
+        return method;
+    }
+    private static String txnRefSuffix(JsonNode p) {
+        String txn = optionalText(p, "depositTxnRef");
+        return txn == null || txn.isBlank() ? "" : " (Mã GD: " + txn + ")";
+    }
+    private static String depositSummaryLabel(JsonNode p) {
+        boolean paid = p.path("depositPaid").asBoolean(false);
+        if (!paid) return "Chưa thanh toán cọc";
+        String method = optionalText(p, "depositPaymentMethod");
+        if ("MANUAL_TRANSFER".equalsIgnoreCase(method)) return "Khách báo đã chuyển tiền cọc";
+        return "Đã thanh toán cọc qua " + depositMethodLabel(p);
+    }
     /** Uu tien so phong de nguoi nhan doc duoc; chi dung ID khi su kien cu khong kem so phong. */
     private static String roomLabel(JsonNode p) {
         String number = optionalText(p, "roomNumber");
@@ -308,7 +371,7 @@ public class NotificationEventProcessor {
         return codes.stream().findFirst().orElse(null);
     }
 
-    private enum Audience { STAFF_BUILDING, CUSTOMER, CUSTOMER_AND_STAFF, OWNER, APPLICANT, TENANTS,
+    private enum Audience { STAFF_BUILDING, MANAGER_BUILDING, CUSTOMER, CUSTOMER_AND_STAFF, OWNER, APPLICANT, TENANTS,
         CUSTOMER_AND_OWNER, OWNER_AND_APPLICANT, STAFF, CUSTOMER_STAFF_BUILDING }
     private record NotificationSpec(Audience audience, String refType, String refField) { }
 }

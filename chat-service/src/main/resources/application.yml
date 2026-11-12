@@ -14,7 +14,7 @@ spring:
   datasource:
     url: ${CHAT_DB_URL:jdbc:postgresql://localhost:5432/chat_db}
     username: ${CHAT_DB_USER:chat_svc}
-    password: ${CHAT_DB_PASSWORD:changeit}
+    password: ${CHAT_DB_PASSWORD:69d277b4ea64f17151fe9b730ab8fd8a}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

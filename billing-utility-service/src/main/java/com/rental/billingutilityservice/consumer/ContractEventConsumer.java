@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.billingutilityservice.entity.ProcessedEvent;
 import com.rental.billingutilityservice.repository.ProcessedEventRepository;
 import com.rental.billingutilityservice.service.ContractInfoService;
+import com.rental.billingutilityservice.service.MeterProvisioningService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ public class ContractEventConsumer {
 
     private final ProcessedEventRepository processed;
     private final ContractInfoService contractInfos;
+    private final MeterProvisioningService meterProvisioning;
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "contract.events", groupId = "billing-utility-service")
@@ -62,8 +64,11 @@ public class ContractEventConsumer {
                         markProcessed(eventId);
                         return;
                     }
-                    contractInfos.upsert(contractId, longOrZero(payload, "roomId"), longOrZero(payload, "buildingId"),
+                    Long roomId = longOrZero(payload, "roomId");
+                    Long buildingId = longOrZero(payload, "buildingId");
+                    contractInfos.upsert(contractId, roomId, buildingId,
                             "ACTIVE", dateOrNull(payload, "startDate"), dateOrNull(payload, "endDate"));
+                    meterProvisioning.ensureDefaultMetersForRoom(roomId, buildingId);
                 }
                 case "ContractRenewed" -> {
                     Long contractId = longOrNull(payload, "contractId");

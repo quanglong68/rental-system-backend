@@ -2,13 +2,18 @@ package com.rental.contracttenant.controller;
 
 import com.rental.contracttenant.dto.BillingContractData;
 import com.rental.contracttenant.dto.ChatContractContext;
+import com.rental.contracttenant.dto.InternalContractDepositResponse;
+import com.rental.contracttenant.dto.MarkDepositPaidRequest;
 import com.rental.contracttenant.dto.RoomTenantCheckResponse;
 import com.rental.contracttenant.service.ContractService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,5 +45,17 @@ public class InternalContractController {
         return contractService.findActiveContractForCustomer(customerId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @GetMapping("/contracts/{id}/deposit-info")
+    public InternalContractDepositResponse getDepositInfo(@PathVariable Long id) {
+        return contractService.getDepositInfo(id);
+    }
+
+    @PostMapping("/contracts/{id}/mark-deposit-paid")
+    public InternalContractDepositResponse markDepositPaid(
+            @PathVariable Long id,
+            @Valid @RequestBody MarkDepositPaidRequest request) {
+        return contractService.markDepositPaid(id, request);
     }
 }

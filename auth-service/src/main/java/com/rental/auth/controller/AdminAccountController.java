@@ -6,6 +6,8 @@ import com.rental.common.dto.PageResponse;
 import com.rental.auth.dto.UpdateAccountRolesRequest;
 import com.rental.auth.dto.UpdateAccountStatusRequest;
 import com.rental.auth.service.AccountService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth/accounts")
 @PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Quản trị tài khoản", description = "Tạo, liệt kê, khóa/mở khóa và phân quyền tài khoản hệ thống (dành cho ADMIN)")
 @RequiredArgsConstructor
 public class AdminAccountController {
 
@@ -34,11 +37,13 @@ public class AdminAccountController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Tạo tài khoản nhân sự hoặc quản trị", description = "ADMIN tạo tài khoản STAFF/ADMIN và gán vai trò ban đầu.")
     public AccountResponse create(@Valid @RequestBody CreateAccountRequest request) {
         return accountService.createAccount(request);
     }
 
     @GetMapping
+    @Operation(summary = "Danh sách tài khoản", description = "Tra cứu phân trang danh sách tài khoản, hỗ trợ lọc theo accountType và trạng thái active.")
     public PageResponse<AccountResponse> list(@RequestParam(required = false) String accountType,
             @RequestParam(required = false) Boolean active, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -46,12 +51,14 @@ public class AdminAccountController {
     }
 
     @PutMapping("/{id}/status")
+    @Operation(summary = "Cập nhật trạng thái hoạt động tài khoản", description = "Kích hoạt hoặc vô hiệu hóa tài khoản theo ID.")
     public AccountResponse updateStatus(@PathVariable Long id,
             @Valid @RequestBody UpdateAccountStatusRequest request) {
         return accountService.updateStatus(id, request.getActive());
     }
 
     @PutMapping("/{id}/roles")
+    @Operation(summary = "Cập nhật vai trò tài khoản", description = "Gán lại danh sách vai trò (ADMIN, QUAN_LY, SALE, KY_THUAT, CUSTOMER) cho tài khoản.")
     public AccountResponse updateRoles(@PathVariable Long id,
             @Valid @RequestBody UpdateAccountRolesRequest request) {
         return accountService.updateRoles(id, request.getRoles());

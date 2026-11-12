@@ -27,6 +27,8 @@ import com.rental.contracttenant.dto.ContractResponse;
 import com.rental.contracttenant.dto.ContractTenantResponse;
 import com.rental.contracttenant.dto.CreateDraftManualRequest;
 import com.rental.contracttenant.dto.CreateDraftContractRequest;
+import com.rental.contracttenant.dto.InternalContractDepositResponse;
+import com.rental.contracttenant.dto.MarkDepositPaidRequest;
 import com.rental.contracttenant.dto.TenantLeaveRequest;
 import com.rental.contracttenant.dto.UpdateDraftContractRequest;
 import com.rental.contracttenant.entity.Contract;
@@ -2388,5 +2390,28 @@ class ContractServiceTest {
         req.setStartDate(LocalDate.of(2026, 12, 1));
         req.setRentAmount(new BigDecimal("4000000"));
         return req;
+    }
+
+    @Test
+    void markDepositPaid_setsFieldsAndIsIdempotent() {
+        Contract contract = fixture();
+        contract.setDepositAmount(new BigDecimal("5000000"));
+        when(contracts.findByIdForUpdate(9L)).thenReturn(Optional.of(contract));
+        when(contracts.save(any(Contract.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        InternalContractDepositResponse first = service.markDepositPaid(
+                9L, new MarkDepositPaidRequest("DEP9_1234", new BigDecimal("5000000"), "VNPAY"));
+
+        assertThat(first.isDepositPaid()).isTrue();
+        assertThat(first.getDepositTxnRef()).isEqualTo("DEP9_1234");
+        assertThat(contract.getDepositPaymentMethod()).isEqualTo("VNPAY");
+        assertThat(contract.getDepositPaidAt()).isNotNull();
+
+        InternalContractDepositResponse repeat = service.markDepositPaid(
+                9L, new MarkDepositPaidRequest("DEP9_9999", new BigDecimal("5000000"), "VNPAY"));
+
+        assertThat(repeat.isDepositPaid()).isTrue();
+        assertThat(repeat.getDepositTxnRef()).isEqualTo("DEP9_1234");
+        verify(contracts, times(1)).save(contract);
     }
 }

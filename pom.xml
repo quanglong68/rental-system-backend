@@ -40,7 +40,7 @@
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <jjwt.version>0.12.6</jjwt.version>
         <!-- Khai bao tuong minh: property tu BOM import khong ke thua duoc (da verify bang help:evaluate -> null) -->
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <!-- Ghi de version Testcontainers cua Boot BOM: 1.19.8 dung docker-java API 1.32,
              bi Docker Engine moi (>= 29.x, min API 1.40) tu choi 400 (Task E1) -->
         <testcontainers.version>1.21.3</testcontainers.version>

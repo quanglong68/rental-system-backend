@@ -12,6 +12,8 @@ import com.rental.chat.dto.UnreadCountResponse;
 import com.rental.chat.service.ChatService;
 import com.rental.common.dto.PageResponse;
 import com.rental.common.security.HeaderUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +30,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/chat")
+@Tag(name = "Trò chuyện & Hội thoại", description = "Mở hội thoại, tải lịch sử tin nhắn, gửi tin nhắn, đánh dấu đã đọc và tra cứu liên hệ")
 @RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
 
     @GetMapping("/conversations")
+    @Operation(summary = "Danh sách hội thoại", description = "Liệt kê phân trang các cuộc hội thoại của người dùng hiện tại, hỗ trợ tìm theo từ khóa.")
     public PageResponse<ConversationSummaryResponse> conversations(
             @AuthenticationPrincipal HeaderUser user,
             @RequestParam(defaultValue = "0") int page,
@@ -43,6 +47,7 @@ public class ChatController {
     }
 
     @GetMapping("/conversations/{conversationId}")
+    @Operation(summary = "Chi tiết hội thoại", description = "Trả về thông tin tóm tắt của một cuộc hội thoại theo ID.")
     public ConversationSummaryResponse conversation(@AuthenticationPrincipal HeaderUser user,
             @PathVariable Long conversationId) {
         return chatService.getConversation(user, conversationId);
@@ -50,12 +55,14 @@ public class ChatController {
 
     @PostMapping("/conversations")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Mở hoặc lấy hội thoại", description = "Tạo hội thoại mới hoặc trả về hội thoại đã có theo ngữ cảnh (LISTING, RENTAL_REQUEST, CONTRACT) và người nhận.")
     public ConversationSummaryResponse openConversation(@AuthenticationPrincipal HeaderUser user,
             @Valid @RequestBody CreateConversationRequest request) {
         return chatService.open(user, request);
     }
 
     @GetMapping("/conversations/{conversationId}/messages")
+    @Operation(summary = "Tải tin nhắn trong hội thoại", description = "Tải danh sách tin nhắn theo con trỏ beforeId và kích thước size (mặc định 30).")
     public MessageCursorResponse messages(@AuthenticationPrincipal HeaderUser user,
             @PathVariable Long conversationId,
             @RequestParam(required = false) Long beforeId,
@@ -65,6 +72,7 @@ public class ChatController {
 
     @PostMapping("/conversations/{conversationId}/messages")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Gửi tin nhắn", description = "Gửi tin nhắn văn bản hoặc đính kèm trong hội thoại và phát sự kiện realtime qua SSE.")
     public MessageResponse sendMessage(@AuthenticationPrincipal HeaderUser user,
             @PathVariable Long conversationId,
             @Valid @RequestBody SendMessageRequest request) {
@@ -72,6 +80,7 @@ public class ChatController {
     }
 
     @PostMapping("/conversations/{conversationId}/read")
+    @Operation(summary = "Đánh dấu đã đọc tin nhắn", description = "Cập nhật vị trí tin nhắn đã đọc và trả về số lượng tin chưa đọc còn lại.")
     public UnreadCountResponse markRead(@AuthenticationPrincipal HeaderUser user,
             @PathVariable Long conversationId,
             @Valid @RequestBody MarkReadRequest request) {
@@ -80,6 +89,7 @@ public class ChatController {
 
     @PostMapping("/conversations/{conversationId}/typing")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Gửi trạng thái đang gõ", description = "Phát tín hiệu đang soạn tin nhắn tới đối phương qua SSE.")
     public void typing(@AuthenticationPrincipal HeaderUser user,
             @PathVariable Long conversationId,
             @RequestBody TypingRequest request) {
@@ -87,11 +97,13 @@ public class ChatController {
     }
 
     @GetMapping("/unread-count")
+    @Operation(summary = "Đếm tổng tin nhắn chưa đọc", description = "Trả về tổng số tin nhắn chưa đọc trên toàn bộ hội thoại của người dùng.")
     public UnreadCountResponse unreadCount(@AuthenticationPrincipal HeaderUser user) {
         return chatService.unreadCount(user);
     }
 
     @GetMapping("/contacts")
+    @Operation(summary = "Danh sách liên hệ theo ngữ cảnh", description = "Gợi ý người có thể nhắn tin dựa trên contextType (LISTING, RENTAL_REQUEST, CONTRACT...) và contextId.")
     public List<ContactResponse> contacts(@AuthenticationPrincipal HeaderUser user,
             @RequestParam String contextType,
             @RequestParam(required = false) Long contextId) {

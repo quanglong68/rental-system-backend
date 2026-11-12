@@ -312,6 +312,12 @@ const CCCD_PNG = Buffer.from(
   'base64',
 );
 
+// Ảnh chữ ký tay dùng cho luồng ký điện tử hai bên; PDF hợp đồng render trực tiếp từ MinIO.
+const SIGNATURE_IMAGES = {
+  tenant: fs.readFileSync(path.join(__dirname, 'assets', 'signature-customer.png')),
+  lessor: fs.readFileSync(path.join(__dirname, 'assets', 'signature-manager.png')),
+};
+
 async function ensureIdentityFiles(key) {
   const cached = ns('identity')[key];
   if (cached?.front && cached?.back) return cached;
@@ -492,35 +498,18 @@ async function setRoomStatus(roomId, status) {
 async function ensureListingTerms(code, managerKey, spec, availableFrom) {
   const listing = await waitListing(rid(code));
   if (listing.depositAmount != null && listing.electricityPrice != null) return listing;
-  let updated;
-  try {
-    updated = await call(managerKey, 'PUT', `/api/v1/listings/${listing.id}`, {
-      title: listing.title,
-      description: listing.description ?? undefined,
-      depositAmount: spec.basePrice,
-      electricityPrice: 3500,
-      waterPrice: 12000,
-      waterUnit: 'PERSON',
-      paymentMethod: 'BANK_TRANSFER',
-      paymentDueDay: 5,
-      minTermMonths: 12,
-      availableFrom,
-    });
-  } catch (err) {
-    log('listing', `thử lại bằng bootstrap cho ${code} (manager ${managerKey} lỗi: ${err.message})`);
-    updated = await call('__bootstrap', 'PUT', `/api/v1/listings/${listing.id}`, {
-      title: listing.title,
-      description: listing.description ?? undefined,
-      depositAmount: spec.basePrice,
-      electricityPrice: 3500,
-      waterPrice: 12000,
-      waterUnit: 'PERSON',
-      paymentMethod: 'BANK_TRANSFER',
-      paymentDueDay: 5,
-      minTermMonths: 12,
-      availableFrom,
-    });
-  }
+  const updated = await call(managerKey, 'PUT', `/api/v1/listings/${listing.id}`, {
+    title: listing.title,
+    description: listing.description ?? undefined,
+    depositAmount: spec.basePrice,
+    electricityPrice: 3500,
+    waterPrice: 12000,
+    waterUnit: 'PERSON',
+    paymentMethod: 'BANK_TRANSFER',
+    paymentDueDay: 5,
+    minTermMonths: 12,
+    availableFrom,
+  });
   log('listing', `bổ sung điều khoản thuê cho ${code} (cọc ${spec.basePrice})`);
   return updated;
 }
@@ -624,16 +613,10 @@ async function acceptRequest(requestKey, managerKey) {
     try {
       await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/verify`);
     } catch (e) {
-      log('booking', `xác minh hồ sơ ${requestId} bằng manager thất bại (${e.message}), thử bootstrap`);
-      await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/verify`).catch(() => {});
+      log('booking', `xác minh hồ sơ ${requestId} thất bại: ${e.message}`);
     }
   }
-  try {
-    await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
-  } catch (e) {
-    log('booking', `duyệt hồ sơ ${requestId} bằng manager thất bại (${e.message}), thử bootstrap`);
-    await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
-  }
+  await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/accept`);
   log('booking', `duyệt yêu cầu ${requestKey} (id=${requestId})`);
 }
 
@@ -641,12 +624,7 @@ async function rejectRequest(requestKey, managerKey, reason) {
   const requestId = ns('requests')[requestKey];
   const data = await call('__bootstrap', 'GET', `/api/v1/rental-requests/${requestId}`);
   if (data.status === 'REJECTED') return;
-  try {
-    await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
-  } catch (e) {
-    log('booking', `từ chối yêu cầu ${requestKey} bằng manager thất bại (${e.message}), thử bootstrap`);
-    await call('__bootstrap', 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
-  }
+  await call(managerKey, 'PUT', `/api/v1/rental-requests/${requestId}/reject`, { reason });
   log('booking', `từ chối yêu cầu ${requestKey}`);
 }
 
@@ -719,13 +697,82 @@ async function updateDraft(contractId, body) {
   return updated;
 }
 
-async function ensureSigned(contractId) {
-  const contract = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
-  if (contract.status === 'ACTIVE') return contract;
-  if (contract.status !== 'DRAFT') throw new Error(`Hợp đồng ${contractId} ở trạng thái ${contract.status}`);
-  const signed = await call('__bootstrap', 'POST', `/api/v1/contracts/${contractId}/sign`);
-  log('contract', `ký hợp đồng ${contractId} -> ACTIVE`);
-  return signed;
+async function uploadSignatureImage(contractId, key, image, filename) {
+  const token = await getToken(key);
+  const form = new FormData();
+  form.append('file', new Blob([image], { type: 'image/png' }), filename);
+  const res = await fetch(`${BASE}/api/v1/contracts/${contractId}/signature-image`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+    signal: AbortSignal.timeout(30000),
+  });
+  const text = await res.text();
+  if (res.status !== 200) {
+    throw new Error(`Upload chữ ký ${filename} cho HĐ ${contractId} -> ${res.status}: ${text.slice(0, 300)}`);
+  }
+  return parseJson(text).key;
+}
+
+// Ký điện tử đúng thứ tự nghiệp vụ: Quản lý "Gửi khách ký" -> khách ký (kèm xác nhận cọc)
+// -> Quản lý ký -> COMPLETED/ACTIVE. Ảnh chữ ký hai bên được lưu MinIO để PDF hiển thị.
+async function ensureTwoPartySigned(contractId, tenantKey, managerKey, terms = null) {
+  let contract = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
+  if (contract.status === 'ACTIVE' && contract.signatureStatus === 'COMPLETED') return contract;
+
+  const resettable = contract.status === 'DRAFT'
+    && ['AWAITING_TENANT', 'AWAITING_LESSOR', 'DECLINED'].includes(contract.signatureStatus);
+  if (resettable) {
+    execSql('contract_db', 'contract_svc',
+      `DELETE FROM contract_signature WHERE contract_id = ${contractId}; ` +
+      `UPDATE contract SET signature_status = 'NOT_READY', signature_deadline = NULL WHERE id = ${contractId};`);
+    contract = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
+  }
+  if (contract.signatureStatus === 'NOT_READY') {
+    if (contract.status !== 'DRAFT') {
+      throw new Error(`Hợp đồng ${contractId} đang ${contract.status}/${contract.signatureStatus}, cần reset DB trước khi seed`);
+    }
+    if (terms) await updateDraft(contractId, terms);
+    await call(managerKey, 'POST', `/api/v1/contracts/${contractId}/send`);
+    log('contract', `gửi HĐ ${contractId} cho khách ký`);
+    contract = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
+  }
+
+  if (contract.signatureStatus === 'AWAITING_TENANT') {
+    const tenantImageKey = await uploadSignatureImage(
+      contractId, tenantKey, SIGNATURE_IMAGES.tenant, 'signature-tenant.png');
+    await call(tenantKey, 'POST', `/api/v1/contracts/${contractId}/signatures`, {
+      password: PASSWORD,
+      signatureImageKey: tenantImageKey,
+      consentVersion: 'v1.0',
+      acceptedTerms: true,
+      depositConfirmed: true,
+    });
+    log('contract', `khách ${acc(tenantKey).username} ký HĐ ${contractId}`);
+    contract = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
+  }
+
+  if (contract.signatureStatus === 'AWAITING_LESSOR') {
+    const lessorImageKey = await uploadSignatureImage(
+      contractId, managerKey, SIGNATURE_IMAGES.lessor, 'signature-lessor.png');
+    await call(managerKey, 'POST', `/api/v1/contracts/${contractId}/signatures`, {
+      password: PASSWORD,
+      signatureImageKey: lessorImageKey,
+      consentVersion: 'v1.0',
+      acceptedTerms: true,
+      depositConfirmed: false,
+    });
+    log('contract', `quản lý ${acc(managerKey).username} ký HĐ ${contractId}`);
+  }
+
+  const done = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractId}`);
+  if (done.status !== 'ACTIVE' || done.signatureStatus !== 'COMPLETED') {
+    throw new Error(`HĐ ${contractId} chưa hoàn tất ký: ${done.status}/${done.signatureStatus}`);
+  }
+  if (!done.depositPaid) {
+    throw new Error(`HĐ ${contractId} chưa ghi nhận tiền cọc sau khi khách ký`);
+  }
+  return done;
 }
 
 async function waitRoomStatus(roomKey, status) {
@@ -889,23 +936,45 @@ async function attachService(key, contractId, serviceId, usageType, contractTena
   return setNs('contractServices', key, s(created.id));
 }
 
-async function ensureMeter(key, roomKey, utilityTypeKey, meterCode, initialIndex) {
-  if (ns('meters')[key]) return s(ns('meters')[key]);
-  const list = await call('__bootstrap', 'GET', `/api/v1/meters?roomId=${rid(roomKey)}`);
-  const found = (list ?? []).find((m) => same(m.utilityTypeId, ns('utilityTypes')[utilityTypeKey]));
-  if (found) return setNs('meters', key, s(found.id));
-  const created = await call('__bootstrap', 'POST', '/api/v1/meters', {
-    roomId: rid(roomKey),
-    utilityTypeId: ns('utilityTypes')[utilityTypeKey],
-    meterCode,
-    initialIndex,
-  }, [201]);
-  log('billing', `tạo đồng hồ ${meterCode} phòng ${roomKey}`);
-  return setNs('meters', key, s(created.id));
+// Ký hợp đồng đã để MeterProvisioningService tự tạo cặp đồng hồ AUTO-<roomId>. Seed chờ
+// đúng 2 đồng hồ, xoá dấu vết bàn giao cũ rồi ép lại mã đồng hồ + mốc chỉ số cố định.
+async function prepareMeters(roomKey, contractId, electricity, water) {
+  const found = await poll(`2 đồng hồ phòng ${roomKey}`, async () => {
+    const list = await call('__bootstrap', 'GET', `/api/v1/meters?roomId=${rid(roomKey)}`);
+    const elec = (list ?? []).find((m) => same(m.utilityTypeId, ns('utilityTypes').electricity));
+    const wat = (list ?? []).find((m) => same(m.utilityTypeId, ns('utilityTypes').water));
+    return elec && wat ? { list, elec, wat } : null;
+  }, { timeout: 90000 });
+
+  for (const extra of found.list.filter((m) => !same(m.id, found.elec.id) && !same(m.id, found.wat.id))) {
+    execSql('billing_db', 'billing_svc',
+      `DELETE FROM meter_reading WHERE meter_id = ${extra.id} ` +
+      `AND id NOT IN (SELECT meter_reading_id FROM invoice_item WHERE meter_reading_id IS NOT NULL); ` +
+      `DELETE FROM meter WHERE id = ${extra.id} ` +
+      `AND NOT EXISTS (SELECT 1 FROM meter_reading WHERE meter_id = ${extra.id});`);
+  }
+
+  execSql('billing_db', 'billing_svc',
+    `DELETE FROM meter_handover WHERE contract_id = ${contractId}; ` +
+    `UPDATE meter SET meter_code = '${electricity.code}', initial_index = ${electricity.initialIndex}, ` +
+    `initial_index_date = NULL WHERE id = ${found.elec.id}; ` +
+    `UPDATE meter SET meter_code = '${water.code}', initial_index = ${water.initialIndex}, ` +
+    `initial_index_date = NULL WHERE id = ${found.wat.id};`);
+
+  const refreshed = await call('__bootstrap', 'GET', `/api/v1/meters?roomId=${rid(roomKey)}`);
+  if (refreshed.length !== 2) {
+    throw new Error(`Phòng ${roomKey} có ${refreshed.length} đồng hồ sau khi chuẩn hoá (mong đợi 2)`);
+  }
+  const leftover = refreshed.filter((m) => /^AUTO-/.test(m.meterCode ?? ''));
+  if (leftover.length > 0) {
+    throw new Error(`Phòng ${roomKey} còn đồng hồ AUTO-*: ${leftover.map((m) => m.meterCode).join(', ')}`);
+  }
+  setNs('meters', `${roomKey}-elec`, s(found.elec.id));
+  setNs('meters', `${roomKey}-water`, s(found.wat.id));
+  return { electricity: s(found.elec.id), water: s(found.wat.id) };
 }
 
 async function ensureReading(key, meterId, month, year, currentIndex, readingDate) {
-  if (ns('readings')[key]) return s(ns('readings')[key]);
   const res = await request('POST', '/api/v1/meter-readings', {
     token: await getToken('__bootstrap'),
     body: { meterId, month, year, currentIndex, readingDate },
@@ -914,9 +983,17 @@ async function ensureReading(key, meterId, month, year, currentIndex, readingDat
     log('billing', `nhập chỉ số ${key}=${currentIndex}`);
     return setNs('readings', key, s(res.data.id));
   }
-  if (res.status === 409 || res.status === 422) {
-    log('billing', `bỏ qua chỉ số ${key}: ${res.status}`);
-    return null;
+  if (res.status === 409) {
+    const page = await call(
+      '__bootstrap', 'GET', `/api/v1/meter-readings?meterId=${meterId}&month=${month}&year=${year}&size=10`);
+    const found = (page.content ?? []).find(
+      (r) => same(r.meterId, meterId) && Number(r.month) === Number(month) && Number(r.year) === Number(year));
+    if (!found) throw new Error(`Chỉ số ${key} trả 409 nhưng không tìm thấy bản ghi hiện có`);
+    if (Number(found.currentIndex) !== Number(currentIndex)) {
+      await call('__bootstrap', 'PUT', `/api/v1/meter-readings/${found.id}`, { currentIndex });
+      log('billing', `cập nhật chỉ số ${key}: ${found.currentIndex} -> ${currentIndex}`);
+    }
+    return setNs('readings', key, s(found.id));
   }
   throw new ApiError('__bootstrap', 'POST', '/api/v1/meter-readings', res);
 }
@@ -968,10 +1045,39 @@ function execSql(db, user, sql) {
 
 function setInvoiceOverdue(invoiceId) {
   const dueDate = monthEndDay(BILLING_PREV2);
+  // Trang Tài chính đọc room_invoice (hóa đơn tổng), nên phải cập nhật cả bản tổng
+  // giống scheduler markOverdue -> recomputeForShare, nếu không UI vẫn hiện "Chưa thu".
   const sql = `UPDATE invoice SET status='OVERDUE', due_date=DATE '${dueDate}', overdue_notified=true, updated_at=now() ` +
-    `WHERE id=${Number(invoiceId)} AND status IN ('UNPAID','PARTIALLY_PAID')`;
+    `WHERE id=${Number(invoiceId)} AND status IN ('UNPAID','PARTIALLY_PAID'); ` +
+    `UPDATE room_invoice SET status='OVERDUE', due_date=DATE '${dueDate}', updated_at=now() ` +
+    `WHERE id=(SELECT room_invoice_id FROM invoice WHERE id=${Number(invoiceId)});`;
   execSql('billing_db', 'billing_svc', sql);
   log('billing', `set OVERDUE cho hóa đơn ${invoiceId}`);
+}
+
+function assertInvoiceCount(label, list, expected) {
+  if (list.length !== expected) {
+    const detail = list.map((i) => `room=${i.roomId}/customer=${i.customerId}/${i.status}`).join(', ');
+    throw new Error(`Hóa đơn ${label}: có ${list.length}, mong đợi ${expected} (${detail})`);
+  }
+  log('verify', `hóa đơn ${label}: đúng ${expected}`);
+}
+
+function assertInvoiceStatus(label, invoice, expected) {
+  if (!invoice) throw new Error(`Thiếu hóa đơn ${label}`);
+  if (invoice.status !== expected) {
+    throw new Error(`Hóa đơn ${label} đang ${invoice.status}, mong đợi ${expected}`);
+  }
+  log('verify', `hóa đơn ${label}: ${expected}`);
+}
+
+async function assertReadingCount(roomKey, expected) {
+  const page = await call('__bootstrap', 'GET', `/api/v1/meter-readings?roomId=${rid(roomKey)}&size=100`);
+  const count = (page.content ?? []).length;
+  if (count !== expected) {
+    throw new Error(`Chỉ số phòng ${roomKey}: có ${count} bản ghi, mong đợi ${expected}`);
+  }
+  log('verify', `chỉ số phòng ${roomKey}: đúng ${expected} bản ghi`);
 }
 
 // ---------------------------------------------------------------- maintenance
@@ -1240,17 +1346,21 @@ async function main() {
   await acceptRequest('B204-accept', 'managerB');
 
   // 6. Hợp đồng thủ công + hợp đồng từ yêu cầu
+  // Loại tiện ích phải có TRƯỚC khi ký: MeterProvisioningService chọn loại Điện/Nước có sẵn
+  // để tạo đúng cặp đồng hồ cho mỗi phòng ngay khi hợp đồng kích hoạt.
+  const electricity = await ensureUtilityType('electricity', 'Điện (Seed)', 'kWh', 3500);
+  const water = await ensureUtilityType('water', 'Nước (Seed)', 'm3', 12000);
+
   let contractA104 = ns('contracts')['A104'];
   if (!contractA104) {
     contractA104 = await waitRequestDraft('A104', 'active');
-    await updateDraft(contractA104, {
-      startDate: isoDayMonthsFromNow(-5),
-      endDate: isoDayMonthsFromNow(7),
-      rentAmount: 6000000,
-      depositAmount: 12000000,
-    });
   }
-  await ensureSigned(contractA104);
+  await ensureTwoPartySigned(contractA104, 'active', 'managerA', {
+    startDate: isoDayMonthsFromNow(-5),
+    endDate: isoDayMonthsFromNow(7),
+    rentAmount: 6000000,
+    depositAmount: 12000000,
+  });
   setNs('contracts', 'A104', contractA104);
 
   const contractB204 = ns('contracts')['B204'] ?? (await waitRequestDraft('B204', 'accept'));
@@ -1264,9 +1374,14 @@ async function main() {
     startDate: isoDayMonthsFromNow(-11),
     endDate: isoDayFromNow(23),
     rentAmount: 5500000,
-    depositAmount: 11000000,
+    depositAmount: 6000000,
   });
-  await ensureSigned(contractA105);
+  await ensureTwoPartySigned(contractA105, 'renew', 'managerA', {
+    startDate: isoDayMonthsFromNow(-11),
+    endDate: isoDayFromNow(23),
+    rentAmount: 5500000,
+    depositAmount: 6000000,
+  });
 
   const contractA107 = await ensureManualDraft('A107', {
     customerKey: 'terminate',
@@ -1277,7 +1392,12 @@ async function main() {
     rentAmount: 5800000,
     depositAmount: 11600000,
   });
-  await ensureSigned(contractA107);
+  await ensureTwoPartySigned(contractA107, 'terminate', 'managerA', {
+    startDate: isoDayMonthsFromNow(-11),
+    endDate: isoDayFromNow(8),
+    rentAmount: 5800000,
+    depositAmount: 11600000,
+  });
 
   // 7A — Khách mới chuyển vào HÔM NAY. Hợp đồng ACTIVE từ hôm nay, đồng hồ chỉ có mốc
   // bàn giao (initialIndex) và chưa có chỉ số chốt tháng nào. Ký hợp đồng sẽ phát
@@ -1292,11 +1412,12 @@ async function main() {
     rentAmount: 5000000,
     depositAmount: 10000000,
   });
-  const beforeSignA108 = await call('__bootstrap', 'GET', `/api/v1/contracts/${contractA108}`);
-  if (beforeSignA108.status === 'DRAFT' && beforeSignA108.startDate !== todayForSeed) {
-    await updateDraft(contractA108, { startDate: todayForSeed });
-  }
-  await ensureSigned(contractA108);
+  await ensureTwoPartySigned(contractA108, 'handover', 'managerA', {
+    startDate: todayForSeed,
+    endDate: isoDayMonthsFromNow(12),
+    rentAmount: 5000000,
+    depositAmount: 10000000,
+  });
   // Chạy lại seed trên DB cũ vẫn phải giữ "khách chuyển vào hôm nay" để test ngày kế tiếp.
   execSql('contract_db', 'contract_svc',
     `UPDATE contract SET start_date = DATE '${todayForSeed}' WHERE id = ${contractA108}; ` +
@@ -1311,7 +1432,12 @@ async function main() {
     rentAmount: 7000000,
     depositAmount: 14000000,
   });
-  await ensureSigned(contractB201);
+  await ensureTwoPartySigned(contractB201, 'moveout', 'managerB', {
+    startDate: isoDayMonthsFromNow(-3),
+    endDate: isoDayMonthsFromNow(9),
+    rentAmount: 7000000,
+    depositAmount: 14000000,
+  });
 
   const contractB203 = await ensureManualDraft('B203', {
     customerKey: 'old',
@@ -1322,7 +1448,12 @@ async function main() {
     rentAmount: 6800000,
     depositAmount: 13600000,
   });
-  await ensureSigned(contractB203);
+  await ensureTwoPartySigned(contractB203, 'old', 'managerB', {
+    startDate: isoDayMonthsFromNow(-13),
+    endDate: isoDayMonthsFromNow(11),
+    rentAmount: 6800000,
+    depositAmount: 13600000,
+  });
 
   const contractA102 = await ensureManualDraft('A102', {
     customerKey: 'draft',
@@ -1405,14 +1536,30 @@ async function main() {
   log('roommate', 'đóng tin B203');
 
   // 8. Điện nước, dịch vụ, hóa đơn
-  const electricity = await ensureUtilityType('electricity', 'Điện (Seed)', 'kWh', 3500);
-  const water = await ensureUtilityType('water', 'Nước (Seed)', 'm3', 12000);
+  // Đồng hồ đã được tạo tự động lúc ký; seed chờ đủ cặp Điện/Nước rồi chuẩn hoá mã + mốc chỉ số.
+  const meterRooms = [
+    ['A104', contractA104, 1000, 100],
+    ['A105', contractA105, 1000, 100],
+    ['A107', contractA107, 1000, 100],
+    ['B201', contractB201, 1000, 100],
+    ['B203', contractB203, 1000, 100],
+    // 7A — A108 là phòng bàn giao mới: đồng hồ chỉ có mốc bàn giao, KHÔNG có chỉ số tháng trước.
+    ['A108', contractA108, 2500, 300],
+  ];
+  for (const [roomKey, contractId, elecIndex, waterIndex] of meterRooms) {
+    await prepareMeters(
+      roomKey,
+      contractId,
+      { code: `SEED-${roomKey}-E`, initialIndex: elecIndex },
+      { code: `SEED-${roomKey}-W`, initialIndex: waterIndex },
+    );
+  }
 
-  const internetA = await ensureBuildingService('internetA', 'A', 'Internet (Seed)', 220000);
-  const cleaningA = await ensureBuildingService('cleaningA', 'A', 'Vệ sinh (Seed)', 100000);
-  const parkingA = await ensureBuildingService('parkingA', 'A', 'Gửi xe (Seed)', 120000);
-  const internetB = await ensureBuildingService('internetB', 'B', 'Internet (Seed)', 220000);
-  const cleaningB = await ensureBuildingService('cleaningB', 'B', 'Vệ sinh (Seed)', 100000);
+  await ensureBuildingService('internetA', 'A', 'Internet (Seed)', 220000);
+  await ensureBuildingService('cleaningA', 'A', 'Vệ sinh (Seed)', 100000);
+  await ensureBuildingService('parkingA', 'A', 'Gửi xe (Seed)', 120000);
+  await ensureBuildingService('internetB', 'B', 'Internet (Seed)', 220000);
+  await ensureBuildingService('cleaningB', 'B', 'Vệ sinh (Seed)', 100000);
 
   // Chờ projection contract_info của billing trước khi gắn dịch vụ.
   for (const contractId of [contractA104, contractA105, contractA107, contractA108, contractB201, contractB203]) {
@@ -1437,28 +1584,6 @@ async function main() {
   await attachService('B203-internet', contractB203, internetB, 'SHARED');
   */
 
-  const meterRooms = [
-    ['A104', contractA104],
-    ['A105', contractA105],
-    ['A107', contractA107],
-    ['B201', contractB201],
-    ['B203', contractB203],
-  ];
-  for (const [roomKey] of meterRooms) {
-    await ensureMeter(`${roomKey}-elec`, roomKey, 'electricity', `SEED-${roomKey}-E`, 1000);
-    await ensureMeter(`${roomKey}-water`, roomKey, 'water', `SEED-${roomKey}-W`, 100);
-  }
-  // 7A — A108 là phòng bàn giao mới: đồng hồ chỉ có mốc bàn giao, KHÔNG có chỉ số tháng trước.
-  // Chỉ số hiện tại do kỹ thuật nhập khi test; tiền = (chỉ số mới − mốc bàn giao) × đơn giá.
-  await ensureMeter('A108-elec', 'A108', 'electricity', 'SEED-A108-E', 2500);
-  await ensureMeter('A108-water', 'A108', 'water', 'SEED-A108-W', 300);
-  // Reset mốc bàn giao để lần seed nào A108 cũng ở trạng thái "chưa ghi chỉ số bàn giao".
-  execSql('billing_db', 'billing_svc',
-    `UPDATE meter SET initial_index = 2500, initial_index_date = NULL ` +
-    `WHERE room_id = ${rid('A108')} AND utility_type_id = ${ns('utilityTypes').electricity}; ` +
-    `UPDATE meter SET initial_index = 300, initial_index_date = NULL ` +
-    `WHERE room_id = ${rid('A108')} AND utility_type_id = ${ns('utilityTypes').water};`);
-
   const prev2Tag = monthTag(BILLING_PREV2);
   const prevTag = monthTag(BILLING_PREV);
   const prevReadingDate = monthDay(BILLING_PREV, 28);
@@ -1468,11 +1593,17 @@ async function main() {
   // chuông có thông báo nhắc, và khi nhập xong hóa đơn của tháng đó tự sinh ngay.
   const closingMissingRooms = new Set(['A105', 'A107']);
   for (const [roomKey] of meterRooms) {
+    // A108 nhận bàn giao trong tháng hiện tại nên không có kỳ chốt tháng trước;
+    // ghi chỉ số cũ hơn mốc bàn giao sẽ bị từ chối INDEX_LOWER_THAN_PREVIOUS.
+    if (roomKey === 'A108') continue;
     await ensureReading(`${roomKey}-elec-${prev2Tag}`, ns('meters')[`${roomKey}-elec`], BILLING_PREV2.month, BILLING_PREV2.year, 1200, monthEndDay(BILLING_PREV2));
     await ensureReading(`${roomKey}-water-${prev2Tag}`, ns('meters')[`${roomKey}-water`], BILLING_PREV2.month, BILLING_PREV2.year, 130, monthEndDay(BILLING_PREV2));
     if (closingMissingRooms.has(roomKey)) continue;
     await ensureReading(`${roomKey}-elec-${prevTag}`, ns('meters')[`${roomKey}-elec`], BILLING_PREV.month, BILLING_PREV.year, 1400, prevReadingDate);
     await ensureReading(`${roomKey}-water-${prevTag}`, ns('meters')[`${roomKey}-water`], BILLING_PREV.month, BILLING_PREV.year, 160, prevReadingDate);
+  }
+  for (const [roomKey, expected] of [['A104', 4], ['A105', 2], ['A107', 2], ['B201', 4], ['B203', 4], ['A108', 0]]) {
+    await assertReadingCount(roomKey, expected);
   }
 
   await generateInvoices(BILLING_PREV2.month, BILLING_PREV2.year, 'A');
@@ -1499,9 +1630,27 @@ async function main() {
   if (sepTerminate && sepTerminate.status !== 'OVERDUE' && sepTerminate.status !== 'PAID') {
     setInvoiceOverdue(sepTerminate.id);
   }
+
+  // Hóa đơn kỳ gần nhất của B203 thanh toán đủ để minh họa khóa sửa PAID (Luồng 7B)
+  // mà không cần đổi bộ lọc kỳ; A104 vẫn chưa thanh toán để test VNPay ở Luồng 8.
+  const octOld = findInvoice(octB, 'B203', 'old');
+  if (octOld && octOld.status !== 'PAID') await payInvoice(octOld, Number(octOld.totalAmount));
+
   for (const inv of [...sepA, ...sepB, ...octA, ...octB]) {
     setNs('invoices', `${inv.roomId}:${inv.customerId}:${inv.month}:${inv.year}`, s(inv.id));
   }
+
+  const sepA2 = await invoicesOf('A', BILLING_PREV2.month, BILLING_PREV2.year);
+  const sepB2 = await invoicesOf('B', BILLING_PREV2.month, BILLING_PREV2.year);
+  const octA2 = await invoicesOf('A', BILLING_PREV.month, BILLING_PREV.year);
+  const octB2 = await invoicesOf('B', BILLING_PREV.month, BILLING_PREV.year);
+  assertInvoiceCount(`${monthTag(BILLING_PREV2)}`, [...sepA2, ...sepB2], 6);
+  assertInvoiceCount(`${monthTag(BILLING_PREV)}`, [...octA2, ...octB2], 4);
+  assertInvoiceStatus('A104 tháng trước-2 (đã thu đủ)', findInvoice(sepA2, 'A104', 'active'), 'PAID');
+  assertInvoiceStatus('A105 tháng trước-2 (thu một phần)', findInvoice(sepA2, 'A105', 'renew'), 'PARTIALLY_PAID');
+  assertInvoiceStatus('A107 tháng trước-2 (quá hạn)', findInvoice(sepA2, 'A107', 'terminate'), 'OVERDUE');
+  assertInvoiceStatus('B203 tháng trước (khóa sửa PAID)', findInvoice(octB2, 'B203', 'old'), 'PAID');
+  assertInvoiceStatus('A104 tháng trước (chờ VNPay)', findInvoice(octA2, 'A104', 'active'), 'UNPAID');
 
   // 8B. Thông báo cho kỹ thuật — Luồng 7.
   // Chèn thẳng vào outbox (idempotent) để chuông luôn có thông báo ngay sau khi seed, kể cả khi
@@ -1542,7 +1691,14 @@ async function main() {
       return (res.data.content ?? []).some((n) => String(n.title ?? '').includes(keyword)) ? true : null;
     });
   }
-  log('notify', 'kỹ thuật A đã nhận thông báo bàn giao A108 + nhắc chỉ số tháng trước A105/A107');
+  // Sự kiện thật lúc ký + bản chèn dự phòng phải dedupe còn đúng 1 thông báo bàn giao A108.
+  await sleep(2000);
+  const techANotes = await call('techA', 'GET', '/api/v1/notifications?page=0&size=100&unreadOnly=false');
+  const handoverAlerts = (techANotes.content ?? []).filter((n) => String(n.title ?? '').includes('bàn giao'));
+  if (handoverAlerts.length !== 1) {
+    throw new Error(`Kỹ thuật A có ${handoverAlerts.length} thông báo bàn giao, mong đợi đúng 1`);
+  }
+  log('notify', 'kỹ thuật A đã nhận đúng 1 thông báo bàn giao A108 + nhắc chỉ số tháng trước A105/A107');
 
   // 9. Thiết bị + báo cáo + phiếu bảo trì + lịch
   const acA104 = await ensureAppliance('A104-ac', 'A104', 'Điều hòa Daikin', 'GOOD');
@@ -1679,6 +1835,13 @@ async function main() {
         previousReadings: { electricity: 1400, water: 160 },
         notification: 'MeterReadingReminder → chuông của seed.tech.a@test.local',
         note: 'A105/A107 chưa nhập chỉ số tháng trước nên hiện dòng đỏ "Yêu cầu nhập" và có nhắc trên chuông; nhập chỉ số xong hóa đơn tự sinh ngay, không cần admin bấm.',
+        paidLock: {
+          room: 'B203',
+          customer: 'seed.old@test.local',
+          month: monthTag(BILLING_PREV),
+          invoiceId: s(findInvoice(octB2, 'B203', 'old')?.id),
+          note: 'Hóa đơn kỳ này của B203 đã PAID nên các ô chỉ số bị khóa ngay trong kỳ mặc định, không cần đổi bộ lọc.',
+        },
       },
     },
     maintenance: {
@@ -1698,7 +1861,7 @@ async function main() {
   console.log(`KỸ THUẬT:  seed.tech.a@test.local / seed.tech.b@test.local`);
   console.log('KHÁCH:     seed.active / renew / terminate / moveout / mate / old / draft / accept / pending / reject / appt / compete / applicant / applicant2 / applicant3 / applicant4 / new / handover @test.local');
   console.log('LUỒNG 7A:  seed.handover@test.local (A108) + seed.tech.a@test.local  — bàn giao HÔM NAY, chuông đã có thông báo, mốc 2500 kWh / 300 m³');
-  console.log(`LUỒNG 7B:  seed.tech.a@test.local + seed.manager.a@test.local  — chốt ${monthTag(BILLING_PREV)}: A104 đủ chỉ số, A105/A107 còn thiếu (dòng đỏ + nhắc chuông), nhập xong hóa đơn tự sinh`);
+  console.log(`LUỒNG 7B:  seed.tech.a@test.local + seed.manager.a@test.local  — chốt ${monthTag(BILLING_PREV)}: A104 đủ chỉ số, A105/A107 còn thiếu (dòng đỏ + nhắc chuông), nhập xong hóa đơn tự sinh; B203 đã PAID để test khóa sửa`);
   console.log(`Báo cáo JSON: ${REPORT_PATH}`);
   console.log('==============================================');
 }

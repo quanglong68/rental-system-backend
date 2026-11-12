@@ -9,12 +9,16 @@
 
 | Thành phần | Đường dẫn / Thông tin truy cập | Ghi chú |
 | :--- | :--- | :--- |
-| **Frontend URL (Production)** | `https://rental-system-frontend-ten.vercel.app` | Giao diện Web trên Vercel |
-| **Backend Gateway (Ngrok)** | `https://quaintly-ageless-corina.ngrok-free.dev` | Tunnel kết nối API Gateway 8080 |
-| **Backend Local (Docker)** | `http://localhost:8080` | Khi chạy nội bộ máy chủ |
+| **Frontend (Local)** | `http://localhost:8443` | Chạy `npm run dev` trong `rental-system-frontend` |
+| **API Gateway (Local)** | `http://localhost:8080` | Toàn bộ API và Swagger đi qua cổng này |
+| **Swagger tổng hợp** | `http://localhost:8080/swagger-ui.html` | Tài liệu 8 service, nhóm theo từng service |
+| **Eureka Dashboard** | `http://localhost:8761` | Kiểm tra 9 service đã đăng ký |
+| **MinIO Console** | `http://localhost:9001` | Tài khoản quản trị lấy trong `rental-system-backend/.env` |
 | **Cổng thanh toán VNPay Sandbox** | Ngân hàng: `NCB`<br>Số thẻ: `9704198526191432198`<br>Tên chủ thẻ: `NGUYEN VAN A`<br>Ngày phát hành: `07/15`<br>Mã OTP: `123456` | Kiểm thử thanh toán hóa đơn thật |
 | **Tài khoản nhận VietQR Cọc HĐ** | Ngân hàng: `MBBank`<br>STK: `0348888999`<br>Chủ TK: `BQL CHUOI PHONG TRO THONG MINH` | Quét mã VietQR nộp cọc hợp đồng |
 | **Script làm mới dữ liệu sạch (1-Click)** | `seed/reset-and-seed.bat` hoặc `start-fresh-system.bat` | Khôi phục 100% dữ liệu gốc bất kỳ lúc nào |
+
+> ⚠️ **CHỈ KIỂM THỬ TRÊN MÔI TRƯỜNG LOCAL:** Không dùng URL Vercel/Ngrok cũ. Máy test cần **Docker Desktop đang chạy** và **Node.js ≥ 18**, đã có `rental-system-backend/.env` + `rental-system-frontend/.env`, sau đó chạy `start-fresh-system.bat` rồi `npm run dev` trong thư mục Frontend. Ảnh mẫu nằm trong `rental-system-backend/pictures/` (có sẵn khi clone repo) và được seed upload tự động.
 
 > ⚠️ **LƯU Ý QUAN TRỌNG VỀ DỮ LIỆU KIỂM THỬ (TEST DATA REPRODUCIBILITY):**
 > Bất kỳ lúc nào bạn cần làm sạch dữ liệu sau khi test xong hoặc muốn đưa hệ thống về trạng thái ban đầu, hãy chạy file `seed/reset-and-seed.bat` (hoặc PowerShell: `.\seed\reset-and-seed.ps1`). Toàn bộ phòng trống, hợp đồng mẫu, thông báo và tài khoản sẽ được nạp lại mới 100%!
@@ -46,11 +50,11 @@
 | **Khách Đang Thuê (Chủ phòng)** | `seed.active@test.local` | `Test@12345` | Phòng A104 (Seed House A) | Chủ phòng A104. Dùng để test: Đăng tin tìm bạn ở ghép & duyệt ứng viên (Luồng 4), gửi phiếu báo hỏng có ảnh (Luồng 5), thanh toán VNPay Sandbox (Luồng 8). |
 | **Khách Sắp Ra (Hết hạn HĐ)** | `seed.renew@test.local` | `Test@12345` | Phòng A105 (Seed House A) | Hợp đồng sắp hết hạn. Dùng để test gửi form 'Yêu cầu trả phòng' có báo trước (Luồng 6) để kiểm tra buffer 10 ngày dọn dẹp và quyết toán cọc. |
 | **Khách Quá Hạn Thanh Toán** | `seed.terminate@test.local` | `Test@12345` | Phòng A107 (Seed House A) | Dùng để kiểm thử hóa đơn phòng ở trạng thái nợ quá hạn (OVERDUE), cảnh báo chuông nhắc nợ và tính năng chặn gia hạn hợp đồng. |
-| **Thành Viên Ở Ghép (Roommate)** | `seed.mate@test.local` | `Test@12345` | Phòng A104 (Seed House A) | Người ở ghép cùng A104. Dùng để kiểm tra: Hóa đơn cá nhân chia tách theo số ngày (Luồng 4) và kiểm thử chặn quyền yêu cầu trả phòng (Luồng 14). |
+| **Thành Viên Ở Ghép (Roommate)** | `seed.mate@test.local` | `Test@12345` | Phòng B201 (Seed House B) | Người ở ghép cùng phòng B201 (cùng với `seed.moveout`). Dùng để kiểm tra: Hóa đơn cá nhân chia tách theo số ngày và kiểm thử chặn quyền yêu cầu trả phòng (Luồng 14). |
 | **Khách Mới Toanh (Chưa có phòng)** | `seed.new@test.local` | `Test@12345` | Chưa có hợp đồng | Khách hàng mới. Dùng để test: Đặt lịch xem phòng (Luồng 1), Nộp hồ sơ đăng ký thuê phòng B204 (Luồng 2), Nộp đơn xin ở ghép (Luồng 4). |
 | **Khách Cạnh Tranh Thuê** | `seed.compete@test.local` | `Test@12345` | Chưa có hợp đồng | Cùng nộp đơn thuê phòng B205. Dùng để kiểm thử cơ chế tự động từ chối (REJECT) khi một khách hàng khác đã hoàn tất ký hợp đồng phòng đó. |
 | **Khách Đang Chờ Duyệt** | `seed.pending@test.local` | `Test@12345` | Chưa có hợp đồng | Có yêu cầu thuê ở trạng thái PENDING. Dùng để test tính năng Khách hàng chủ động bấm 'Hủy yêu cầu' và ghi lý do hủy (Luồng 3). |
-| **Khách Có Lịch Hẹn Chờ** | `seed.appt@test.local` | `Test@12345` | Chưa có hợp đồng | Có lịch hẹn xem phòng SCHEDULED. Dùng để test tính năng Khách hàng chủ động bấm 'Hủy lịch hẹn' (Luồng 3). |
+| **Khách Có Lịch Hẹn Chờ** | `seed.appt@test.local` | `Test@12345` | Chưa có hợp đồng | Có lịch hẹn xem phòng CONFIRMED (đã xác nhận). Dùng để test tính năng Khách hàng chủ động bấm 'Hủy lịch hẹn' (Luồng 3). |
 | **Khách Đã Được Duyệt Hồ Sơ** | `seed.accept@test.local` | `Test@12345` | Chưa có hợp đồng | Đơn đã ACCEPTED / Tạo DRAFT. Dùng để test tính năng chặn hủy đơn khi đã duyệt và kiểm thử nộp cọc VietQR + ký chuột. |
 | **Khách Bị Từ Chối Hồ Sơ** | `seed.reject@test.local` | `Test@12345` | Chưa có hợp đồng | Đơn bị REJECTED. Dùng để kiểm tra giao diện hiển thị rõ lý do bị từ chối và chặn các thao tác tiếp theo. |
 | **Khách Mới Bàn Giao** | `seed.handover@test.local` | `Test@12345` | Phòng A108 (Seed House A) | Khách mới ký xong HĐ, chuyển vào hôm nay. Dùng để test ghi mốc công tơ bàn giao khách mới (tab 1) không tính tiền (Luồng 7A). |
@@ -66,17 +70,16 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 | :--- | :--- | :--- | :--- | :--- |
 | **Seed House A** | Ông Nguyễn Văn An | 0903 123 456 | 079080001234 | 12 Đường Seed A, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh |
 | **Seed House B** | Ông Trần Đức Bình | 0912 345 678 | 079085005678 | 18 Đường Seed B, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh |
-| **Mộc Residence (Studio)** | Bà Lê Hoàng Mai | 0987 654 321 | 079188009999 | 45 Trương Định, Phường Bến Nghé, Quận 3, TP. Hồ Chí Minh |
-| **Lam Garden** | Ông Phạm Quốc Cường | 0933 888 999 | 079075001122 | 68 Đường số 2, Thảo Điền, TP. Thủ Đức, TP. Hồ Chí Minh |
 
 ### 2.2. Thời Hạn Hợp Đồng Chuẩn Hóa Mặc Định 12 Tháng (1 Năm)
 - Toàn bộ các luồng đăng ký thuê, tạo hợp đồng nháp và văn bản PDF đều mặc định thời hạn là **12 tháng (1 năm)** tính từ ngày bắt đầu.
 - Giúp giao diện gọn gàng, người thuê không phải chọn thủ công các kỳ hạn ngắn không phù hợp.
 
-### 2.3. Quy Định Chuyển Tiền Cọc & Vẽ Chữ Ký Chuột Trên Canvas
-1. **Nộp cọc trước khi ký:** Khách bắt buộc phải chuyển khoản cọc qua mã VietQR và bấm xác nhận trước khi hệ thống mở khóa chức năng ký số.
-2. **Vẽ chữ ký chuột trên Canvas:** Cả Khách hàng và Quản lý dùng chuột (hoặc chạm tay nếu dùng màn hình cảm ứng) để vẽ chữ ký trực tiếp trên khung Canvas Signature Pad.
+### 2.3. Quy Định Thanh Toán Cọc, Thông Báo Quản Lý & Ký Số Canvas
+1. **Nộp cọc trước khi ký:** Khách thanh toán cọc qua cổng **VNPay** hoặc tích xác nhận *"Tôi đã chuyển tiền cọc"* (chuyển khoản thủ công để Quản lý đối chiếu) trước khi mở khóa chức năng ký số.
+2. **Vẽ chữ ký chuột trên Canvas & Thông báo chuông:** Cả Khách hàng và Quản lý dùng chuột (hoặc chạm tay nếu dùng màn hình cảm ứng) vẽ chữ ký trực tiếp trên Canvas Signature Pad. Ngay khi khách nộp cọc hoặc hoàn tất ký tên, **Quản lý phụ trách tòa nhà** nhận chuông thông báo và có thể bấm để mở thẳng chi tiết hợp đồng; trạng thái tiền cọc (`VNPay` / `Chuyển khoản thủ công — cần đối chiếu`) và trạng thái ký hiển thị rõ trên cả bảng, drawer chi tiết và cổng cư dân ở cả `DRAFT` lẫn `ACTIVE`.
 3. **Thời hạn ký hợp đồng 2 ngày:** Kể từ lúc hợp đồng nháp được tạo, các bên có tối đa 2 ngày để hoàn tất ký kết; quá hạn hệ thống sẽ tự động hủy hợp đồng và mở lại phòng.
+4. **Cấp đồng hồ tự động & Chốt số theo Phương án A:** Khi Quản lý ký kích hoạt hợp đồng, nếu phòng chưa có công tơ điện/nước, hệ thống tự động tạo đồng hồ với chỉ số khởi tạo ngẫu nhiên khác `0` (mô phỏng đồng hồ đang vận hành thực tế) và mở ngay yêu cầu **Bàn giao khách mới** cho Kỹ thuật viên (kể cả khi ngày bắt đầu hợp đồng ở tương lai). Việc chốt số cuối tháng tính theo múi giờ Việt Nam (`Asia/Ho_Chi_Minh`): ngày `01–27` mặc định hiển thị kỳ tháng trước (cửa sổ chính thức từ ngày `01–05`), ngày `28–cuối tháng` mặc định chuyển sang kỳ tháng hiện tại kèm nhắc nhở cuối tháng lúc `08:00`, chặn nhập kỳ tương lai, và tự động khóa sửa nếu hóa đơn kỳ đó đã `PAID`.
 
 ### 2.4. Quy Định Phân Quyền & Giao Tiếp Nội Bộ Mới Nhất
 1. **Nhân viên Sale:** Chỉ phụ trách Leads, Lịch xem phòng, Khách hàng, Hợp đồng, Nhân sự và Tin nhắn. **Menu Hóa đơn và Bảo trì đã bị ẩn/chặn hoàn toàn khỏi tài khoản Sale**.
@@ -127,9 +130,9 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 ---
 
-### LUỒNG 2: QUY TRÌNH THUÊ PHÒNG, NỘP CỌC VIETQR, VẼ CHỮ KÝ CHUỘT CANVAS & QUẢN LÝ DUYỆT HĐ
+### LUỒNG 2: QUY TRÌNH THUÊ PHÒNG, NỘP CỌC VNPAY, THÔNG BÁO QUẢN LÝ & KÝ SỐ CANVAS
 
-**🎯 Mục tiêu kiểm thử:** Khách hàng nộp hồ sơ thuê phòng chính thức kèm ảnh CCCD 2 mặt. Sale thẩm định hồ sơ, Quản lý phê duyệt tạo hợp đồng nháp. Khách hàng chuyển khoản tiền cọc qua VietQR trước khi mở khóa khung vẽ chữ ký điện tử bằng chuột trên Canvas. Quản lý ký số hoàn tất kích hoạt hợp đồng.
+**🎯 Mục tiêu kiểm thử:** Khách hàng nộp hồ sơ thuê phòng chính thức kèm ảnh CCCD 2 mặt. Sale thẩm định hồ sơ, Quản lý phê duyệt tạo hợp đồng nháp. Khách hàng thanh toán tiền cọc qua cổng **VNPay** (hoặc xác nhận đã chuyển khoản thủ công) trước khi mở khóa khung vẽ chữ ký điện tử bằng chuột trên Canvas. Ngay khi khách nộp cọc và khi khách ký xong, Quản lý tòa nhà nhận chuông thông báo để vào đối chiếu cọc và ký số kích hoạt hợp đồng; đồng hồ điện/nước tự động khởi tạo ngẫu nhiên khác `0` và mở ngay yêu cầu bàn giao cho Kỹ thuật viên.
 
 **🏢 Dữ liệu / Tiền điều kiện:** Phòng B204 (Tòa Seed House B) | Tiền thuê: 6.500.000đ/tháng | Tiền cọc: 6.500.000đ | Hạn ký: 2 ngày | Thời hạn HĐ chuẩn: 12 tháng (1 năm).
 
@@ -137,28 +140,27 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Khách hàng (Customer)** | `seed.new@test.local` | `Test@12345` | Bấm 'Đăng ký thuê phòng' -> Tải ảnh CCCD 2 mặt -> Chờ duyệt -> Quét mã VietQR nộp cọc -> Dùng chuột vẽ chữ ký trên Canvas -> Gửi chữ ký. |
+| **Khách hàng (Customer)** | `seed.new@test.local` | `Test@12345` | Bấm 'Đăng ký thuê phòng' -> Tải ảnh CCCD 2 mặt -> Chờ duyệt -> Thanh toán tiền cọc qua VNPay (hoặc tick 'Tôi đã chuyển tiền cọc') -> Dùng chuột vẽ chữ ký trên Canvas -> Gửi chữ ký. |
 | **Nhân viên Sale Tòa B** | `seed.sale.b@test.local` | `Test@12345` | Vào /admin/leads -> Bấm 'Xem hồ sơ' kiểm tra 2 mặt ảnh CCCD -> Bấm 'Xác minh hồ sơ' (VERIFIED). Không có quyền duyệt HĐ. |
-| **Quản lý Tòa B** | `seed.manager.b@test.local` | `Test@12345` | Vào /admin/contracts -> Bấm 'Duyệt yêu cầu & Tạo HĐ nháp' -> Khách ký xong -> Quản lý kiểm tra tiền cọc, dùng chuột ký số đại diện bên cho thuê -> Kích hoạt HĐ. |
+| **Quản lý Tòa B** | `seed.manager.b@test.local` | `Test@12345` | Kiểm tra chuông thông báo khi khách nộp cọc & ký xong -> Bấm thông báo mở thẳng `/admin/contracts?contractId=...` -> Kiểm tra trạng thái cọc (`VNPay` / `Chuyển khoản thủ công`), dùng chuột ký số -> Kích hoạt HĐ. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
 1. **Bước 1 - Khách mở Drawer đăng ký thuê phòng:** Khách hàng seed.new@test.local vào trang chi tiết phòng B204 -> Bấm nút 'Đăng ký thuê phòng'. Ngăn kéo (Drawer) trượt ra từ bên phải màn hình. Bước 1 hiển thị các điều khoản: Thời hạn hợp đồng mặc định là 12 tháng (1 năm), Chủ nhà là Ông Trần Đức Bình, tiền cọc 6.500.000đ. Tích chọn cam kết đồng ý điều khoản -> Bấm 'Tiếp tục'.
 2. **Bước 2 - Điền thông tin cá nhân:** Tại Bước 2 của Drawer, điền thông tin người thuê: Họ và tên, Số điện thoại, Số CCCD (đủ 12 chữ số), Ngày sinh (đảm bảo đủ từ 18 tuổi trở lên). Bấm 'Tiếp tục'.
-3. **Bước 3 - Tải ảnh CCCD 2 mặt & chọn ngày bắt đầu:** Tại Bước 3, bấm tải lên 2 tệp ảnh mặt trước và mặt sau của thẻ CCCD. Chọn ngày bắt đầu dọn vào ở (ví dụ: ngày 15 của tháng). Bấm 'Nộp hồ sơ thuê phòng'. Hệ thống hiển thị thông báo gửi hồ sơ thành công, trạng thái hồ sơ là PENDING.
+3. **Bước 3 - Tải ảnh CCCD 2 mặt & chọn ngày bắt đầu:** Tại Bước 3, bấm tải lên 2 tệp ảnh mặt trước và mặt sau của thẻ CCCD. Chọn ngày bắt đầu dọn vào ở (có thể là hôm nay hoặc ngày tương lai, ví dụ ngày 15 của tháng). Bấm 'Nộp hồ sơ thuê phòng'. Hệ thống hiển thị thông báo gửi hồ sơ thành công, trạng thái hồ sơ là PENDING.
 4. **Bước 4 - Nhân viên Sale xác minh hồ sơ CCCD:** Đăng nhập Sale Tòa B seed.sale.b@test.local -> Vào menu /admin/leads (tab Hồ sơ thuê). Thấy yêu cầu mới của phòng B204. Bấm nút 'Hồ sơ' -> Modal hiển thị hình ảnh 2 mặt CCCD của khách. Bấm 'Xác minh hồ sơ' (VERIFIED). Lưu ý: Sale không có nút Duyệt hợp đồng.
 5. **Bước 5 - Quản lý phê duyệt hồ sơ và tạo hợp đồng nháp:** Đăng nhập Quản lý Tòa B seed.manager.b@test.local -> Vào /admin/contracts. Thấy yêu cầu phòng B204 đã được Sale xác minh. Quản lý kiểm tra điều khoản và bấm 'Duyệt yêu cầu & Tạo hợp đồng nháp'. Hợp đồng chuyển sang trạng thái DRAFT (Nháp), hệ thống đếm ngược thời hạn ký 2 ngày.
-6. **Bước 6 - Khách hàng nộp cọc VietQR:** Khách hàng seed.new@test.local đăng nhập lại, vào /requests (hoặc /contracts) mở hợp đồng nháp. Tại Bước 1: Khung nộp cọc hiển thị mã VietQR động cùng STK Ban quản lý (0348888999, MBBank) với đúng số tiền cọc 6.500.000đ. Khách bấm 'Xác nhận đã chuyển tiền cọc' -> Hệ thống mở khóa bước ký tên.
-7. **Bước 7 - Khách hàng dùng chuột vẽ chữ ký trên Canvas:** Khung vẽ chữ ký điện tử (Canvas Signature Pad) mở ra. Khách hàng dùng chuột máy tính hoặc ngón tay (trên màn hình cảm ứng) vẽ nét chữ ký thực tế của mình -> Có thể bấm 'Xóa vẽ lại' nếu chưa ưng ý. Sau khi vẽ xong, bấm 'Ký hợp đồng'. Hệ thống chuyển chữ ký thành vector nhúng vào hợp đồng.
-8. **Bước 8 - Quản lý ký số đại diện bên cho thuê và kích hoạt hợp đồng:** Quản lý Tòa B seed.manager.b@test.local mở hợp đồng, xem chữ ký của khách và xác nhận cọc đã vào tài khoản. Quản lý dùng chuột vẽ chữ ký số đại diện bên cho thuê lên Canvas -> Bấm 'Duyệt và Kích hoạt hợp đồng'. Hợp đồng chuyển trạng thái ACTIVE, hệ thống tự động sinh file PDF hợp đồng đầy đủ 2 chữ ký. Phòng B204 chuyển sang trạng thái OCCUPIED (Đang thuê).
+6. **Bước 6 - Khách hàng thanh toán tiền cọc qua VNPay:** Khách hàng seed.new@test.local đăng nhập lại, vào `/requests` (hoặc `/my-room` -> Ký hợp đồng) mở hợp đồng nháp. Tại khung nộp cọc hiển thị số tiền cọc 6.500.000đ và nút **'Thanh toán tiền cọc'** (VNPay) kèm tùy chọn **'Tôi đã chuyển tiền cọc'** (dùng cho chuyển khoản thủ công). Khách bấm **'Thanh toán tiền cọc'** -> hệ thống mở modal xác nhận gọn gàng -> điều hướng sang cổng **VNPay** -> hoàn tất thanh toán thẻ NCB (OTP `123456`) và quay về `/payment/vnpay-return`. Trạng thái cọc chuyển thành đã thanh toán (`VNPAY`) và khung vẽ chữ ký tự động mở khóa.
+7. **Bước 7 - Khách hàng dùng chuột vẽ chữ ký trên Canvas:** Khung vẽ chữ ký điện tử (Canvas Signature Pad) mở ra. Khách hàng dùng chuột máy tính hoặc ngón tay vẽ nét chữ ký thực tế -> Bấm 'Ký hợp đồng'. Hệ thống chuyển hợp đồng sang `AWAITING_LESSOR`, đồng thời phát sự kiện `ContractTenantSigned` gửi chuông thông báo tới **Quản lý Tòa B** (không gửi cho Kỹ thuật hay Sale).
+8. **Bước 8 - Quản lý nhận thông báo, kiểm tra cọc và ký số kích hoạt hợp đồng:** Quản lý Tòa B `seed.manager.b@test.local` mở chuông thông báo trên thanh topbar -> thấy thông báo nộp cọc (`ContractDepositPaid`) và thông báo khách đã ký (`ContractTenantSigned`) -> bấm vào thông báo để chuyển thẳng tới `/admin/contracts?contractId=...`. Trên bảng danh sách và drawer chi tiết, cột **Tiền cọc** hiển thị rõ đã nộp qua VNPay (hoặc *Cần đối chiếu* nếu chọn chuyển khoản thủ công) và badge **'Cần quản lý ký'**. Quản lý vẽ chữ ký đại diện bên cho thuê -> Bấm 'Duyệt và Kích hoạt hợp đồng'. Hợp đồng chuyển trạng thái `ACTIVE`, badge ký **'Đã ký đủ 2 bên'**, trang `/my-room` Tab 2 của khách cũng hiển thị đầy đủ tiền cọc & trạng thái đã nộp, đồng thời hệ thống tự cấp công tơ điện/nước ngẫu nhiên khác `0` và tạo ngay yêu cầu bàn giao cho Kỹ thuật Tòa B.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
-- Hồ sơ thuê bắt buộc phải có ảnh CCCD 2 mặt và người thuê đủ 18 tuổi.
-- Thời hạn hợp đồng luôn cố định 12 tháng (1 năm) trên toàn hệ thống.
-- Khách hàng bắt buộc phải xác nhận nộp cọc VietQR trước khi mở khóa khung vẽ chữ ký chuột.
-- Chữ ký là hình vẽ thực tế trên Canvas (không phải nút bấm giả lập), được nhúng vào file PDF hợp đồng.
-- Sau khi Quản lý ký duyệt, HĐ chuyển thành ACTIVE và phòng B204 không còn hiển thị trống trên Explore.
+- Hồ sơ thuê bắt buộc phải có ảnh CCCD 2 mặt và người thuê đủ 18 tuổi; thời hạn HĐ cố định 12 tháng.
+- Khách hàng phải thanh toán tiền cọc VNPay (hoặc xác nhận đã chuyển tiền cọc) trước khi mở khóa khung vẽ chữ ký Canvas.
+- Quản lý tòa nhà (`QUAN_LY` / `ADMIN`) nhận chuông thông báo khi khách nộp cọc và khi khách ký xong; bấm thông báo mở thẳng chi tiết hợp đồng; trạng thái cọc & chữ ký 2 bên hiển thị rõ ở cả `DRAFT` và `ACTIVE`.
+- Ngay khi Quản lý ký kích hoạt hợp đồng, công tơ Điện/Nước chưa có sẽ tự động được cấp chỉ số ngẫu nhiên khác `0` và mở tab **Bàn giao khách mới** cho Kỹ thuật viên ngay lập tức (không chờ tới `startDate`).
 
 #### 📸 Khung dành cho thành viên nhóm dán ảnh minh chứng:
 
@@ -167,37 +169,37 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 > - `[Ảnh 2.2]`: *Drawer Bước 3 - Tải ảnh CCCD 2 mặt và chọn ngày bắt đầu dọn vào ở.*
 > - `[Ảnh 2.3]`: *Sale kiểm tra ảnh CCCD và bấm Xác minh hồ sơ (VERIFIED).*
 > - `[Ảnh 2.4]`: *Quản lý bấm Duyệt tạo hợp đồng nháp (DRAFT).*
-> - `[Ảnh 2.5]`: *Khách mở hợp đồng, quét mã VietQR nộp tiền cọc 6.500.000đ.*
+> - `[Ảnh 2.5]`: *Khách mở hợp đồng, bấm 'Thanh toán tiền cọc' qua VNPay và xác nhận trở về thành công.*
 > - `[Ảnh 2.6]`: *Khách hàng dùng chuột vẽ nét chữ ký trên khung Canvas Signature Pad.*
-> - `[Ảnh 2.7]`: *Quản lý vẽ chữ ký số đại diện bên cho thuê và bấm Duyệt kích hoạt hợp đồng.*
-> - `[Ảnh 2.8]`: *Hợp đồng chuyển trạng thái ACTIVE và tải file PDF hợp đồng có đủ 2 chữ ký.*
+> - `[Ảnh 2.7]`: *Quản lý nhận chuông thông báo, đối chiếu cột Tiền cọc/Trạng thái ký và bấm Duyệt kích hoạt hợp đồng.*
+> - `[Ảnh 2.8]`: *Hợp đồng chuyển ACTIVE ('Đã ký đủ 2 bên'), `/my-room` Tab 2 hiển thị cọc rõ ràng và tải PDF đủ 2 chữ ký.*
 
 ---
 
 ### LUỒNG 3: QUY TRÌNH KHÁCH HÀNG CHỦ ĐỘNG HỦY YÊU CẦU & HỦY LỊCH HẸN
 
-**🎯 Mục tiêu kiểm thử:** Cho phép khách hàng chủ động hủy yêu cầu thuê phòng hoặc lịch xem phòng khi thay đổi kế hoạch lưu trú, đồng thời bảo đảm hệ thống kiểm soát chặt chẽ: chỉ được hủy khi đơn đang ở trạng thái PENDING hoặc SCHEDULED, và chặn hủy khi đơn đã được duyệt hoặc đã ký kết.
+**🎯 Mục tiêu kiểm thử:** Cho phép khách hàng chủ động hủy yêu cầu thuê phòng hoặc lịch xem phòng khi thay đổi kế hoạch lưu trú, đồng thời bảo đảm hệ thống kiểm soát chặt chẽ: chỉ được hủy khi đơn đang ở trạng thái PENDING hoặc lịch hẹn SCHEDULED/CONFIRMED, và chặn hủy khi đơn đã được duyệt hoặc đã ký kết.
 
-**🏢 Dữ liệu / Tiền điều kiện:** Tài khoản có yêu cầu PENDING (seed.pending), có lịch hẹn SCHEDULED (seed.appt) và yêu cầu đã duyệt ACCEPTED (seed.accept).
+**🏢 Dữ liệu / Tiền điều kiện:** Tài khoản có yêu cầu PENDING (seed.pending), có lịch hẹn CONFIRMED (seed.appt) và yêu cầu đã duyệt ACCEPTED (seed.accept).
 
 #### 🔑 Bảng tài khoản thực hiện luồng này:
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
 | **Khách có yêu cầu PENDING** | `seed.pending@test.local` | `Test@12345` | Vào /requests -> Bấm nút 'Hủy yêu cầu' -> Nhập lý do hủy -> Xác nhận. |
-| **Khách có lịch hẹn SCHEDULED** | `seed.appt@test.local` | `Test@12345` | Vào /requests (tab Lịch hẹn) -> Bấm nút 'Hủy lịch hẹn' -> Xác nhận. |
+| **Khách có lịch hẹn CONFIRMED** | `seed.appt@test.local` | `Test@12345` | Vào /requests (tab Lịch hẹn) -> Bấm nút 'Hủy lịch hẹn' -> Xác nhận. |
 | **Khách có yêu cầu ACCEPTED** | `seed.accept@test.local` | `Test@12345` | Vào /requests -> Kiểm tra nút 'Hủy yêu cầu' bị ẩn hoặc vô hiệu hóa để bảo vệ cọc. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
 1. **Bước 1 - Khách hàng hủy yêu cầu thuê phòng PENDING:** Đăng nhập tài khoản seed.pending@test.local. Truy cập menu 'Yêu cầu của tôi' (/requests). Nhìn thấy yêu cầu thuê phòng đang có badge màu cam 'Chờ xử lý' (PENDING). Bấm nút 'Hủy yêu cầu'.
 2. **Bước 2 - Nhập lý do hủy và xác nhận:** Hộp thoại xác nhận xuất hiện yêu cầu nhập lý do hủy (ví dụ: 'Thay đổi kế hoạch học tập, chọn khu vực khác'). Bấm nút 'Xác nhận hủy'. Hệ thống cập nhật trạng thái yêu cầu sang 'Đã hủy' (CANCELLED), giải phóng phòng cho người khác.
-3. **Bước 3 - Khách hàng hủy lịch hẹn xem phòng SCHEDULED:** Đăng xuất. Đăng nhập tài khoản seed.appt@test.local. Vào /requests, chọn tab 'Lịch xem phòng'. Tìm thấy lịch hẹn đang ở trạng thái 'Chờ xác nhận' (SCHEDULED). Bấm nút 'Hủy lịch hẹn' -> Xác nhận hủy. Lịch hẹn chuyển sang trạng thái CANCELLED.
+3. **Bước 3 - Khách hàng hủy lịch hẹn xem phòng CONFIRMED:** Đăng xuất. Đăng nhập tài khoản seed.appt@test.local. Vào /requests, chọn tab 'Lịch xem phòng'. Tìm thấy lịch hẹn đang ở trạng thái 'Đã xác nhận' (CONFIRMED). Bấm nút 'Hủy lịch hẹn' -> Xác nhận hủy. Lịch hẹn chuyển sang trạng thái CANCELLED.
 4. **Bước 4 - Kiểm tra chốt chặn: Khách đã được duyệt không được tự ý hủy:** Đăng nhập tài khoản seed.accept@test.local. Vào /requests. Thấy yêu cầu thuê đã được Quản lý duyệt (ACCEPTED / Đã tạo HĐ nháp). Kiểm tra giao diện: Nút 'Hủy yêu cầu' hoàn toàn bị ẩn để tránh trường hợp khách phá cọc tự do sau khi hợp đồng đã được khởi tạo.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
-- Khách hàng có thể hủy yêu cầu thuê PENDING và lịch hẹn SCHEDULED dễ dàng với lý do rõ ràng.
+- Khách hàng có thể hủy yêu cầu thuê PENDING và lịch hẹn SCHEDULED/CONFIRMED dễ dàng với lý do rõ ràng.
 - Sau khi hủy, trạng thái đổi thành CANCELLED và giải phóng slot phòng.
 - Các yêu cầu đã ở trạng thái ACCEPTED hoặc CONTRACT_CREATED bị khóa tính năng tự hủy.
 
@@ -206,7 +208,7 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 > **[KHUNG DÀNH CHO BẠN CHỤP VÀ DÁN ẢNH MINH CHỨNG VÀO ĐÂY]**
 > - `[Ảnh 3.1]`: *Khách bấm nút Hủy yêu cầu thuê phòng đang ở trạng thái PENDING.*
 > - `[Ảnh 3.2]`: *Hộp thoại nhập lý do hủy yêu cầu thuê phòng và thông báo thành công.*
-> - `[Ảnh 3.3]`: *Khách hàng bấm nút Hủy lịch hẹn xem phòng SCHEDULED.*
+> - `[Ảnh 3.3]`: *Khách hàng bấm nút Hủy lịch hẹn xem phòng CONFIRMED.*
 > - `[Ảnh 3.4]`: *Màn hình kiểm tra yêu cầu đã ACCEPTED không có nút hủy để bảo vệ thỏa thuận.*
 
 ---
@@ -221,17 +223,17 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Chủ phòng A104** | `seed.active@test.local` | `Test@12345` | Vào /my-home -> Tạo bài đăng tìm bạn ở ghép -> Chờ ứng viên nộp -> Xem hồ sơ ứng viên và bấm 'Chấp nhận'. |
+| **Chủ phòng A104** | `seed.active@test.local` | `Test@12345` | Vào /my-room -> Tạo bài đăng tìm bạn ở ghép -> Chờ ứng viên nộp -> Xem hồ sơ ứng viên và bấm 'Chấp nhận'. |
 | **Ứng viên xin ở ghép** | `seed.new@test.local` | `Test@12345` | Vào trang /roommates -> Tìm bài đăng phòng A104 -> Bấm 'Ứng tuyển' -> Điền giới thiệu và gửi đơn. |
-| **Bạn cùng phòng (sau khi ghép)** | `seed.mate@test.local` | `Test@12345` | Đăng nhập /my-home -> Kiểm tra thông tin phòng chung và hóa đơn cá nhân chia tách theo số ngày. |
+| **Bạn cùng phòng (dữ liệu mẫu)** | `seed.mate@test.local` | `Test@12345` | Đăng nhập /my-room -> Kiểm tra hóa đơn cá nhân chia tách theo số ngày tại phòng B201 (đang ở ghép cùng `seed.moveout`). |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Chủ phòng đăng bài tìm bạn ở ghép:** Đăng nhập tài khoản chủ phòng seed.active@test.local. Vào menu 'Trang chủ của tôi' (/my-home), chọn tab hoặc nút 'Tìm bạn ở ghép' -> Bấm 'Tạo bài đăng'. Nhập thông tin: Số người cần tìm (1 người), chi phí chia đều ước tính, tiêu chí bạn cùng phòng (ví dụ: 'Sinh viên năm 2 trở lên, giữ gìn vệ sinh chung, không hút thuốc') -> Bấm 'Đăng bài'.
+1. **Bước 1 - Chủ phòng đăng bài tìm bạn ở ghép:** Đăng nhập tài khoản chủ phòng seed.active@test.local. Vào menu 'Trang chủ của tôi' (/my-room), chọn tab hoặc nút 'Tìm bạn ở ghép' -> Bấm 'Tạo bài đăng'. Nhập thông tin: Số người cần tìm (1 người), chi phí chia đều ước tính, tiêu chí bạn cùng phòng (ví dụ: 'Sinh viên năm 2 trở lên, giữ gìn vệ sinh chung, không hút thuốc') -> Bấm 'Đăng bài'.
 2. **Bước 2 - Ứng viên tìm bài đăng và nộp hồ sơ ở ghép:** Đăng xuất. Đăng nhập tài khoản ứng viên seed.new@test.local. Truy cập menu 'Ở ghép' (/roommates) trên thanh điều hướng chính. Tìm thấy bài đăng của phòng A104 Tòa Seed House A. Bấm nút 'Ứng tuyển ở ghép'. Điền thông tin giới thiệu bản thân, thói quen sinh hoạt và số điện thoại liên hệ -> Bấm 'Gửi hồ sơ ứng tuyển'.
-3. **Bước 3 - Chủ phòng xét duyệt ứng viên:** Đăng xuất. Đăng nhập lại chủ phòng seed.active@test.local. Vào /my-home (mục Bạn ở ghép). Nhìn thấy hồ sơ ứng tuyển mới của seed.new@test.local. Bấm xem chi tiết thông tin giới thiệu -> Bấm nút 'Chấp nhận' (ACCEPT).
-4. **Bước 4 - Hệ thống cập nhật danh sách cư dân phòng:** Sau khi chấp nhận, ứng viên được thêm vào danh sách người lưu trú chính thức của phòng A104 kèm mốc thời gian bắt đầu ở (StayInterval). Chủ phòng và ứng viên cùng nhìn thấy nhau trong danh sách thành viên phòng trên giao diện /my-home.
-5. **Bước 5 - Kiểm tra tự động chia tách hóa đơn theo số ngày:** Đăng nhập tài khoản người ở ghép seed.mate@test.local (hoặc seed.new@test.local). Vào /my-home -> Mục 'Hóa đơn'. Kiểm tra: Hóa đơn tiền phòng và điện nước không phải là tổng cả phòng mà được tự động chia tỷ lệ tương ứng theo số ngày thực tế thành viên lưu trú trong kỳ chốt số.
+3. **Bước 3 - Chủ phòng xét duyệt ứng viên:** Đăng xuất. Đăng nhập lại chủ phòng seed.active@test.local. Vào /my-room (mục Bạn ở ghép). Nhìn thấy hồ sơ ứng tuyển mới của seed.new@test.local. Bấm xem chi tiết thông tin giới thiệu -> Bấm nút 'Chấp nhận' (ACCEPT).
+4. **Bước 4 - Hệ thống cập nhật danh sách cư dân phòng:** Sau khi chấp nhận, ứng viên được thêm vào danh sách người lưu trú chính thức của phòng A104 kèm mốc thời gian bắt đầu ở (StayInterval). Chủ phòng và ứng viên cùng nhìn thấy nhau trong danh sách thành viên phòng trên giao diện /my-room.
+5. **Bước 5 - Kiểm tra tự động chia tách hóa đơn theo số ngày:** Đăng nhập tài khoản vừa được duyệt seed.new@test.local (hoặc seed.mate@test.local đang ở ghép tại phòng B201). Vào /my-room -> Mục 'Hóa đơn'. Kiểm tra: Hóa đơn tiền phòng và điện nước không phải là tổng cả phòng mà được tự động chia tỷ lệ tương ứng theo số ngày thực tế thành viên lưu trú trong kỳ chốt số.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
@@ -247,7 +249,7 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 > - `[Ảnh 4.2]`: *Trang danh sách bài đăng ở ghép công khai (/roommates) hiển thị bài đăng A104.*
 > - `[Ảnh 4.3]`: *Ứng viên gửi đơn xin ở ghép kèm thông tin giới thiệu bản thân.*
 > - `[Ảnh 4.4]`: *Chủ phòng xem danh sách ứng viên và bấm nút Chấp nhận (ACCEPT).*
-> - `[Ảnh 4.5]`: *Màn hình /my-home hiển thị đầy đủ danh sách thành viên cùng ở phòng A104.*
+> - `[Ảnh 4.5]`: *Màn hình /my-room hiển thị đầy đủ danh sách thành viên cùng ở phòng A104.*
 > - `[Ảnh 4.6]`: *Hóa đơn tháng tự động chia tách số tiền cần thanh toán cho từng người.*
 
 ---
@@ -264,13 +266,13 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 | :--- | :--- | :--- | :--- |
 | **Khách thuê báo hỏng** | `seed.active@test.local` | `Test@12345` | Vào /repairs -> Bấm 'Báo sự cố mới' -> Tải ảnh vòi nước rò rỉ -> Gửi yêu cầu. |
 | **Quản lý Tòa A** | `seed.manager.a@test.local` | `Test@12345` | Vào /admin/maintenance -> Xem hình ảnh và mô tả -> Bấm 'Phân công kỹ thuật' -> Giao việc cho seed.tech.a. |
-| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Vào /admin/tech-tasks -> Bấm 'Bắt đầu xử lý' (IN_PROGRESS) -> Hoàn tất sửa chữa -> Nhập chi phí linh kiện -> Bấm Hoàn tất (COMPLETED). |
+| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Vào /admin/my-tasks -> Bấm 'Bắt đầu xử lý' (IN_PROGRESS) -> Hoàn tất sửa chữa -> Nhập chi phí linh kiện -> Bấm Hoàn tất (COMPLETED). |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
 1. **Bước 1 - Khách thuê tạo phiếu báo hỏng thiết bị:** Đăng nhập tài khoản khách thuê seed.active@test.local. Truy cập menu 'Bảo trì & Sự cố' (/repairs). Bấm nút 'Báo sự cố mới'. Nhập tiêu đề: 'Rò rỉ vòi nước lavabo', chọn khu vực: 'Nhà vệ sinh', chọn mức độ khẩn cấp: 'Bình thường', nhập mô tả chi tiết: 'Vòi nước bị rỉ liên tục gây thất thoát nước'. Bấm tải lên ảnh chụp hiện trạng vòi nước -> Bấm 'Gửi yêu cầu'.
 2. **Bước 2 - Quản lý tiếp nhận và phân công kỹ thuật:** Đăng xuất. Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Truy cập menu 'Bảo trì' (/admin/maintenance). Thấy phiếu báo hỏng mới của phòng A104 với badge màu vàng 'Chờ xử lý' (PENDING). Bấm xem chi tiết hình ảnh và nội dung -> Bấm nút 'Phân công kỹ thuật' -> Chọn kỹ thuật viên phụ trách seed.tech.a@test.local -> Bấm 'Xác nhận giao việc'.
-3. **Bước 3 - Kỹ thuật viên tiếp nhận tác vụ:** Đăng xuất. Đăng nhập Kỹ thuật viên Tòa A seed.tech.a@test.local. Vào menu 'Tác vụ kỹ thuật' (/admin/tech-tasks). Nhìn thấy tác vụ sửa vòi nước phòng A104 vừa được giao. Bấm nút 'Bắt đầu xử lý' -> Trạng thái phiếu chuyển sang màu xanh dương 'Đang xử lý' (IN_PROGRESS).
+3. **Bước 3 - Kỹ thuật viên tiếp nhận tác vụ:** Đăng xuất. Đăng nhập Kỹ thuật viên Tòa A seed.tech.a@test.local. Vào menu 'Tác vụ kỹ thuật' (/admin/my-tasks). Nhìn thấy tác vụ sửa vòi nước phòng A104 vừa được giao. Bấm nút 'Bắt đầu xử lý' -> Trạng thái phiếu chuyển sang màu xanh dương 'Đang xử lý' (IN_PROGRESS).
 4. **Bước 4 - Kỹ thuật viên hoàn tất sửa chữa và nhập chi phí:** Sau khi tiến hành kiểm tra và thay thế gioăng cao su, quấn băng tan vòi nước tại phòng A104, kỹ thuật viên bấm nút 'Hoàn tất xử lý'. Hộp thoại nghiệm thu hiện ra: Nhập mô tả giải pháp ('Đã thay mới gioăng cao su chịu nhiệt và quấn băng tan cố định vòi'), nhập chi phí vật tư phụ tùng: 50.000 VNĐ -> Bấm 'Xác nhận hoàn tất'. Trạng thái chuyển thành 'Đã hoàn tất' (COMPLETED).
 5. **Bước 5 - Cư dân nhận thông báo và nghiệm thu:** Đăng xuất. Đăng nhập lại khách thuê seed.active@test.local. Quan sát chuông thông báo hiển thị thông báo mới: 'Sự cố vòi nước lavabo phòng A104 đã được sửa chữa xong'. Khách vào /repairs thấy phiếu đổi sang màu xanh lá cây COMPLETED, hiển thị đầy đủ giải pháp xử lý và chi phí linh kiện để cư dân nghiệm thu.
 
@@ -302,16 +304,16 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Khách thuê sắp hết hạn** | `seed.renew@test.local` | `Test@12345` | Vào /my-home -> Mở form 'Yêu cầu trả phòng' -> Chọn ngày trả và lý do -> Bấm Gửi yêu cầu. |
+| **Khách thuê sắp hết hạn** | `seed.renew@test.local` | `Test@12345` | Vào /my-room -> Mở form 'Yêu cầu trả phòng' -> Chọn ngày trả và lý do -> Bấm Gửi yêu cầu. |
 | **Quản lý Tòa A** | `seed.manager.a@test.local` | `Test@12345` | Vào /admin/contracts -> Thấy badge 'Có yêu cầu dọn đi' -> Bấm Duyệt -> Khảo sát công tơ cuối kỳ -> Quyết toán hoàn cọc. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Khách thuê gửi thông báo trả phòng:** Đăng nhập tài khoản khách thuê sắp hết hạn seed.renew@test.local (đang ở phòng A105). Vào menu 'Trang chủ của tôi' (/my-home). Bấm vào mục 'Yêu cầu trả phòng' (Move-out Request). Chọn ngày dự kiến trả phòng (ví dụ: ngày 28 của tháng) và nhập lý do: 'Hết hạn hợp đồng, chuyển về quê sinh sống' -> Bấm 'Gửi yêu cầu trả phòng'.
+1. **Bước 1 - Khách thuê gửi thông báo trả phòng:** Đăng nhập tài khoản khách thuê sắp hết hạn seed.renew@test.local (đang ở phòng A105). Vào menu 'Trang chủ của tôi' (/my-room). Bấm vào mục 'Yêu cầu trả phòng' (Move-out Request). Chọn ngày dự kiến trả phòng (ví dụ: ngày 28 của tháng) và nhập lý do: 'Hết hạn hợp đồng, chuyển về quê sinh sống' -> Bấm 'Gửi yêu cầu trả phòng'.
 2. **Bước 2 - Quản lý xem xét và phê duyệt dọn đi:** Đăng xuất. Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Vào menu 'Hợp đồng' (/admin/contracts). Tìm phòng A105 thấy gắn badge thông báo màu cam 'Có yêu cầu dọn đi'. Bấm xem chi tiết đề xuất ngày trả phòng của khách -> Bấm nút 'Duyệt trả phòng'. Phòng A105 chuyển sang trạng thái UPCOMING_VACANT.
 3. **Bước 3 - Kiểm tra tin đăng tự động mở lại với buffer 10 ngày:** Truy cập trang công khai Khám phá phòng (/listings). Tìm thẻ phòng A105. Kiểm tra thông tin: Phòng A105 đã được tự động hiển thị mở lại cho khách mới đặt lịch, trong đó ngày phòng sẵn sàng vào ở (Available Date) chính xác bằng: Ngày khách cũ trả phòng + 10 ngày dọn dẹp vệ sinh theo đúng quy định.
 4. **Bước 4 - Khảo sát công tơ và quyết toán hoàn cọc:** Đến ngày trả phòng thực tế, Quản lý cùng Kỹ thuật tiến hành kiểm tra tài sản phòng và chốt chỉ số điện nước cuối cùng. Quản lý vào /admin/contracts -> Bấm 'Quyết toán cọc' (Deposit Settlement). Nhập các khoản khấu trừ nếu có (tiền điện nước tháng cuối, phí vệ sinh) -> Hệ thống tự động tính số tiền cọc hoàn trả thực tế cho khách.
-5. **Bước 5 - Khách thuê nhận biên lai hoàn cọc:** Đăng nhập lại khách thuê seed.renew@test.local. Vào /my-home kiểm tra biên lai quyết toán hoàn cọc trực tuyến. Khách hàng đối chiếu các khoản khấu trừ minh bạch và nhận tiền hoàn cọc qua tài khoản ngân hàng.
+5. **Bước 5 - Khách thuê nhận biên lai hoàn cọc:** Đăng nhập lại khách thuê seed.renew@test.local. Vào /my-room kiểm tra biên lai quyết toán hoàn cọc trực tuyến. Khách hàng đối chiếu các khoản khấu trừ minh bạch và nhận tiền hoàn cọc qua tài khoản ngân hàng.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
@@ -331,50 +333,55 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 ---
 
-### LUỒNG 7: CHỐT SỐ ĐIỆN NƯỚC BÀN GIAO KHÁCH MỚI & CHỐT SỔ CUỐI THÁNG (2 KỊCH BẢN)
+### LUỒNG 7: CHỐT SỐ ĐIỆN NƯỚC BÀN GIAO KHÁCH MỚI & CHỐT SỔ CUỐI THÁNG (PHƯƠNG ÁN A)
 
-**🎯 Mục tiêu kiểm thử:** Tách bạch 2 kịch bản ghi chỉ số điện nước độc lập: (7A) Ghi chỉ số BÀN GIAO cho khách mới chuyển vào hôm nay - đây là mốc xuất phát điểm, không tính tiền và không sinh hóa đơn; (7B) Chốt số ĐỊNH KỲ cuối tháng cho các phòng đang thuê - nhập chỉ số tháng trước trong 5 ngày đầu tháng, phòng thiếu bị đánh dấu đỏ, và hóa đơn tự động sinh ngay khi đủ chỉ số.
+**🎯 Mục tiêu kiểm thử:** Tách bạch 2 kịch bản ghi chỉ số điện nước theo đúng Phương án A (`Asia/Ho_Chi_Minh`):
+- **(7A) Ghi chỉ số BÀN GIAO ngay khi ký kích hoạt hợp đồng:** Áp dụng cho cả hợp đồng bắt đầu hôm nay lẫn hợp đồng ký trước ngày dọn vào (`startDate` trong tương lai). Nếu phòng chưa có công tơ, hệ thống tự động tạo đồng hồ Điện (`[180..2500]` kWh) và Nước (`[18..350]` m³) với số ngẫu nhiên khác `0` và bắn thông báo ngay cho Kỹ thuật viên; sau khi lưu, phòng **vẫn giữ hiển thị** trong tab *Bàn giao khách mới* với trạng thái *Đã nhập chỉ số bàn giao* (không tính tiền, không sinh hóa đơn).
+- **(7B) Chốt chỉ số ĐỊNH KỲ theo kỳ & trạng thái hóa đơn:** Ngày `01–27` mặc định hiển thị kỳ **tháng trước** kèm thông báo rõ thời gian nhập chính thức (`5 ngày đầu tháng sau`); ngày `28–cuối tháng` mặc định chuyển sang kỳ **tháng hiện tại** và bật nhắc chốt lúc `08:00` cho phòng đang ở chưa chốt. Cho phép nhập/sửa tháng hiện tại và tháng trước; **chặn 422 (`FUTURE_PERIOD_NOT_ALLOWED`)** với tháng tương lai; phòng có hóa đơn **Chưa thanh toán (`UNPAID`)** yêu cầu hộp thoại xác nhận (Confirm Modal) khi sửa và tự cập nhật lại hóa đơn khách; phòng có hóa đơn **Đã thanh toán (`PAID`)** tự động khóa ô nhập và ẩn nút Lưu.
 
-**🏢 Dữ liệu / Tiền điều kiện:** Kịch bản 7A: Phòng A108 (khách mới chuyển vào hôm nay seed.handover@test.local, công tơ SEED-A108-E mốc 2.500 kWh, SEED-A108-W mốc 300 m³). Kịch bản 7B: Phòng A104 (đã có chỉ số), Phòng A105 & A107 (chưa có chỉ số, dòng đỏ cảnh báo).
+**🏢 Dữ liệu / Tiền điều kiện:** Kịch bản 7A: Phòng A108 (`seed.handover@test.local`) hoặc hợp đồng mới ký kích hoạt bất kỳ (kể cả ngày dọn vào tương lai) được tự động cấp đồng hồ Điện/Nước khác `0`. Kịch bản 7B: Phòng A104 (đã có hóa đơn hoặc `PAID` cần khóa sửa), Phòng A105 & A107 (chưa có chỉ số hoặc hóa đơn `UNPAID` có thể xác nhận sửa lại).
 
 #### 🔑 Bảng tài khoản thực hiện luồng này:
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Khách thuê mới (Kịch bản 7A)** | `seed.handover@test.local` | `Test@12345` | Đăng nhập /my-home -> Xác nhận hợp đồng bắt đầu từ hôm nay và chưa có hóa đơn. |
-| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Vào /admin/meter-readings -> Tab 'Bàn giao khách mới' (nhập mốc đầu cho A108: 2.560 / 315) -> Chuyển tab 'Chốt chỉ số tháng' nhập cho A105/A107. |
-| **Quản lý Tòa A (Kịch bản 7B)** | `seed.manager.a@test.local` | `Test@12345` | Vào /admin/finance -> Kiểm tra cảnh báo đỏ kỳ chốt và xác nhận hóa đơn tự động sinh sau khi kỹ thuật lưu chỉ số. |
+| **Khách thuê mới (Kịch bản 7A)** | `seed.handover@test.local` | `Test@12345` | Đăng nhập `/my-room` -> Xác nhận hợp đồng mới và kiểm tra chưa phát sinh hóa đơn khi vừa nhận bàn giao. |
+| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Vào `/admin/meter-readings` -> Tab `Bàn giao khách mới` (kiểm tra/sửa chỉ số random khác `0` đã điền sẵn, bấm `Lưu bàn giao` -> chuyển `Đã nhập chỉ số bàn giao`) -> Tab `Chốt chỉ số kỳ MM/YYYY` kiểm tra banner kỳ chốt, chặn tháng tương lai, sửa phòng `UNPAID` qua Confirm Modal và xác nhận phòng `PAID` bị khóa. |
+| **Quản lý Tòa A (Kịch bản 7B)** | `seed.manager.a@test.local` | `Test@12345` | Vào `/admin/finance` -> Xác nhận hóa đơn tự động sinh hoặc tự động tính lại số tiền ngay khi Kỹ thuật cập nhật chỉ số phòng có hóa đơn `UNPAID`. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 (7A) - Khách mới kiểm tra hợp đồng:** Đăng nhập khách mới seed.handover@test.local. Vào /my-home kiểm tra hợp đồng phòng A108 có hiệu lực từ ngày hôm nay. Tại mục Hóa đơn, xác nhận hoàn toàn chưa có hóa đơn nào vì phòng vừa mới nhận bàn giao.
-2. **Bước 2 (7A) - Kỹ thuật ghi mốc công tơ bàn giao:** Đăng xuất. Đăng nhập Kỹ thuật Tòa A seed.tech.a@test.local. Mở chuông thông báo thấy nhắc nhở: 'Cần ghi chỉ số điện nước bàn giao phòng A108 hôm nay'. Vào menu /admin/meter-readings, chọn tab 'Bàn giao khách mới'. Nhìn thấy phòng A108 với ngày chuyển vào là hôm nay. Nhập số công tơ thực tế: Điện 2.560 kWh, Nước 315 m³ -> Bấm 'Lưu mốc bàn giao'.
-3. **Bước 3 (7A) - Kiểm tra tính chất không sinh hóa đơn của mốc bàn giao:** Sau khi lưu, phòng A108 biến mất khỏi tab 'Bàn giao khách mới'. Vào tab 'Chốt chỉ số tháng' xác nhận không có phòng A108 ở kỳ hiện tại. Sang /admin/finance kiểm tra hoàn toàn không sinh hóa đơn cho A108. Mốc này chỉ dùng làm initialIndex để tính tiền cho kỳ tháng sau.
-4. **Bước 4 (7B) - Kỹ thuật mở tab Chốt chỉ số tháng:** Tại màn hình /admin/meter-readings, chọn tab 'Chốt chỉ số tháng'. Kỳ chốt mặc định hiển thị là tháng trước (ví dụ: tháng 10). Quan sát danh sách phòng: Phòng A104 hiển thị bình thường (đã đủ chỉ số), Phòng A105 và A107 hiển thị dòng đỏ nổi bật 'Yêu cầu nhập'.
-5. **Bước 5 (7B) - Kỹ thuật nhập chỉ số điện nước phòng A105:** Tại hàng phòng A105: Số cũ hiển thị là 1.200 kWh (điện) và 130 m³ (nước). Kỹ thuật viên nhập số mới: Điện 1.350 kWh (tiêu thụ 150 kWh), Nước 145 m³ (tiêu thụ 15 m³) -> Bấm nút 'Lưu chỉ số'. Hàng phòng A105 mất dòng đỏ cảnh báo và chuyển sang trạng thái đã ghi nhận.
-6. **Bước 6 (7B) - Kiểm tra hóa đơn tự động sinh (Zero-Click Invoice):** Đăng xuất. Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Truy cập menu 'Tài chính' (/admin/finance). Kiểm tra danh sách hóa đơn: Hóa đơn kỳ tháng trước của phòng A105 ĐÃ TỰ ĐỘNG XUẤT HIỆN với đầy đủ tiền phòng, tiền điện (150 kWh x đơn giá) và tiền nước (15 m³ x đơn giá) mà Quản lý không cần bấm nút 'Sinh hóa đơn'!
+1. **Bước 1 (7A) - Kiểm tra tự tạo đồng hồ khác `0` & thông báo bàn giao ngay khi kích hoạt HĐ:** Ngay sau khi Quản lý ký kích hoạt một hợp đồng mới (kể cả khi `startDate` là ngày mai/tương lai), hệ thống kiểm tra phòng chưa có đồng hồ thì tự tạo cặp đồng hồ Điện (`[180..2500]`) & Nước (`[18..350]`) khác `0`, đồng thời phát sự kiện `MeterReadingHandoverDue` tới Kỹ thuật viên phụ trách tòa nhà. Khách mới đăng nhập `/my-room` xác nhận hợp đồng đã có hiệu lực và chưa có hóa đơn nào.
+2. **Bước 2 (7A) - Kỹ thuật ghi mốc công tơ bàn giao (không biến mất sau khi lưu):** Đăng nhập Kỹ thuật Tòa A `seed.tech.a@test.local`. Mở chuông thông báo hoặc vào menu `/admin/meter-readings`, chọn tab **'Bàn giao khách mới'**. Nhìn thấy phòng mới cùng ngày chuyển vào (hôm nay / sau N ngày) và số đồng hồ ban đầu ngẫu nhiên khác `0` đã điền sẵn trong ô nhập. Kỹ thuật kiểm tra/chỉnh nếu cần -> Bấm **'Lưu bàn giao'**. Sau khi lưu: dòng phòng **không biến mất**, chuyển thành nhãn **'Đã nhập chỉ số bàn giao'** kèm ngày bàn giao, và bộ đếm badge trên tab tự động trừ bớt phòng vừa hoàn tất (`Bàn giao khách mới (0)`). Sang `/admin/invoices` (hoặc `/admin/finance`) xác nhận hoàn toàn không sinh hóa đơn từ mốc bàn giao.
+3. **Bước 3 (7B) - Kiểm tra kỳ mặc định Phương án A & chặn tháng tương lai:** Chuyển sang tab **'Chốt chỉ số kỳ MM/YYYY'**:
+   - Nếu hôm nay là ngày `01–27`: mặc định hiển thị **tháng trước**, kèm khung giải thích rõ *"Chỉ số kỳ MM/YYYY được nhập chính thức trong 5 ngày đầu tháng sau..."*.
+   - Nếu chuyển bộ lọc sang **tháng hiện tại**: vẫn xem và chốt bình thường; từ ngày `28` trở đi kỳ mặc định chuyển sang tháng hiện tại và scheduler `08:00` gửi nhắc nhở chốt cho phòng đang ở chưa chốt.
+   - Nếu thử chuyển bộ lọc sang **tháng tương lai**: giao diện hiển thị banner cảnh báo chặn chốt kỳ tương lai, và API `POST /api/v1/readings` trả lỗi `422 FUTURE_PERIOD_NOT_ALLOWED`.
+4. **Bước 4 (7B) - Kỹ thuật nhập chỉ số kỳ chốt cho phòng chưa có chỉ số:** Tại hàng phòng còn thiếu (ví dụ A105), số cũ lấy từ kỳ trước hoặc mốc bàn giao. Kỹ thuật nhập số Điện mới và Nước mới -> Bấm **'Lưu chỉ số'**. Hàng chuyển sang trạng thái đã ghi nhận và hóa đơn tự động sinh ngay ở `/admin/finance`.
+5. **Bước 5 (7B) - Kiểm tra khóa hóa đơn `PAID` và hộp thoại xác nhận khi sửa `UNPAID`:**
+   - Với phòng đã có hóa đơn **Đã thanh toán (`PAID`)**: dòng phòng hiển thị nhãn *Hóa đơn đã thanh toán — Không thể sửa*, các ô nhập chỉ số bị vô hiệu hóa (`disabled`) và nút Lưu bị ẩn.
+   - Với phòng đã có hóa đơn **Chưa thanh toán (`UNPAID`)**: dòng phòng hiển thị badge *Hóa đơn chưa thanh toán — Được phép sửa*. Khi Kỹ thuật đổi chỉ số và bấm Lưu -> **Hộp thoại xác nhận (Confirmation Modal)** xuất hiện cảnh báo việc cập nhật sẽ tự động tính lại hóa đơn của khách -> Bấm Xác nhận -> Chỉ số mới được lưu và hóa đơn bên Quản lý & Khách hàng (`/my-room`) tự động cập nhật thành tiền ngay lập tức.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
-- Tách biệt 100% giữa 2 tab: Tab 'Bàn giao khách mới' và Tab 'Chốt chỉ số tháng'.
-- Mốc bàn giao khách mới chỉ là chỉ số ban đầu, tuyệt đối không tính tiền và không tạo hóa đơn.
-- Tab chốt tháng có cảnh báo đỏ đối với các phòng chưa nhập chỉ số trong 5 ngày đầu tháng.
-- Hóa đơn tự động sinh ngay lập tức khi phòng được nhập đủ tất cả đồng hồ điện nước đang hoạt động.
+- Mọi phòng kích hoạt hợp đồng đều tự có đồng hồ Điện/Nước khác `0` và hiện ngay ở tab *Bàn giao khách mới*; sau khi lưu chuyển thành *Đã nhập chỉ số bàn giao* và không sinh hóa đơn.
+- Chuẩn hóa múi giờ `Asia/Ho_Chi_Minh`: ngày `01–27` mặc định kỳ tháng trước, ngày `28+` mặc định kỳ tháng hiện tại + nhắc chốt `08:00`; cho phép nhập tháng hiện tại/tháng trước, chặn `422` tháng tương lai.
+- Tự động phân quyền sửa theo trạng thái thanh toán hóa đơn: `PAID` khóa sửa 100% (cả UI lẫn Backend `422`), `UNPAID` có Confirm Modal và tự động tính lại hóa đơn khách.
 
 #### 📸 Khung dành cho thành viên nhóm dán ảnh minh chứng:
 
 > **[KHUNG DÀNH CHO BẠN CHỤP VÀ DÁN ẢNH MINH CHỨNG VÀO ĐÂY]**
-> - `[Ảnh 7.1]`: *Tab 'Bàn giao khách mới' hiển thị phòng A108 chuyển vào hôm nay.*
-> - `[Ảnh 7.2]`: *Kỹ thuật nhập và lưu chỉ số bàn giao đầu tiên phòng A108.*
-> - `[Ảnh 7.3]`: *Tab 'Chốt chỉ số tháng' hiển thị A104 đủ chỉ số, A105/A107 có dòng đỏ 'Yêu cầu nhập'.*
-> - `[Ảnh 7.4]`: *Kỹ thuật nhập và lưu số công tơ điện nước mới cho phòng A105.*
-> - `[Ảnh 7.5]`: *Màn hình Tài chính Quản lý hiển thị hóa đơn A105 tự động sinh mà không cần bấm phát hành.*
+> - `[Ảnh 7.1]`: *Tab 'Bàn giao khách mới' hiển thị phòng mới kích hoạt (kể cả ngày dọn vào tương lai) với chỉ số đồng hồ ngẫu nhiên khác 0.*
+> - `[Ảnh 7.2]`: *Sau khi bấm Lưu bàn giao, dòng phòng chuyển nhãn 'Đã nhập chỉ số bàn giao' (không biến mất) và badge tab về (0).*
+> - `[Ảnh 7.3]`: *Tab 'Chốt chỉ số kỳ MM/YYYY' hiển thị thông báo rõ thời gian chốt kỳ tháng trước, cho phép tháng hiện tại và chặn tháng tương lai.*
+> - `[Ảnh 7.4]`: *Hộp thoại xác nhận (Confirm Modal) khi Kỹ thuật sửa chỉ số phòng có hóa đơn UNPAID và dòng phòng PAID bị khóa nút Lưu.*
+> - `[Ảnh 7.5]`: *Hóa đơn bên Quản lý (/admin/finance) và Khách (/my-room) tự động cập nhật ngay theo chỉ số mới.*
 
 ---
 
 ### LUỒNG 8: QUY TRÌNH PHÁT HÀNH HÓA ĐƠN & THANH TOÁN: CỔNG VNPAY SANDBOX THẬT & VIETQR / TIỀN MẶT
 
-**🎯 Mục tiêu kiểm thử:** Khách thuê thanh toán hóa đơn trực tuyến thông qua cổng thanh toán VNPay Sandbox thật (sử dụng thẻ test ngân hàng NCB, mã hóa HMAC-SHA512 an toàn, xác thực OTP, webhook IPN gạch nợ tự động chuyển hóa đơn sang PAID). Đồng thời kiểm tra song song kênh thanh toán quét mã VietQR và Quản lý ghi nhận thu tiền mặt tại quầy.
+**🎯 Mục tiêu kiểm thử:** Khách thuê thanh toán hóa đơn trực tuyến thông qua cổng thanh toán VNPay Sandbox thật (sử dụng thẻ test ngân hàng NCB, mã hóa HMAC-SHA512 an toàn, xác thực OTP; Frontend nhận kết quả từ VNPay rồi gọi Backend xác thực chữ ký và gạch nợ hóa đơn sang PAID). Đồng thời kiểm tra song song kênh thanh toán quét mã VietQR và Quản lý ghi nhận thu tiền mặt tại quầy.
 
 **🏢 Dữ liệu / Tiền điều kiện:** Hóa đơn phòng A104 (seed.active@test.local) chưa thanh toán. Cổng thanh toán VNPay Sandbox với thẻ test NCB chuẩn.
 
@@ -382,13 +389,13 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Khách thuê thanh toán VNPay** | `seed.active@test.local` | `Test@12345` | Vào /my-home -> Mở hóa đơn phòng A104 -> Bấm 'Thanh toán VNPay Sandbox' -> Nhập thẻ test NCB -> Nhập OTP -> Kiểm tra kết quả PAID. |
-| **Khách thuê có hóa đơn quá hạn** | `seed.terminate@test.local` | `Test@12345` | Vào /my-home -> Kiểm tra hóa đơn phòng A107 hiển thị badge màu đỏ 'Quá hạn' (OVERDUE) và chuông nhắc nợ. |
+| **Khách thuê thanh toán VNPay** | `seed.active@test.local` | `Test@12345` | Vào /my-room -> Mở hóa đơn phòng A104 -> Bấm 'Thanh toán VNPay Sandbox' -> Nhập thẻ test NCB -> Nhập OTP -> Kiểm tra kết quả PAID. |
+| **Khách thuê có hóa đơn quá hạn** | `seed.terminate@test.local` | `Test@12345` | Vào /my-room -> Kiểm tra hóa đơn phòng A107 hiển thị badge màu đỏ 'Quá hạn' (OVERDUE) và chuông nhắc nợ. |
 | **Quản lý Tòa A** | `seed.manager.a@test.local` | `Test@12345` | Vào /admin/finance -> Theo dõi danh sách hóa đơn 4 trạng thái màu sắc -> Bấm 'Ghi nhận thu tiền mặt' cho khách đóng trực tiếp. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Khách mở hóa đơn và chọn thanh toán VNPay Sandbox:** Đăng nhập khách thuê seed.active@test.local (phòng A104). Vào menu 'Trang chủ của tôi' (/my-home), kéo xuống mục Hóa đơn tháng. Mở chi tiết hóa đơn chưa thanh toán. Nhận diện nút 'Thanh toán VNPay' (màu xanh dương có logo VNPay). Bấm vào nút này.
+1. **Bước 1 - Khách mở hóa đơn và chọn thanh toán VNPay Sandbox:** Đăng nhập khách thuê seed.active@test.local (phòng A104). Vào menu 'Trang chủ của tôi' (/my-room), kéo xuống mục Hóa đơn tháng. Mở chi tiết hóa đơn chưa thanh toán. Nhận diện nút 'Thanh toán VNPay' (màu xanh dương có logo VNPay). Bấm vào nút này.
 2. **Bước 2 - Chuyển hướng sang cổng thanh toán VNPay Sandbox:** Hệ thống tự động sinh mã tham chiếu giao dịch vnp_TxnRef duy nhất, ký mã hóa HMAC-SHA512 an toàn và điều hướng người dùng sang trang thanh toán chính thức của VNPay Sandbox (đường dẫn https://sandbox.vnpayment.vn/paymentv2/vpcpay.html).
 3. **Bước 3 - Chọn phương thức thẻ NCB và điền thông tin thẻ test:** Tại màn hình VNPay Sandbox: Chọn mục 'Thẻ nội địa và tài khoản ngân hàng' -> Chọn ngân hàng 'NCB'. Nhập chính xác thông tin thẻ test quy chuẩn:
 - Số thẻ: 9704198526191432198
@@ -396,13 +403,13 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 - Ngày phát hành: 07/15
 -> Bấm nút 'Tiếp tục'.
 4. **Bước 4 - Xác thực mã OTP và hoàn tất thanh toán:** Màn hình chuyển sang bước xác thực OTP. Nhập mã OTP mặc định của Sandbox: 123456 -> Bấm 'Thanh toán'. Cổng VNPay xử lý thành công giao dịch (mã kết quả vnp_ResponseCode = 00).
-5. **Bước 5 - Kiểm tra trang kết quả Return URL và hóa đơn tự động PAID:** Cổng VNPay tự động chuyển hướng khách hàng quay trở lại hệ thống tại đường dẫn /payment/vnpay-return. Màn hình hiển thị thông báo chúc mừng 'Thanh toán hóa đơn thành công qua VNPay' kèm mã giao dịch, số tiền và thời gian. Quay lại /my-home, kiểm tra hóa đơn phòng A104 ĐÃ TỰ ĐỘNG CHUYỂN SANG TRẠNG THÁI 'ĐÃ THU' (PAID) màu xanh lá cây.
+5. **Bước 5 - Kiểm tra trang kết quả Return URL và hóa đơn tự động PAID:** Cổng VNPay tự động chuyển hướng khách hàng quay trở lại hệ thống tại đường dẫn /payment/vnpay-return. Trang này gửi toàn bộ query params về Backend để xác thực chữ ký HMAC-SHA512 và cập nhật hóa đơn. Màn hình hiển thị thông báo chúc mừng 'Thanh toán hóa đơn thành công qua VNPay' kèm mã giao dịch, số tiền và thời gian. Quay lại trang Phòng của tôi, kiểm tra hóa đơn phòng A104 ĐÃ TỰ ĐỘNG CHUYỂN SANG TRẠNG THÁI 'ĐÃ THU' (PAID) màu xanh lá cây.
 6. **Bước 6 - Quản lý theo dõi bảng hóa đơn 4 màu và thu tiền mặt tại quầy:** Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Vào menu /admin/finance. Quan sát danh sách hóa đơn với 4 trạng thái màu sắc trực quan: Chưa thu (Vàng), Thu một phần (Xanh dương), Đã thu (Xanh lá - bao gồm hóa đơn A104 vừa trả qua VNPay), Quá hạn (Đỏ san hô). Đối với khách đóng tiền mặt tại văn phòng, Quản lý bấm nút 'Ghi nhận thu tiền mặt' -> Nhập số tiền -> Hóa đơn được gạch nợ thành PAID ngay lập tức.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
 - Tích hợp cổng thanh toán VNPay Sandbox thật hoạt động ổn định và chính xác.
-- Cơ chế mã hóa bảo mật HMAC-SHA512 và IPN webhook gạch nợ tự động chuẩn xác.
+- Cơ chế mã hóa bảo mật HMAC-SHA512; Frontend gửi kết quả về Backend để xác thực và cập nhật hóa đơn (idempotent). IPN webhook chỉ dùng khi deploy có URL public.
 - Bảo đảm tính idempotent: Ngăn chặn thanh toán lặp 2 lần cho cùng một hóa đơn.
 - Giao diện phân định rõ ràng 4 trạng thái màu sắc hóa đơn và hỗ trợ song song thu tiền mặt.
 
@@ -433,17 +440,17 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Kiểm tra Dashboard quản trị hợp nhất:** Đăng nhập seed.admin@test.local. Truy cập trang chủ quản trị (/admin). Kiểm tra các chỉ số tổng quan: Tổng số tòa nhà (4 tòa), tổng số phòng, tỷ lệ lấp đầy phòng, doanh thu tháng và biểu đồ phân bổ công nợ toàn hệ thống.
-2. **Bước 2 - Quản lý danh mục tòa nhà và chủ nhà pháp lý:** Vào menu 'Tòa nhà' (/admin/buildings). Xem danh sách đầy đủ 4 tòa nhà: Seed House A, Seed House B, Mộc Residence, Lam Garden. Bấm 'Sửa' kiểm tra thông tin pháp lý của từng Chủ nhà (Bên A): Họ tên, số điện thoại, số CCCD và địa chỉ thường trú đã được cập nhật chuẩn xác.
+1. **Bước 1 - Kiểm tra Dashboard quản trị hợp nhất:** Đăng nhập seed.admin@test.local. Truy cập trang chủ quản trị (/admin). Kiểm tra các chỉ số tổng quan: Tổng số tòa nhà (2 tòa), tổng số phòng, tỷ lệ lấp đầy phòng, doanh thu tháng và biểu đồ phân bổ công nợ toàn hệ thống.
+2. **Bước 2 - Quản lý danh mục tòa nhà và chủ nhà pháp lý:** Vào menu 'Tòa nhà' (/admin/buildings). Xem danh sách đầy đủ 2 tòa nhà: Seed House A, Seed House B. Bấm 'Sửa' kiểm tra thông tin pháp lý của từng Chủ nhà (Bên A): Họ tên, số điện thoại, số CCCD và địa chỉ thường trú đã được cập nhật chuẩn xác.
 3. **Bước 3 - Quản lý danh mục phòng toàn hệ thống:** Vào menu 'Phòng' (/admin/rooms). Xem danh sách phòng của toàn bộ chuỗi trọ. Thử nghiệm bộ lọc: Lọc theo tòa nhà, lọc theo tầng, lọc theo trạng thái (Trống, Đang thuê, Chờ dọn vào, Đang sửa chữa).
 4. **Bước 4 - Quản lý nhân sự và phân bổ tòa nhà phụ trách:** Vào menu 'Nhân sự' (/admin/staff). Xem danh sách tất cả nhân viên (Quản lý tòa, Nhân viên Sale, Kỹ thuật viên). Kiểm tra thông tin chức vụ, email, số điện thoại và tòa nhà được gán phụ trách. Nhận diện nút 'Nhắn tin' cạnh mỗi nhân viên để kết nối nhanh.
 5. **Bước 5 - Báo cáo tài chính & Doanh thu chuỗi:** Vào menu 'Tài chính' (/admin/finance). Xem báo cáo tổng hợp doanh thu tiền phòng, tiền điện, tiền nước và các khoản phụ thu của tất cả các tòa. Kiểm tra bộ lọc theo kỳ chốt và trạng thái thu.
-6. **Bước 6 - Quản lý tài sản & Bảng giá dịch vụ niêm yết:** Vào menu 'Tài sản' (/admin/assets) xem kiểm kê thiết bị trang bị theo phòng. Vào menu 'Bảng giá dịch vụ' (/admin/service-rates) kiểm tra đơn giá điện/kWh, nước/m3, internet và phí dịch vụ niêm yết của hệ thống.
+6. **Bước 6 - Kiểm kê thiết bị & Bảng giá dịch vụ niêm yết:** Vào menu 'Bảo trì' (/admin/maintenance) để xem danh sách thiết bị và báo cáo hỏng theo từng phòng. Vào menu 'Hóa đơn' (/admin/invoices), bấm nút 'Bảng giá dịch vụ' để kiểm tra đơn giá điện/kWh, nước/m3, internet và phí dịch vụ niêm yết của hệ thống.
 
 #### ✅ Kết quả mong đợi (Expected Results):
 
 - Admin có quyền xem và thao tác trên dữ liệu của tất cả các tòa nhà không bị giới hạn.
-- Thông tin Chủ nhà Bên A của 4 tòa hiển thị đầy đủ, không bị rỗng.
+- Thông tin Chủ nhà Bên A của 2 tòa hiển thị đầy đủ, không bị rỗng.
 - Tất cả các menu quản trị hoạt động mượt mà, phân quyền chính xác.
 
 #### 📸 Khung dành cho thành viên nhóm dán ảnh minh chứng:
@@ -542,13 +549,13 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Đăng nhập -> Vào /admin/tech-tasks xử lý sự cố -> Vào /admin/meter-readings ghi chỉ số -> Vào /admin/staff nhắn tin với đồng nghiệp. |
+| **Kỹ thuật viên Tòa A** | `seed.tech.a@test.local` | `Test@12345` | Đăng nhập -> Vào /admin/my-tasks xử lý sự cố -> Vào /admin/meter-readings ghi chỉ số -> Vào /admin/staff nhắn tin với đồng nghiệp. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Tiếp nhận và xử lý tác vụ bảo trì:** Đăng nhập seed.tech.a@test.local. Truy cập menu 'Tác vụ kỹ thuật' (/admin/tech-tasks). Xem danh sách các công việc sửa chữa được Quản lý phân công. Bấm xem chi tiết ảnh chụp và mô tả hư hỏng -> Bấm 'Bắt đầu xử lý' (IN_PROGRESS).
+1. **Bước 1 - Tiếp nhận và xử lý tác vụ bảo trì:** Đăng nhập seed.tech.a@test.local. Truy cập menu 'Tác vụ kỹ thuật' (/admin/my-tasks). Xem danh sách các công việc sửa chữa được Quản lý phân công. Bấm xem chi tiết ảnh chụp và mô tả hư hỏng -> Bấm 'Bắt đầu xử lý' (IN_PROGRESS).
 2. **Bước 2 - Hoàn tất tác vụ và ghi nhận chi phí vật tư:** Sau khi khắc phục xong sự cố tại phòng, bấm nút 'Hoàn tất xử lý' -> Nhập giải pháp sửa chữa và số tiền linh kiện vật tư thay thế -> Bấm 'Xác nhận hoàn tất' (COMPLETED).
-3. **Bước 3 - Ghi chỉ số công tơ điện nước:** Vào menu 'Ghi chỉ số điện nước' (/admin/meter-readings). Thực hiện ghi mốc bàn giao phòng khách mới ở tab 'Bàn giao khách mới' hoặc ghi chỉ số tiêu thụ tháng ở tab 'Chốt chỉ số tháng'.
+3. **Bước 3 - Ghi chỉ số công tơ điện nước:** Vào menu 'Ghi chỉ số điện nước' (`/admin/meter-readings`). Thực hiện ghi mốc bàn giao phòng khách mới (đồng hồ tự động khởi tạo khác `0`) ở tab **'Bàn giao khách mới'** -> dòng chuyển thành **'Đã nhập chỉ số bàn giao'**; hoặc ghi/sửa chỉ số tiêu thụ theo Phương án A ở tab **'Chốt chỉ số kỳ MM/YYYY'** (mặc định kỳ tháng trước vào ngày 01–27, chuyển sang kỳ hiện tại từ ngày 28+, khóa sửa hóa đơn `PAID` và có Confirm Modal khi sửa hóa đơn `UNPAID`).
 4. **Bước 4 - Truy cập danh sách Nhân sự và nhắn tin nội bộ:** Vào menu 'Nhân sự' (/admin/staff) (Kỹ thuật đã được mở quyền truy cập menu này). Xem danh sách nhân viên tòa nhà, bấm nút 'Nhắn tin' cạnh Quản lý hoặc Sale để trao đổi về tình trạng vật tư kỹ thuật.
 
 #### ✅ Kết quả mong đợi (Expected Results):
@@ -577,11 +584,11 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 | Vai Trò (Role) | Tài Khoản (Username) | Mật Khẩu | Hành Động Cụ Thể Trong Luồng |
 | :--- | :--- | :--- | :--- |
-| **Khách thuê đang ở (Chủ phòng)** | `seed.active@test.local` | `Test@12345` | Đăng nhập /my-home -> Kiểm tra thông tin phòng A104, hợp đồng điện tử, hóa đơn tháng, phiếu sửa chữa, bài đăng ở ghép, chuông thông báo. |
+| **Khách thuê đang ở (Chủ phòng)** | `seed.active@test.local` | `Test@12345` | Đăng nhập /my-room -> Kiểm tra thông tin phòng A104, hợp đồng điện tử, hóa đơn tháng, phiếu sửa chữa, bài đăng ở ghép, chuông thông báo. |
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Bước 1 - Kiểm tra trang chủ cư dân (/my-home):** Đăng nhập seed.active@test.local. Màn hình tự động điều hướng đến /my-home. Quan sát tổng quan thông tin phòng A104: Tòa nhà Seed House A, giá thuê, chu kỳ thanh toán, ngày bắt đầu hợp đồng và danh sách các thành viên đang ở chung.
+1. **Bước 1 - Kiểm tra trang chủ cư dân (/my-room):** Đăng nhập seed.active@test.local. Màn hình tự động điều hướng đến /my-room. Quan sát tổng quan thông tin phòng A104: Tòa nhà Seed House A, giá thuê, chu kỳ thanh toán, ngày bắt đầu hợp đồng và danh sách các thành viên đang ở chung.
 2. **Bước 2 - Tra cứu hợp đồng điện tử pháp lý:** Tại mục 'Hợp đồng thuê', bấm nút 'Xem chi tiết hợp đồng'. Kiểm tra nội dung hợp đồng: Thời hạn 12 tháng, thông tin Bên A Chủ nhà Nguyễn Văn An, Bên B khách thuê, số tiền cọc. Bấm nút 'Tải PDF hợp đồng' -> File PDF hiển thị đầy đủ chữ ký vẽ tay của cả hai bên.
 3. **Bước 3 - Quản lý hóa đơn và thanh toán trực tuyến:** Tại mục 'Hóa đơn & Chi phí', xem danh sách các kỳ hóa đơn. Xem chi tiết từng khoản mục: Tiền phòng, tiền điện (chỉ số cũ, chỉ số mới, số tiêu thụ), tiền nước, internet. Khách có thể bấm nút thanh toán trực tuyến qua VNPay Sandbox hoặc quét VietQR.
 4. **Bước 4 - Theo dõi yêu cầu bảo trì và bài đăng ở ghép:** Kiểm tra danh sách các phiếu báo hỏng đã gửi và kết quả nghiệm thu của thợ. Kiểm tra bài đăng tìm bạn ở ghép và danh sách hồ sơ ứng viên nộp vào phòng.
@@ -596,7 +603,7 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 #### 📸 Khung dành cho thành viên nhóm dán ảnh minh chứng:
 
 > **[KHUNG DÀNH CHO BẠN CHỤP VÀ DÁN ẢNH MINH CHỨNG VÀO ĐÂY]**
-> - `[Ảnh 13.1]`: *Bảng tổng quan phòng đang ở (/my-home) của cư dân.*
+> - `[Ảnh 13.1]`: *Bảng tổng quan phòng đang ở (/my-room) của cư dân.*
 > - `[Ảnh 13.2]`: *Chi tiết hợp đồng thuê điện tử và xem file PDF có 2 chữ ký.*
 > - `[Ảnh 13.3]`: *Danh sách hóa đơn tiền nhà và các tùy chọn thanh toán trực tuyến.*
 > - `[Ảnh 13.4]`: *Lịch sử các phiếu yêu cầu sửa chữa bảo trì của phòng.*
@@ -622,13 +629,13 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 
 #### 📋 Các bước thực hiện bằng lời chi tiết:
 
-1. **Ca 1 - Chặn người ở ghép gửi yêu cầu trả phòng:** Đăng nhập tài khoản bạn cùng phòng seed.mate@test.local (ở ghép tại phòng A104). Vào /my-home -> Thử tìm hoặc bấm nút 'Yêu cầu trả phòng'. Hệ thống hiển thị thông báo lỗi hoặc vô hiệu hóa nút: 'Chỉ người đại diện hợp đồng mới có quyền gửi yêu cầu trả phòng'.
-2. **Ca 2 - Route Guard chặn khách hàng truy cập trái phép trang quản trị:** Đăng nhập tài khoản khách hàng thông thường seed.new@test.local. Trên thanh địa chỉ URL của trình duyệt, gõ trực tiếp đường dẫn quản trị: https://.../admin/finance hoặc /admin/staff rồi nhấn Enter. Hệ thống tự động chặn lại thông qua Route Guard và chuyển hướng người dùng về trang chủ kèm thông báo không có quyền truy cập.
+1. **Ca 1 - Chặn người ở ghép gửi yêu cầu trả phòng:** Đăng nhập tài khoản bạn cùng phòng seed.mate@test.local (ở ghép tại phòng B201). Vào /my-room -> Thử tìm hoặc bấm nút 'Yêu cầu trả phòng'. Hệ thống hiển thị thông báo lỗi hoặc vô hiệu hóa nút: 'Chỉ người đại diện hợp đồng mới có quyền gửi yêu cầu trả phòng'.
+2. **Ca 2 - Route Guard chặn khách hàng truy cập trái phép trang quản trị:** Đăng nhập tài khoản khách hàng thông thường seed.new@test.local. Trên thanh địa chỉ URL của trình duyệt, gõ trực tiếp đường dẫn quản trị: http://localhost:8443/admin/invoices hoặc /admin/staff rồi nhấn Enter. Hệ thống tự động chặn lại thông qua Route Guard và chuyển hướng người dùng về trang chủ kèm thông báo không có quyền truy cập.
 3. **Ca 3 - Chặn nhân viên Sale phê duyệt hợp đồng:** Đăng nhập nhân viên Sale seed.sale.a@test.local. Truy cập danh sách hợp đồng hoặc Leads. Xác nhận trên giao diện hoàn toàn không có nút 'Duyệt hợp đồng' (chỉ có nút Xác minh hồ sơ CCCD). Nếu cố tình gửi request POST duyệt hợp đồng qua API, Backend trả về mã lỗi 403 Forbidden.
 4. **Ca 4 - Chặn nộp hồ sơ người thuê dưới 18 tuổi hoặc sai định dạng CCCD:** Khách hàng mở form nộp hồ sơ thuê phòng:
 - Trường hợp 1: Nhập ngày sinh tính đến hiện tại chưa đủ 18 tuổi -> Hệ thống hiển thị thông báo lỗi màu đỏ cạnh ô nhập: 'Người thuê phòng phải đủ từ 18 tuổi trở lên' và khóa nút Tiếp tục.
 - Trường hợp 2: Nhập số CCCD chỉ có 9 số hoặc chứa chữ cái -> Hệ thống báo lỗi: 'Số CCCD phải bao gồm đúng 12 chữ số'.
-5. **Ca 5 - Cô lập dữ liệu theo tòa nhà (BuildingScope Isolation):** Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Vào danh mục phòng (/admin/rooms), hợp đồng (/admin/contracts) và bảo trì (/admin/maintenance). Kiểm tra danh sách hiển thị: Tất cả các dòng dữ liệu 100% đều thuộc Tòa Seed House A, tuyệt đối KHÔNG xuất hiện bất kỳ phòng hay hợp đồng nào của Tòa B (B202, B204, B205...) hay Mộc Studio.
+5. **Ca 5 - Cô lập dữ liệu theo tòa nhà (BuildingScope Isolation):** Đăng nhập Quản lý Tòa A seed.manager.a@test.local. Vào danh mục phòng (/admin/rooms), hợp đồng (/admin/contracts) và bảo trì (/admin/maintenance). Kiểm tra danh sách hiển thị: Tất cả các dòng dữ liệu 100% đều thuộc Tòa Seed House A, tuyệt đối KHÔNG xuất hiện bất kỳ phòng hay hợp đồng nào của Tòa B (B201, B202, B204, B205...).
 
 #### ✅ Kết quả mong đợi (Expected Results):
 

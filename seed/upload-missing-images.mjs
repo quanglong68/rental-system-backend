@@ -8,9 +8,13 @@ const BASE = 'http://localhost:8080';
 const USERNAME = 'seed.admin@test.local';
 const PASSWORD = 'Test@12345';
 const reportPath = path.join(__dirname, 'missing-images-report.json');
-const picturesDir = fs.existsSync(path.join(repoRoot, 'pictures'))
-  ? path.join(repoRoot, 'pictures')
-  : path.join(path.dirname(repoRoot), 'pictures');
+const candidateDirs = [
+  path.join(repoRoot, 'pictures'),
+  path.join(repoRoot, 'rental-system-backend', 'pictures'),
+  path.join(path.dirname(repoRoot), 'pictures'),
+  path.join(path.dirname(repoRoot), 'rental-system-backend', 'pictures'),
+];
+const picturesDir = candidateDirs.find((d) => fs.existsSync(d) && fs.existsSync(path.join(d, 'studios'))) ?? path.join(repoRoot, 'pictures');
 const studiosDir = path.join(picturesDir, 'studios');
 
 const allFiles = fs.readdirSync(picturesDir)
@@ -31,20 +35,49 @@ function mimeFor(file) {
   return 'image/jpeg';
 }
 
+const RETRY_STATUSES = new Set([502, 503, 504]);
+
+async function fetchWithRetry(url, makeOptions, label, maxAttempts = 12) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const res = await fetch(url, makeOptions());
+      if (RETRY_STATUSES.has(res.status) && attempt < maxAttempts) {
+        console.log(`[retry ${attempt}/${maxAttempts}] ${label} -> HTTP ${res.status}, chờ Gateway/Eureka...`);
+        await new Promise((r) => setTimeout(r, 2500));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (attempt < maxAttempts) {
+        console.log(`[retry ${attempt}/${maxAttempts}] ${label} -> ${err.message}, thử lại sau 2.5s...`);
+        await new Promise((r) => setTimeout(r, 2500));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 async function login() {
-  const res = await fetch(`${BASE}/api/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
-  });
+  const res = await fetchWithRetry(
+    `${BASE}/api/v1/auth/login`,
+    () => ({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
+    }),
+    'login',
+  );
   if (!res.ok) throw new Error(`Login thất bại: ${res.status} ${await res.text()}`);
   return (await res.json()).accessToken;
 }
 
 async function listImages(token, kind, ownerId) {
-  const res = await fetch(`${BASE}/api/v1/images/${kind}/${ownerId}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  const res = await fetchWithRetry(
+    `${BASE}/api/v1/images/${kind}/${ownerId}`,
+    () => ({ headers: token ? { Authorization: `Bearer ${token}` } : {} }),
+    `GET ${kind}/${ownerId}`,
+  );
   if (!res.ok) throw new Error(`GET ${kind} ${ownerId} -> ${res.status}`);
   const body = await res.json();
   return Array.isArray(body) ? body : [];
@@ -52,21 +85,25 @@ async function listImages(token, kind, ownerId) {
 
 async function uploadImage(token, kind, ownerId, relFile) {
   const buf = fs.readFileSync(path.join(picturesDir, relFile));
-  const form = new FormData();
-  form.append('file', new Blob([buf], { type: mimeFor(relFile) }), path.basename(relFile));
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const res = await fetch(`${BASE}/api/v1/images/${kind}/${ownerId}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
-    });
-    if (res.ok) return res.json();
-    if ([502, 503, 504].includes(res.status) && attempt < 3) {
-      await new Promise((r) => setTimeout(r, 1000));
-      continue;
-    }
+  const mime = mimeFor(relFile);
+  const fileName = path.basename(relFile);
+  const res = await fetchWithRetry(
+    `${BASE}/api/v1/images/${kind}/${ownerId}`,
+    () => {
+      const form = new FormData();
+      form.append('file', new Blob([buf], { type: mime }), fileName);
+      return {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      };
+    },
+    `POST ${kind}/${ownerId} (${fileName})`,
+  );
+  if (!res.ok) {
     throw new Error(`${kind}/${ownerId} ${relFile} -> ${res.status} ${await res.text()}`);
   }
+  return res.json();
 }
 
 function pick(pool, offset, count) {
@@ -94,7 +131,11 @@ async function fill(token, kind, ownerId, pool, offset, report, key) {
 async function main() {
   const token = await login();
   const headers = { Authorization: `Bearer ${token}` };
-  const buildingsRes = await fetch(`${BASE}/api/v1/buildings/search?page=0&size=100`, { headers });
+  const buildingsRes = await fetchWithRetry(
+    `${BASE}/api/v1/buildings/search?page=0&size=100`,
+    () => ({ headers }),
+    'GET buildings',
+  );
   if (!buildingsRes.ok) throw new Error(`GET buildings -> ${buildingsRes.status}`);
   const buildings = (await buildingsRes.json()).content ?? [];
   const report = fs.existsSync(reportPath) ? JSON.parse(fs.readFileSync(reportPath, 'utf8')) : {};
@@ -118,7 +159,11 @@ async function main() {
 
   let roomOffset = 0;
   for (const building of buildings) {
-    const roomsRes = await fetch(`${BASE}/api/v1/rooms?buildingId=${building.buildingId}&page=0&size=100`, { headers });
+    const roomsRes = await fetchWithRetry(
+      `${BASE}/api/v1/rooms?buildingId=${building.buildingId}&page=0&size=100`,
+      () => ({ headers }),
+      `GET rooms building=${building.buildingId}`,
+    );
     if (!roomsRes.ok) {
       failures.push({ building: building.name, error: `GET rooms -> ${roomsRes.status}` });
       continue;
@@ -138,28 +183,51 @@ async function main() {
     }
   }
 
-  // Kiểm tra công khai (không token) cho mọi tòa/phòng
+  // Kiểm tra công khai (không token) cho mọi tòa/phòng + xác minh URL MinIO trả HTTP 200
   const verify = [];
+  let checkedUrls = 0;
   for (const building of buildings) {
     const bImages = await listImages(null, 'buildings', building.buildingId);
-    const roomRes = await fetch(`${BASE}/api/v1/rooms?buildingId=${building.buildingId}&page=0&size=100`, { headers });
+    const roomRes = await fetchWithRetry(
+      `${BASE}/api/v1/rooms?buildingId=${building.buildingId}&page=0&size=100`,
+      () => ({ headers }),
+      `verify GET rooms building=${building.buildingId}`,
+    );
     const rooms = roomRes.ok ? (await roomRes.json()).content ?? [] : [];
     const roomChecks = [];
     for (const room of rooms) {
       const images = await listImages(null, 'rooms', room.id);
       roomChecks.push({ roomCode: room.roomCode, count: images.length });
       if (images.length < 3) failures.push({ room: `${building.name}/${room.roomCode}`, error: `chỉ có ${images.length} ảnh` });
+      for (const img of images) {
+        if (img.imageUrl && img.imageUrl.startsWith('http://localhost:')) {
+          const check = await fetchWithRetry(img.imageUrl, () => ({ method: 'HEAD' }), `HEAD ${img.imageUrl}`, 3);
+          checkedUrls += 1;
+          if (!check.ok) failures.push({ url: img.imageUrl, error: `HTTP ${check.status}` });
+        }
+      }
     }
     verify.push({ building: building.name, buildingImages: bImages.length, rooms: roomChecks });
     if (bImages.length < 3) failures.push({ building: building.name, error: `chỉ có ${bImages.length} ảnh` });
+    for (const img of bImages) {
+      if (img.imageUrl && img.imageUrl.startsWith('http://localhost:')) {
+        const check = await fetchWithRetry(img.imageUrl, () => ({ method: 'HEAD' }), `HEAD ${img.imageUrl}`, 3);
+        checkedUrls += 1;
+        if (!check.ok) failures.push({ url: img.imageUrl, error: `HTTP ${check.status}` });
+      }
+    }
   }
 
   const anonRoom = verify.flatMap((b) => b.rooms).find((r) => r.count > 0);
-  fs.writeFileSync(reportPath, JSON.stringify({ generatedAt: new Date().toISOString(), uploaded, skipped, failures, report, verify }, null, 2), 'utf8');
-  console.log(`\nUpload thêm ${uploaded} ảnh, bỏ qua ${skipped} chỗ đã đủ, lỗi ${failures.length}`);
+  fs.writeFileSync(reportPath, JSON.stringify({ generatedAt: new Date().toISOString(), uploaded, skipped, checkedUrls, failures, report, verify }, null, 2), 'utf8');
+  console.log(`\nUpload thêm ${uploaded} ảnh, bỏ qua ${skipped} chỗ đã đủ, kiểm tra ${checkedUrls} URL ảnh, lỗi ${failures.length}`);
   console.log(`Tòa đủ 3 ảnh: ${verify.filter((b) => b.buildingImages >= 3).length}/${verify.length}`);
   console.log(`Phòng đủ 3 ảnh: ${verify.flatMap((b) => b.rooms).filter((r) => r.count >= 3).length}/${verify.flatMap((b) => b.rooms).length}`);
   if (anonRoom) console.log(`Mẫu phòng: ${anonRoom.roomCode} = ${anonRoom.count} ảnh`);
+  if (failures.length > 0) {
+    console.error('CÓ LỖI UPLOAD/KIỂM TRA ẢNH:', JSON.stringify(failures.slice(0, 10), null, 2));
+    process.exitCode = 1;
+  }
 }
 
 main().catch((e) => {

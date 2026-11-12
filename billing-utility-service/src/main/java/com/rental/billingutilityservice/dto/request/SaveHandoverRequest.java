@@ -13,6 +13,8 @@ import java.util.List;
 @Data
 public class SaveHandoverRequest {
 
+    private Long contractId;
+
     @NotNull
     private Long roomId;
 

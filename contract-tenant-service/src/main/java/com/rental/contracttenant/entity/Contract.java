@@ -58,6 +58,18 @@ public class Contract {
     @Column(name = "deposit_amount", precision = 15, scale = 0)
     private BigDecimal depositAmount;
 
+    @Column(name = "deposit_paid", nullable = false)
+    private boolean depositPaid = false;
+
+    @Column(name = "deposit_paid_at")
+    private Instant depositPaidAt;
+
+    @Column(name = "deposit_payment_method", length = 30)
+    private String depositPaymentMethod;
+
+    @Column(name = "deposit_txn_ref", length = 100)
+    private String depositTxnRef;
+
     @Column(name = "termination_reason", length = 1000)
     private String terminationReason;
 

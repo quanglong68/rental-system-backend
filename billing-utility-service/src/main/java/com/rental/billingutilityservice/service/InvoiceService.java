@@ -12,6 +12,7 @@ import com.rental.billingutilityservice.enums.InvoiceStatus;
 import com.rental.billingutilityservice.outbox.BillingEventPublisher;
 import com.rental.billingutilityservice.repository.InvoiceItemRepository;
 import com.rental.billingutilityservice.repository.InvoiceRepository;
+import com.rental.billingutilityservice.repository.MeterHandoverRepository;
 import com.rental.billingutilityservice.repository.MeterReadingRepository;
 import com.rental.billingutilityservice.repository.MeterRepository;
 import com.rental.billingutilityservice.repository.OutboxEventRepository;
@@ -30,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,7 @@ import java.util.List;
 public class InvoiceService {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceService.class);
+    private static final ZoneId VN = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final ContractClient contractClient;
     private final InvoiceGenerator generator;
@@ -53,12 +55,13 @@ public class InvoiceService {
     private final BillingEventPublisher events;
     private final MeterRepository meters;
     private final MeterReadingRepository readings;
+    private final MeterHandoverRepository meterHandovers;
     private final OutboxEventRepository outbox;
     private final AuthSupport auth;
 
     public GenerateInvoiceResult generate(int month, int year, Long buildingId) {
         YearMonth target = YearMonth.of(year, month);
-        if (target.isAfter(YearMonth.now(ZoneOffset.UTC))) {
+        if (target.isAfter(YearMonth.now(VN))) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Không chốt sổ cho tháng tương lai");
         }
         // Staff chi chot so cho toa minh phu trach; ADMIN va scheduler (khong co SecurityContext) chay tat ca.
@@ -99,23 +102,40 @@ public class InvoiceService {
     }
 
     /**
-     * Nhắc kỹ thuật nhập chỉ số chốt tháng trước mỗi ngày trong 5 ngày đầu tháng. Gom theo tòa
-     * để không bắn một thông báo cho từng phòng; mỗi tòa tối đa một thông báo/ngày.
+     * Phuong an A: Tu ngay 28 cuoi thang nhac ky thuat nhap chi so ky hien tai cho cac phong
+     * chua chot du; 5 ngay dau thang (01..05) nhac cac phong con thieu ky thang truoc.
+     * Gom theo toa de moi toa toi da mot thong bao/ngay.
      */
     @Transactional
     public int remindMissingReadings(LocalDate today) {
-        if (today.getDayOfMonth() > 5) {
+        int day = today.getDayOfMonth();
+        YearMonth closing;
+        if (day <= 5) {
+            closing = YearMonth.from(today).minusMonths(1);
+        } else if (day >= 28) {
+            closing = YearMonth.from(today);
+        } else {
             return 0;
         }
-        // Chỉ số cuối tháng được nhập trong 5 ngày đầu tháng kế tiếp nên kỳ cần nhắc là tháng trước.
-        YearMonth closing = YearMonth.from(today).minusMonths(1);
         int month = closing.getMonthValue();
         int year = closing.getYear();
         List<BillingDataResponse> contracts = fetchBillingData(month, year);
-        java.util.Map<Long, java.util.List<String>> missingByBuilding = new java.util.LinkedHashMap<>();
+        java.util.Map<Long, java.util.Set<String>> missingByBuilding = new java.util.LinkedHashMap<>();
         for (BillingDataResponse contract : contracts) {
+            if (day >= 28 && contract.getStartDate() != null && contract.getStartDate().isAfter(today)) {
+                continue;
+            }
             List<Meter> activeMeters = meters.findByRoomIdAndIsActiveTrue(contract.getRoomId());
             if (activeMeters.isEmpty()) {
+                continue;
+            }
+            boolean awaitingHandover = day >= 28 && "ACTIVE".equalsIgnoreCase(contract.getStatus())
+                    && contract.getStartDate() != null
+                    && YearMonth.from(contract.getStartDate()).equals(closing)
+                    && meterHandovers.findById(contract.getContractId()).isEmpty()
+                    && activeMeters.stream().anyMatch(m -> m.getInitialIndexDate() == null
+                            || m.getInitialIndexDate().isBefore(contract.getStartDate()));
+            if (awaitingHandover) {
                 continue;
             }
             boolean missing = activeMeters.stream()
@@ -126,16 +146,18 @@ public class InvoiceService {
             String label = contract.getRoomNumber() == null || contract.getRoomNumber().isBlank()
                     ? "#" + contract.getRoomId()
                     : contract.getRoomNumber();
-            missingByBuilding.computeIfAbsent(contract.getBuildingId(), id -> new java.util.ArrayList<>()).add(label);
+            missingByBuilding.computeIfAbsent(contract.getBuildingId(), id -> new java.util.LinkedHashSet<>())
+                    .add(label);
         }
-        java.time.Instant startOfDay = today.atStartOfDay(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        java.time.Instant startOfDay = today.atStartOfDay(VN).toInstant();
         int sent = 0;
-        for (java.util.Map.Entry<Long, java.util.List<String>> entry : missingByBuilding.entrySet()) {
+        for (java.util.Map.Entry<Long, java.util.Set<String>> entry : missingByBuilding.entrySet()) {
             if (outbox.existsByEventTypeAndEventKeyAndCreatedAtGreaterThanEqual(
                     BillingEventPublisher.EVENT_METER_READING_REMINDER, String.valueOf(entry.getKey()), startOfDay)) {
                 continue;
             }
-            events.publishMeterReadingReminder(entry.getKey(), null, month, year, entry.getValue());
+            events.publishMeterReadingReminder(entry.getKey(), null, month, year,
+                    new java.util.ArrayList<>(entry.getValue()));
             sent++;
         }
         return sent;

@@ -21,6 +21,8 @@ import com.rental.contracttenant.dto.CreateDraftContractRequest;
 import com.rental.contracttenant.dto.CreateDraftManualRequest;
 import com.rental.contracttenant.dto.CreateMoveOutRequest;
 import com.rental.contracttenant.dto.DeclineSignatureRequest;
+import com.rental.contracttenant.dto.InternalContractDepositResponse;
+import com.rental.contracttenant.dto.MarkDepositPaidRequest;
 import com.rental.contracttenant.dto.MoveOutRequestResponse;
 import com.rental.contracttenant.dto.RejectMoveOutRequest;
 import com.rental.contracttenant.dto.RejectRenewalRequest;
@@ -559,7 +561,14 @@ public class ContractService {
             signatureRows.save(sig);
 
             if (party == SignatureParty.TENANT) {
+                if (!locked.isDepositPaid() && request != null && Boolean.TRUE.equals(request.depositConfirmed())
+                        && locked.getDepositAmount() != null && locked.getDepositAmount().signum() > 0) {
+                    locked.setDepositPaid(true);
+                    locked.setDepositPaidAt(now);
+                    locked.setDepositPaymentMethod("MANUAL_TRANSFER");
+                }
                 locked.setSignatureStatus(SignatureStatus.AWAITING_LESSOR);
+                outbox.publishContractTenantSigned(locked, now);
             } else {
                 locked.setSignatureStatus(SignatureStatus.COMPLETED);
                 locked.setStatus(ContractStatus.ACTIVE);
@@ -571,8 +580,9 @@ public class ContractService {
                 // each must advance the contract revision accepted by the Property projection.
                 locked.setRevision(locked.getRevision() + 1);
                 outbox.publishContractSigned(locked, List.of(locked.getCustomerId()));
-                // Khach chuyen vao hom nay (hoac da qua ngay vao) thi nhac ky thuat ghi chi so ban giao ngay.
-                if (locked.getStartDate() != null && !locked.getStartDate().isAfter(LocalDate.now(clock))) {
+                // Chi nhac ghi chi so ban giao cho hop dong vao o hom nay/tuong lai; hop dong
+                // kich hoat lai tu du lieu cu se lam ngap chuong ky thuat neu khong loc.
+                if (locked.getStartDate() != null && !locked.getStartDate().isBefore(LocalDate.now(clock))) {
                     outbox.publishMeterReadingHandoverDue(locked);
                 }
                 if (representative != null) {
@@ -1893,6 +1903,52 @@ public class ContractService {
         boolean isTenant = Objects.equals(c.getCustomerId(), customerId)
                 || tenants.existsByContractIdAndCustomerIdAndLeftAtIsNull(c.getId(), customerId);
         return new RoomTenantCheckResponse(isTenant, isTenant ? c.getId() : null, isTenant ? c.getBuildingId() : null);
+    }
+
+    public InternalContractDepositResponse getDepositInfo(Long contractId) {
+        Contract contract = contracts.findById(contractId)
+                .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
+        return toInternalDepositResponse(contract);
+    }
+
+    public InternalContractDepositResponse markDepositPaid(Long contractId, MarkDepositPaidRequest request) {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        return template.execute(status -> {
+            Contract locked = contracts.findByIdForUpdate(contractId)
+                    .orElseThrow(() -> new NotFoundException("CONTRACT_NOT_FOUND", "Không tìm thấy hợp đồng " + contractId));
+            if (locked.isDepositPaid()) {
+                return toInternalDepositResponse(locked);
+            }
+            if (locked.getStatus() == ContractStatus.ENDED || locked.getStatus() == ContractStatus.TERMINATED) {
+                throw new BusinessException("INVALID_STATUS",
+                        "Hợp đồng không ở trạng thái hợp lệ để thanh toán cọc", HttpStatus.UNPROCESSABLE_ENTITY);
+            }
+            String method = (request.getMethod() != null && !request.getMethod().isBlank())
+                    ? request.getMethod().trim()
+                    : "VNPAY";
+            locked.setDepositPaid(true);
+            locked.setDepositPaidAt(Instant.now(clock));
+            locked.setDepositPaymentMethod(method);
+            locked.setDepositTxnRef(request.getTxnRef());
+            Contract saved = contracts.save(locked);
+            outbox.publishContractDepositPaid(saved);
+            return toInternalDepositResponse(saved);
+        });
+    }
+
+    private static InternalContractDepositResponse toInternalDepositResponse(Contract c) {
+        return new InternalContractDepositResponse(
+                c.getId(),
+                c.getCustomerId(),
+                c.getBuildingId(),
+                c.getRoomId(),
+                c.getRoomNumber(),
+                c.getStatus().name(),
+                c.getSignatureStatus().name(),
+                c.getDepositAmount(),
+                c.isDepositPaid(),
+                c.getDepositTxnRef()
+        );
     }
 
     public void processRoommateAccepted(RoommateApplicationAcceptedEvent event) {

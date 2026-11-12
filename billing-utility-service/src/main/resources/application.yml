@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${BILLING_DB_URL:jdbc:postgresql://localhost:5432/billing_db}
     username: ${BILLING_DB_USER:billing_svc}
-    password: ${BILLING_DB_PASSWORD:changeit}
+    password: ${BILLING_DB_PASSWORD:change_me_in_dot_env}
     driver-class-name: org.postgresql.Driver
   jpa:
     # Chi Flyway tao bang (docs muc 12); khong de Hibernate tu sua schema.
@@ -76,7 +76,7 @@ vnpay:
   hash-secret: ${VNPAY_HASH_SECRET:Q78M2SN95OZRMDVJPWIX5FEL37TXG9UL}
   api-url: ${VNPAY_API_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   api-query-url: ${VNPAY_API_QUERY_URL:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
-  allowed-return-urls: ${VNPAY_ALLOWED_RETURN_URLS:http://localhost:3000/payment/vnpay-return,https://rental-system-frontend-ten.vercel.app/payment/vnpay-return}
+  allowed-return-urls: ${VNPAY_ALLOWED_RETURN_URLS:http://localhost:3000/payment/vnpay-return,http://localhost:8443/payment/vnpay-return,http://localhost:5173/payment/vnpay-return,https://rental-system-frontend-ten.vercel.app/payment/vnpay-return}
   ipn-url: ${VNPAY_IPN_URL:https://quaintly-ageless-corina.ngrok-free.dev/api/v1/payments/vnpay-ipn}
   default-client-ip: ${VNPAY_DEFAULT_CLIENT_IP:127.0.0.1}
 

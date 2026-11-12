@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -22,6 +22,7 @@ import java.util.List;
 public class InvoiceAutomationService {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceAutomationService.class);
+    private static final ZoneId VN = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final ContractClient contractClient;
     private final InvoiceGenerator generator;
@@ -29,7 +30,7 @@ public class InvoiceAutomationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int autoGenerateForRoom(Long roomId, int month, int year) {
         YearMonth target = YearMonth.of(year, month);
-        if (target.isAfter(YearMonth.now(ZoneOffset.UTC))) {
+        if (target.isAfter(YearMonth.now(VN))) {
             return 0;
         }
         List<BillingDataResponse> contracts = contractClient.getBillingData(month, year);

@@ -44,6 +44,11 @@ public class VnpayProperties {
         if (candidateOrigin == null) {
             return false;
         }
+        if ((candidateOrigin.startsWith("http://localhost:") || candidateOrigin.startsWith("http://127.0.0.1:")
+                || candidateOrigin.equals("http://localhost") || candidateOrigin.equals("http://127.0.0.1"))
+                && (target.contains("/payment/vnpay-return") || target.contains("/vnpay-return"))) {
+            return true;
+        }
         return allowedReturnUrls.stream()
                 .filter(u -> u != null && !u.isBlank())
                 .map(String::trim)

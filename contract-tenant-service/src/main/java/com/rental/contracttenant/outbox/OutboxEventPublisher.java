@@ -10,6 +10,7 @@ import com.rental.common.security.HeaderAuthenticationFilter;
 import com.rental.contracttenant.entity.Contract;
 import com.rental.contracttenant.entity.OutboxEvent;
 import com.rental.contracttenant.repository.OutboxEventRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,8 @@ public class OutboxEventPublisher {
     public static final String EVENT_CONTRACT_RENEWAL_APPROVED = "ContractRenewalApproved";
     public static final String EVENT_CONTRACT_RENEWAL_REJECTED = "ContractRenewalRejected";
     public static final String EVENT_METER_READING_HANDOVER_DUE = "MeterReadingHandoverDue";
+    public static final String EVENT_CONTRACT_DEPOSIT_PAID = "ContractDepositPaid";
+    public static final String EVENT_CONTRACT_TENANT_SIGNED = "ContractTenantSigned";
 
     private final OutboxEventRepository outbox;
 
@@ -107,6 +110,25 @@ public class OutboxEventPublisher {
             return;
         }
         saveOutboxEvent(EVENT_METER_READING_HANDOVER_DUE, contractId, MeterReadingHandoverDuePayload.of(contract));
+    }
+
+    /** Bao chuong cho Quan ly toa nha ngay khi he thong ghi nhan khach da thanh toan tien coc. */
+    public void publishContractDepositPaid(Contract contract) {
+        String contractId = String.valueOf(contract.getId());
+        if (outbox.existsByEventTypeAndEventKey(EVENT_CONTRACT_DEPOSIT_PAID, contractId)) {
+            return;
+        }
+        saveOutboxEvent(EVENT_CONTRACT_DEPOSIT_PAID, contractId, ContractDepositPaidPayload.of(contract));
+    }
+
+    /** Bao chuong cho Quan ly toa nha ngay khi khach da ky xong hop dong va dang cho Quan ly ky duyet. */
+    public void publishContractTenantSigned(Contract contract, Instant signedAt) {
+        String contractId = String.valueOf(contract.getId());
+        if (outbox.existsByEventTypeAndEventKey(EVENT_CONTRACT_TENANT_SIGNED, contractId)) {
+            return;
+        }
+        saveOutboxEvent(EVENT_CONTRACT_TENANT_SIGNED, contractId,
+                ContractTenantSignedPayload.of(contract, signedAt));
     }
 
     private <T> void saveOutboxEvent(String eventType, String eventKey, T payload) {

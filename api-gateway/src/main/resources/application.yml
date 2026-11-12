@@ -139,7 +139,7 @@ eureka:
 
 # JWT (docs muc 7.1, 6.1): cung secret/iss/claims voi auth-service (veriy HS256).
 jwt:
-  secret: ${JWT_SECRET:please-override-min-32-chars-secret-for-local-dev}
+  secret: ${JWT_SECRET:local-dev-test-secret-min-32-chars-00}
   issuer: ${JWT_ISSUER:rental-auth}
 
 management:

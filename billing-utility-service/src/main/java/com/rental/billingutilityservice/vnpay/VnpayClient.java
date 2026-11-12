@@ -3,8 +3,6 @@ package com.rental.billingutilityservice.vnpay;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -50,12 +48,6 @@ public class VnpayClient {
 
         String query = signer.buildHashData(params);
         String secureHash = signer.sign(params, properties.getHashSecret());
-        String paymentUrl = properties.getApiUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
-
-        if (properties.getIpnUrl() != null && !properties.getIpnUrl().isBlank()) {
-            paymentUrl += "&vnp_NotifyUrl=" + URLEncoder.encode(properties.getIpnUrl(), StandardCharsets.UTF_8);
-        }
-
-        return paymentUrl;
+        return properties.getApiUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
     }
 }
