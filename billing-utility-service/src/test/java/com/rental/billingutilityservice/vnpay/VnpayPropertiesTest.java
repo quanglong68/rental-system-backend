@@ -24,6 +24,7 @@ class VnpayPropertiesTest {
     void allowsExactWhitelistedUrls() {
         assertTrue(properties.isReturnUrlAllowed("http://localhost:3000/payment/vnpay-return"));
         assertTrue(properties.isReturnUrlAllowed("https://rental-system-frontend-ten.vercel.app/payment/vnpay-return"));
+        assertTrue(properties.isReturnUrlAllowed("http://localhost:8443/payment/vnpay-return"));
     }
 
     @Test

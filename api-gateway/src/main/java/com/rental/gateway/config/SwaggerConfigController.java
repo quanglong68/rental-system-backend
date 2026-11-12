@@ -1,11 +1,14 @@
 package com.rental.gateway.config;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -17,13 +20,20 @@ public class SwaggerConfigController {
 
     private static final List<String> PUBLIC_API_SERVICES = List.of(
             "auth-service", "user-notification-service", "property-service",
-            "listing-booking-service", "contract-tenant-service", "billing-utility-service",
-            "asset-maintenance-service");
+            "listing-booking-service", "chat-service", "contract-tenant-service",
+            "billing-utility-service", "asset-maintenance-service");
 
     private final DiscoveryClient discovery;
 
     public SwaggerConfigController(DiscoveryClient discovery) {
         this.discovery = discovery;
+    }
+
+    @GetMapping("/")
+    public Mono<ResponseEntity<Void>> rootRedirect() {
+        return Mono.just(ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("/swagger-ui.html"))
+                .build());
     }
 
     @GetMapping(value = "/swagger-config", produces = MediaType.APPLICATION_JSON_VALUE)

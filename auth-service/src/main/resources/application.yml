@@ -9,7 +9,7 @@ spring:
   datasource:
     url: ${AUTH_DB_URL:jdbc:postgresql://localhost:5432/auth_db}
     username: ${AUTH_DB_USER:auth_user}
-    password: ${AUTH_DB_PASSWORD:changeit}
+    password: ${AUTH_DB_PASSWORD:change_me_in_dot_env}
     driver-class-name: org.postgresql.Driver
   jpa:
     # Chi Flyway tao bang (docs muc 12); khong de Hibernate tu sua schema.
@@ -44,7 +44,7 @@ eureka:
 
 # JWT (docs muc 7.1): HS256, toi thieu 32 ky tu, iss=rental-auth, access 15 phut (900s).
 jwt:
-  secret: ${JWT_SECRET:please-override-min-32-chars-secret-for-local-dev}
+  secret: ${JWT_SECRET:local-dev-test-secret-min-32-chars-00}
   issuer: ${JWT_ISSUER:rental-auth}
   access-expiration: 900
 

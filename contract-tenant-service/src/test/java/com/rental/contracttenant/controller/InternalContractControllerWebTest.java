@@ -1,13 +1,17 @@
 package com.rental.contracttenant.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.rental.common.error.GlobalExceptionHandler;
 import com.rental.contracttenant.config.SecurityConfig;
 import com.rental.contracttenant.dto.BillingContractData;
+import com.rental.contracttenant.dto.InternalContractDepositResponse;
 import com.rental.contracttenant.dto.RoomTenantCheckResponse;
 import com.rental.contracttenant.service.ContractService;
 import java.math.BigDecimal;
@@ -18,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(InternalContractController.class)
@@ -64,5 +69,37 @@ class InternalContractControllerWebTest {
                 .andExpect(jsonPath("$.isTenant").value(true))
                 .andExpect(jsonPath("$.contractId").value(1))
                 .andExpect(jsonPath("$.buildingId").value(100));
+    }
+
+    @Test
+    void getDepositInfo_returns200() throws Exception {
+        when(contractService.getDepositInfo(9L)).thenReturn(new InternalContractDepositResponse(
+                9L, 77L, 3L, 12L, "A101", "DRAFT", "AWAITING_TENANT",
+                new BigDecimal("5000000"), false, null
+        ));
+
+        mvc.perform(get("/internal/contracts/9/deposit-info")
+                        .header("X-User-Id", "999").header("X-User-Type", "SYSTEM"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contractId").value(9))
+                .andExpect(jsonPath("$.depositAmount").value(5000000))
+                .andExpect(jsonPath("$.depositPaid").value(false));
+    }
+
+    @Test
+    void markDepositPaid_returns200() throws Exception {
+        when(contractService.markDepositPaid(eq(9L), any())).thenReturn(new InternalContractDepositResponse(
+                9L, 77L, 3L, 12L, "A101", "DRAFT", "AWAITING_TENANT",
+                new BigDecimal("5000000"), true, "DEP9_1234"
+        ));
+
+        mvc.perform(post("/internal/contracts/9/mark-deposit-paid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"txnRef\":\"DEP9_1234\",\"amount\":5000000,\"method\":\"VNPAY\"}")
+                        .header("X-User-Id", "999").header("X-User-Type", "SYSTEM"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contractId").value(9))
+                .andExpect(jsonPath("$.depositPaid").value(true))
+                .andExpect(jsonPath("$.depositTxnRef").value("DEP9_1234"));
     }
 }

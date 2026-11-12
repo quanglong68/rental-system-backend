@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +33,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class InvoiceGenerator {
+
+    private static final ZoneId VN = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final MeterRepository meters;
     private final MeterReadingRepository readings;
@@ -166,16 +168,17 @@ public class InvoiceGenerator {
         }
         // Sinh invoice moi nguoi.
         int count = 0;
+        LocalDate todayVN = LocalDate.now(VN);
         LocalDate dueDate;
         if (contract.getPaymentDueDay() != null && contract.getPaymentDueDay() >= 1 && contract.getPaymentDueDay() <= 31) {
             YearMonth dueMonth = target.plusMonths(1);
             int targetDay = Math.min(contract.getPaymentDueDay(), dueMonth.lengthOfMonth());
             LocalDate candidateDue = dueMonth.atDay(targetDay);
-            dueDate = candidateDue.isBefore(LocalDate.now(ZoneOffset.UTC))
-                    ? LocalDate.now(ZoneOffset.UTC).plusDays(dueDays)
+            dueDate = candidateDue.isBefore(todayVN)
+                    ? todayVN.plusDays(dueDays)
                     : candidateDue;
         } else {
-            dueDate = LocalDate.now(ZoneOffset.UTC).plusDays(dueDays);
+            dueDate = todayVN.plusDays(dueDays);
         }
         Instant now = Instant.now();
         RoomInvoice master = null;

@@ -17,5 +17,6 @@ public class VnpayPaymentUrlResponse {
     private String paymentUrl;
     private String txnRef;
     private Long invoiceId;
+    private Long contractId;
     private BigDecimal amount;
 }

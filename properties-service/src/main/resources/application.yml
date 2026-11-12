@@ -11,8 +11,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:property_db}?currentSchema=${DB_SCHEMA:properties_service},public
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD}
+    username: ${DB_USER:${PROPERTY_DB_USER:property_svc}}
+    password: ${DB_PASSWORD:${PROPERTY_DB_PASSWORD:change_me_in_dot_env}}
     driver-class-name: org.postgresql.Driver
 
   servlet:
@@ -88,23 +88,24 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
   instance:
+    prefer-ip-address: true
     # Dev local: heartbeat nhanh de Gateway thay instance vua restart trong ~5-10s.
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 15
 
 storage:
   provider: ${STORAGE_PROVIDER:r2}
-  public-base-url: ${R2_PUBLIC_BASE_URL:}
+  public-base-url: ${R2_PUBLIC_BASE_URL:http://localhost:9000/property-images}
 
   image:
     max-size: ${STORAGE_IMAGE_MAX_SIZE:5242880}
 
 cloudflare:
   r2:
-    access-key-id: ${R2_ACCESS_KEY_ID:${R2_ACCESS_KEY:}}
-    secret-key-id: ${R2_SECRET_ACCESS_KEY:${R2_SECRET_KEY:}}
-    end-point: ${R2_ENDPOINT:}
-    bucket-name: ${R2_BUCKET:}
+    access-key-id: ${R2_ACCESS_KEY_ID:${R2_ACCESS_KEY:minioadmin}}
+    secret-key-id: ${R2_SECRET_ACCESS_KEY:${R2_SECRET_KEY:change_me_in_dot_env}}
+    end-point: ${R2_ENDPOINT:http://localhost:9000}
+    bucket-name: ${R2_BUCKET:property-images}
 
 management:
   endpoints:

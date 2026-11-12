@@ -77,10 +77,11 @@ public class OpenApiGatewayServerGatewayFilterFactory
         if (!path.startsWith("/api/") || !(pathItem instanceof ObjectNode operations)) {
             return;
         }
+        String samplePath = path.replaceAll("\\{[^/]+\\}", "1");
         operations.properties().forEach(entry -> {
             String method = entry.getKey().toLowerCase(Locale.ROOT);
             if (!HTTP_OPERATIONS.contains(method) || !(entry.getValue() instanceof ObjectNode operation)
-                    || whitelist.isPublic(HttpMethod.valueOf(method.toUpperCase(Locale.ROOT)), path)) {
+                    || whitelist.isPublic(HttpMethod.valueOf(method.toUpperCase(Locale.ROOT)), samplePath)) {
                 return;
             }
             JsonNode existing = operation.get("security");

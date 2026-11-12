@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$SkipSeed
 )
 
@@ -25,7 +25,8 @@ $serviceContainers = @(
     "rental-listing-booking",
     "rental-contract-tenant",
     "rental-billing-utility",
-    "rental-asset-maintenance"
+    "rental-asset-maintenance",
+    "rental-chat"
 )
 
 function Write-Step($message) {
@@ -196,7 +197,7 @@ DELETE FROM account_role ar
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  RENTAL SYSTEM - XOA SACH 7 DATABASE VA SEED LAI DATA   " -ForegroundColor Cyan
+Write-Host "  RENTAL SYSTEM - XOA SACH 8 DATABASE VA SEED LAI DATA   " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 # 0. Tiền điều kiện
@@ -213,12 +214,12 @@ if (-not $envVars.ContainsKey("POSTGRES_USER") -or [string]::IsNullOrWhiteSpace(
     $envVars["POSTGRES_USER"] = "postgres"
 }
 
-$databases = @("auth_db", "user_db", "property_db", "listing_db", "contract_db", "billing_db", "asset_db")
+$databases = @("auth_db", "user_db", "property_db", "listing_db", "contract_db", "billing_db", "asset_db", "chat_db")
 if ($envVars.ContainsKey("POSTGRES_MULTIPLE_DATABASES") -and $envVars["POSTGRES_MULTIPLE_DATABASES"]) {
     $databases = $envVars["POSTGRES_MULTIPLE_DATABASES"].Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 }
 
-Write-Step "[1/6] Xóa và tạo lại $($databases.Count) database (Flyway sẽ dựng schema mới khi service khởi động)"
+Write-Step "[1/7] Xóa và tạo lại $($databases.Count) database (Flyway sẽ dựng schema mới khi service khởi động)"
 foreach ($db in $databases) {
     Assert-SafeIdentifier $db "Tên database"
     $prefix = ($db -replace "_db$", "").ToUpper()
@@ -245,7 +246,7 @@ GRANT ALL PRIVILEGES ON DATABASE "$db" TO "$dbUser";
     Invoke-Psql $db "ALTER SCHEMA public OWNER TO `"$dbUser`"; GRANT ALL ON SCHEMA public TO `"$dbUser`";" | Out-Null
 }
 
-Write-Step "[2/6] Khởi động lại các service nghiệp vụ để Flyway tạo schema và seed role"
+Write-Step "[2/7] Khởi động lại các service nghiệp vụ để Flyway tạo schema và seed role"
 foreach ($container in $serviceContainers) {
     $exists = docker inspect -f "{{.Name}}" $container 2>$null
     if ($LASTEXITCODE -eq 0 -and $exists) {
@@ -257,7 +258,20 @@ foreach ($container in $serviceContainers) {
     }
 }
 
-Write-Step "[3/6] Chờ service healthy và Flyway chạy xong"
+Write-Step "[3/7] Chờ service healthy, MinIO sẵn sàng và Gateway nhận đủ route Eureka"
+$minioRunning = docker inspect -f "{{.State.Running}}" "rental-minio" 2>$null
+if ($minioRunning -ne "true") {
+    throw "Container rental-minio chưa chạy. Kiểm tra MINIO_LICENSE_TOKEN trong .env và log rental-minio."
+}
+$minioInitExit = docker inspect -f "{{.State.ExitCode}}" "rental-minio-init" 2>$null
+$minioInitStatus = docker inspect -f "{{.State.Status}}" "rental-minio-init" 2>$null
+if ($minioInitStatus -ne "exited" -or $minioInitExit -ne "0") {
+    Write-Host "  - Chạy lại rental-minio-init để đảm bảo tạo đủ bucket MinIO và quyền download..." -ForegroundColor Yellow
+    docker start -a rental-minio-init | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "rental-minio-init thất bại (exit $LASTEXITCODE)." }
+}
+Write-Host "  - rental-minio & bucket property-images sẵn sàng" -ForegroundColor Green
+
 foreach ($container in $serviceContainers) {
     $exists = docker inspect -f "{{.Name}}" $container 2>$null
     if ($LASTEXITCODE -eq 0 -and $exists) {
@@ -266,8 +280,11 @@ foreach ($container in $serviceContainers) {
     }
 }
 Wait-HttpReady "http://localhost:8080/api/v1/auth/login"
+Wait-HttpReady "http://localhost:8080/api/v1/buildings/nearby?latitude=10.8&longitude=106.7"
+Wait-HttpReady "http://localhost:8080/api/v1/listings"
+Write-Host "  - API Gateway đã nhận đủ route Auth, Property và Listing" -ForegroundColor Green
 
-Write-Step "[4/6] Nạp danh mục tỉnh/phường và tạo tài khoản bootstrap admin"
+Write-Step "[4/7] Nạp danh mục tỉnh/phường và tạo tài khoản bootstrap admin"
 Import-LocationData
 Ensure-BootstrapAdmin
 
@@ -277,7 +294,7 @@ if ($SkipSeed) {
     return
 }
 
-Write-Step "[5/6] Chạy seed dữ liệu kiểm thử"
+Write-Step "[5/7] Chạy seed dữ liệu kiểm thử"
 $stateFile = Join-Path $scriptDir "state.json"
 $reportFile = Join-Path $scriptDir "seed-report.json"
 if (Test-Path $stateFile) { Remove-Item $stateFile -Force }
@@ -291,7 +308,14 @@ if ($LASTEXITCODE -ne 0) {
     throw "Seed dữ liệu thất bại (exit $LASTEXITCODE). Xem log phía trên."
 }
 
-Write-Step "[6/6] Upload ảnh phòng và tòa nhà từ thư mục pictures"
+Write-Step "[6/7] Kiểm tra lại dữ liệu seed (verify-seed)"
+$verifyMjs = Join-Path $scriptDir "verify-seed.mjs"
+& $nodeExe $verifyMjs
+if ($LASTEXITCODE -ne 0) {
+    throw "Kiểm tra dữ liệu seed thất bại (exit $LASTEXITCODE). Xem chi tiết trong seed/verify-report.json."
+}
+
+Write-Step "[7/7] Upload ảnh phòng và tòa nhà từ thư mục pictures"
 $imageMjs = Join-Path $scriptDir "upload-missing-images.mjs"
 & $nodeExe $imageMjs
 if ($LASTEXITCODE -ne 0) {
@@ -300,7 +324,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "  RESET 7 DATABASE + SEED HOAN TAT                       " -ForegroundColor Green
+Write-Host "  RESET 8 DATABASE + SEED HOAN TAT                       " -ForegroundColor Green
 Write-Host "  Bootstrap admin : e2e.admin@example.com / E2ePass123!  " -ForegroundColor Green
 Write-Host "  Tài khoản seed  : seed.*@test.local / Test@12345       " -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green

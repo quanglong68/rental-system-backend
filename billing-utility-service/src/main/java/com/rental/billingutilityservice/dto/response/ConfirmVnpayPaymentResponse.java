@@ -17,6 +17,7 @@ public class ConfirmVnpayPaymentResponse {
     private boolean success;
     private String message;
     private Long invoiceId;
+    private Long contractId;
     private BigDecimal amount;
     private String txnRef;
 }

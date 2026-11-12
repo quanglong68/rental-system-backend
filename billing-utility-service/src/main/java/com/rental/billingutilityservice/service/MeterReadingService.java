@@ -7,21 +7,26 @@ import com.rental.billingutilityservice.dto.request.SaveHandoverRequest;
 import com.rental.billingutilityservice.dto.request.UpdateReadingRequest;
 import com.rental.billingutilityservice.dto.response.MeterReadingOverviewResponse;
 import com.rental.billingutilityservice.dto.response.MeterReadingResponse;
-import com.rental.common.dto.PageResponse;
+import com.rental.billingutilityservice.entity.ContractInfo;
 import com.rental.billingutilityservice.entity.Invoice;
 import com.rental.billingutilityservice.entity.Meter;
+import com.rental.billingutilityservice.entity.MeterHandover;
 import com.rental.billingutilityservice.entity.MeterReading;
 import com.rental.billingutilityservice.enums.InvoiceStatus;
+import com.rental.billingutilityservice.repository.ContractInfoRepository;
 import com.rental.billingutilityservice.repository.InvoiceRepository;
+import com.rental.billingutilityservice.repository.MeterHandoverRepository;
 import com.rental.billingutilityservice.repository.MeterReadingRepository;
 import com.rental.billingutilityservice.repository.MeterRepository;
 import com.rental.billingutilityservice.support.AuthSupport;
+import com.rental.common.dto.PageResponse;
 import com.rental.common.error.BusinessException;
 import com.rental.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,20 +35,26 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Chỉ số điện nước (docs mục 9.5): KY_THUAT/QUAN_LY nhập. prevIndex từ tháng trước hoặc
- * initialIndex; consumption = current - prev (>= 0, neu khong 422 INDEX_LOWER_THAN_PREVIOUS);
- * amount = consumption x unit_price hiện hành. Mỗi đồng hồ mỗi tháng một dòng (409 READING_EXISTS).
- * Sửa được cho đến khi tháng đó đã sinh hóa đơn (422 MONTH_ALREADY_INVOICED).
+ * Chỉ số điện nước (docs mục 9.5): KY_THUAT/QUAN_LY nhập. Chặn tháng tương lai (VN);
+ * cho phép nhập tháng hiện tại và sửa tháng chưa thu tiền (hóa đơn UNPAID tự tính lại).
+ * Khóa sửa khi hóa đơn đã PAID / PARTIALLY_PAID.
  */
 @Service
 @RequiredArgsConstructor
@@ -54,16 +65,26 @@ public class MeterReadingService {
 
     private final MeterReadingRepository readings;
     private final MeterRepository meters;
+    private final MeterHandoverRepository meterHandovers;
+    private final ContractInfoRepository contractInfos;
     private final InvoiceRepository invoices;
     private final ContractClient contractClient;
     private final InvoiceAutomationService invoiceAutomation;
+    private final MeterProvisioningService meterProvisioning;
     private final AuthSupport auth;
+    private Clock clock = Clock.system(VN);
+
+    /** Cho phep test gia lap ngay gio Viet Nam. */
+    void setClock(Clock clock) {
+        this.clock = clock;
+    }
 
     @Transactional
     public MeterReadingResponse create(CreateReadingRequest request) {
         Meter meter = meters.findById(request.getMeterId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy đồng hồ"));
         auth.requireBuildingScope(meter.getBuildingId());
+        assertNotFuturePeriod(request.getMonth(), request.getYear());
         if (readings.existsByMeter_IdAndMonthAndYear(request.getMeterId(), request.getMonth(), request.getYear())) {
             throw new BusinessException("READING_EXISTS", "Đồng hồ đã có chỉ số tháng này", HttpStatus.CONFLICT);
         }
@@ -78,7 +99,7 @@ public class MeterReadingService {
         reading.setMonth(request.getMonth());
         reading.setYear(request.getYear());
         reading.setReadingDate(request.getReadingDate() == null
-                ? LocalDate.now(java.time.ZoneOffset.UTC)
+                ? LocalDate.now(clock.withZone(VN))
                 : request.getReadingDate());
         reading.setPrevIndex(prevIndex);
         reading.setCurrentIndex(request.getCurrentIndex());
@@ -96,6 +117,7 @@ public class MeterReadingService {
         MeterReading reading = readings.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy chỉ số"));
         auth.requireBuildingScope(reading.getMeter().getBuildingId());
+        assertNotFuturePeriod(reading.getMonth(), reading.getYear());
         assertInvoiceEditable(reading.getMeter().getRoomId(), reading.getMonth(), reading.getYear());
         if (request.getCurrentIndex().compareTo(reading.getPrevIndex()) < 0) {
             throw new BusinessException("INDEX_LOWER_THAN_PREVIOUS", "Chỉ số mới thấp hơn chỉ số trước",
@@ -115,7 +137,9 @@ public class MeterReadingService {
      */
     @Transactional
     public void saveHandover(SaveHandoverRequest request) {
-        LocalDate handoverDate = request.getReadingDate() == null ? LocalDate.now(VN) : request.getReadingDate();
+        LocalDate handoverDate = request.getReadingDate() == null
+                ? LocalDate.now(clock.withZone(VN))
+                : request.getReadingDate();
         Map<Long, SaveHandoverRequest.MeterIndex> byId = new HashMap<>();
         for (SaveHandoverRequest.MeterIndex item : request.getReadings()) {
             byId.put(item.getMeterId(), item);
@@ -147,6 +171,17 @@ public class MeterReadingService {
             meter.setInitialIndexDate(handoverDate);
             meters.save(meter);
         }
+
+        Long resolvedContractId = resolveHandoverContractId(request.getContractId(), request.getRoomId());
+        if (resolvedContractId != null) {
+            MeterHandover record = meterHandovers.findById(resolvedContractId).orElseGet(MeterHandover::new);
+            record.setContractId(resolvedContractId);
+            record.setRoomId(request.getRoomId());
+            record.setBuildingId(roomMeters.get(0).getBuildingId());
+            record.setHandoverDate(handoverDate);
+            record.setEnteredBy(auth.currentUserId());
+            meterHandovers.save(record);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -170,10 +205,13 @@ public class MeterReadingService {
     }
 
     /**
-     * Tinh trang ky chot so: phong cho ban giao (khach chuyen vao trong thang hien tai) va
-     * phong con thieu chi so cua ky duoc chon (thuong la thang truoc).
+     * Tinh trang ky chot so theo Phuong an A:
+     * - Tab Ban giao khach moi: hop dong ACTIVE bat dau tu thang hien tai tro di (hoac da luu ban giao trong thang)
+     *   hien thi ngay sau khi ky xong (khong doi startDate) va giu lai danh dau da nhap sau khi luu.
+     * - Tab Chot chi so ky MM/YYYY: phong co hop dong hieu luc trong ky (hoac da co chi so ky do), kem trang thai
+     *   thanh toan hoa don (NONE/UNPAID/PAID). Tu ngay 28 hoac thang qua khu moi danh dau do thieu chi so.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public MeterReadingOverviewResponse overview(int month, int year, Long buildingId) {
         if (month < 1 || month > 12) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "month phải trong khoảng 1-12");
@@ -187,85 +225,171 @@ public class MeterReadingService {
                 return emptyOverview(month, year);
             }
         }
+        LocalDate todayVN = LocalDate.now(clock.withZone(VN));
         YearMonth target = YearMonth.of(year, month);
-        YearMonth current = YearMonth.from(LocalDate.now(VN));
+        YearMonth current = YearMonth.from(todayVN);
+        boolean futurePeriod = target.isAfter(current);
         boolean contractsAvailable = true;
 
-        List<BillingDataResponse> closingContracts = fetchContracts(month, year);
+        List<BillingDataResponse> closingContracts = futurePeriod ? List.of() : fetchContracts(month, year);
         if (closingContracts == null) {
             contractsAvailable = false;
             closingContracts = List.of();
         }
-        List<BillingDataResponse> handoverContracts = target.equals(current)
+        List<BillingDataResponse> currentContracts = target.equals(current) && !futurePeriod
                 ? closingContracts
                 : fetchContracts(current.getMonthValue(), current.getYear());
-        if (handoverContracts == null) {
+        if (currentContracts == null) {
             contractsAvailable = false;
-            handoverContracts = List.of();
+            currentContracts = List.of();
         }
+        YearMonth nextMonth = current.plusMonths(1);
+        List<BillingDataResponse> nextContracts = fetchContracts(nextMonth.getMonthValue(), nextMonth.getYear());
+
+        List<BillingDataResponse> handoverCandidates = mergeHandoverCandidates(
+                currentContracts, nextContracts == null ? List.of() : nextContracts, current);
 
         List<MeterReadingOverviewResponse.HandoverRoom> handoverRooms =
-                handoverRooms(handoverContracts, current, buildingId, allowed);
-        // Chỉ số của một tháng chỉ đến hạn sau khi tháng đó kết thúc (nhập trong 5 ngày đầu tháng sau).
-        // Chọn tháng hiện tại/tương lai thì chưa có phòng nào "thiếu", tránh tô đỏ oan.
-        List<MeterReadingOverviewResponse.MissingRoom> missingRooms = target.isBefore(current)
-                ? missingRooms(closingContracts, target, buildingId, allowed, handoverRooms)
-                : List.of();
+                handoverRooms(handoverCandidates, current, todayVN, buildingId, allowed);
 
-        return MeterReadingOverviewResponse.builder().month(month).year(year)
-                .dayOfMonth(LocalDate.now(VN).getDayOfMonth())
-                .firstFiveDays(LocalDate.now(VN).getDayOfMonth() <= 5)
+        Set<Long> pendingHandoverRoomIds = handoverRooms.stream()
+                .filter(h -> !h.isCompleted())
+                .map(MeterReadingOverviewResponse.HandoverRoom::getRoomId)
+                .collect(Collectors.toSet());
+
+        List<MeterReadingOverviewResponse.ClosingRoom> closingRooms = new ArrayList<>();
+        List<MeterReadingOverviewResponse.MissingRoom> missingRooms = new ArrayList<>();
+        if (!futurePeriod) {
+            buildClosingAndMissingRooms(
+                    closingContracts, target, current, todayVN, buildingId, allowed,
+                    pendingHandoverRoomIds, closingRooms, missingRooms);
+        }
+
+        int dayOfMonth = todayVN.getDayOfMonth();
+        return MeterReadingOverviewResponse.builder()
+                .month(month)
+                .year(year)
+                .dayOfMonth(dayOfMonth)
+                .firstFiveDays(dayOfMonth <= 5)
+                .endOfMonthReminder(dayOfMonth >= 28)
+                .futurePeriod(futurePeriod)
                 .contractsAvailable(contractsAvailable)
-                .handoverRooms(handoverRooms).missingRooms(missingRooms).build();
+                .handoverRooms(handoverRooms)
+                .missingRooms(missingRooms)
+                .closingRooms(closingRooms)
+                .build();
+    }
+
+    private List<BillingDataResponse> mergeHandoverCandidates(List<BillingDataResponse> currentContracts,
+            List<BillingDataResponse> nextContracts, YearMonth current) {
+        Map<Long, BillingDataResponse> byContractId = new LinkedHashMap<>();
+        for (BillingDataResponse c : currentContracts) {
+            if (c.getContractId() != null) {
+                byContractId.putIfAbsent(c.getContractId(), c);
+            }
+        }
+        for (BillingDataResponse c : nextContracts) {
+            if (c.getContractId() != null) {
+                byContractId.putIfAbsent(c.getContractId(), c);
+            }
+        }
+        // Bo sung hop dong ACTIVE co startDate xa hon thang sau neu da dong bo qua contract_info.
+        for (ContractInfo info : contractInfos.findAll()) {
+            if (!"ACTIVE".equalsIgnoreCase(info.getStatus()) || info.getStartDate() == null
+                    || byContractId.containsKey(info.getContractId())) {
+                continue;
+            }
+            if (!YearMonth.from(info.getStartDate()).isBefore(current)) {
+                BillingDataResponse fallback = new BillingDataResponse();
+                fallback.setContractId(info.getContractId());
+                fallback.setRoomId(info.getRoomId());
+                fallback.setBuildingId(info.getBuildingId());
+                fallback.setStatus(info.getStatus());
+                fallback.setStartDate(info.getStartDate());
+                fallback.setEndDate(info.getEndDate());
+                byContractId.put(info.getContractId(), fallback);
+            }
+        }
+        return new ArrayList<>(byContractId.values());
     }
 
     private List<BillingDataResponse> fetchContracts(int month, int year) {
         try {
             return contractClient.getBillingData(month, year);
         } catch (RuntimeException ex) {
-            // Khong de Contract loi lam trang chi so khong mo duoc; FE hien canh bao tam thoi.
             log.warn("Không lấy được hợp đồng cho kỳ {}/{}: {}", month, year, ex.toString());
             return null;
         }
     }
 
     private List<MeterReadingOverviewResponse.HandoverRoom> handoverRooms(List<BillingDataResponse> contracts,
-            YearMonth current, Long buildingId, List<Long> allowed) {
-        LocalDate today = LocalDate.now(VN);
+            YearMonth current, LocalDate todayVN, Long buildingId, List<Long> allowed) {
+        List<Long> contractIds = contracts.stream().map(BillingDataResponse::getContractId)
+                .filter(Objects::nonNull).toList();
+        Map<Long, MeterHandover> tracked = contractIds.isEmpty()
+                ? Map.of()
+                : meterHandovers.findByContractIdIn(contractIds).stream()
+                        .collect(Collectors.toMap(MeterHandover::getContractId, h -> h, (a, b) -> a));
+
         List<MeterReadingOverviewResponse.HandoverRoom> rooms = new ArrayList<>();
-        for (BillingDataResponse contract : contracts == null ? List.<BillingDataResponse>of() : contracts) {
-            if (!inScope(contract, buildingId, allowed) || contract.getStartDate() == null) {
+        for (BillingDataResponse contract : contracts) {
+            if (!inScope(contract, buildingId, allowed) || contract.getStartDate() == null
+                    || !"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
                 continue;
             }
-            // Ban giao chi tinh cho khach da/den ngay chuyen vao trong thang hien tai.
-            if (!YearMonth.from(contract.getStartDate()).equals(current)
-                    || contract.getStartDate().isAfter(today)) {
+            MeterHandover mh = tracked.get(contract.getContractId());
+            boolean startsCurrentOrFuture = !YearMonth.from(contract.getStartDate()).isBefore(current);
+            boolean handedOverThisMonth = mh != null && YearMonth.from(mh.getHandoverDate()).equals(current);
+            if (!startsCurrentOrFuture && !handedOverThisMonth) {
                 continue;
             }
-            List<Meter> roomMeters = meters.findByRoomIdAndIsActiveTrue(contract.getRoomId());
-            if (roomMeters.isEmpty() || hasReading(roomMeters, current)) {
+
+            List<Meter> roomMeters = meterProvisioning.ensureDefaultMetersForRoom(
+                    contract.getRoomId(), contract.getBuildingId());
+            if (roomMeters.isEmpty()) {
                 continue;
             }
-            boolean missingBaseline = roomMeters.stream().anyMatch(m -> m.getInitialIndexDate() == null
-                    || m.getInitialIndexDate().isBefore(contract.getStartDate()));
-            if (!missingBaseline) {
-                continue;
-            }
+
+            boolean legacyDone = !contract.getStartDate().isAfter(todayVN)
+                    && roomMeters.stream().allMatch(m -> m.getInitialIndexDate() != null
+                            && !m.getInitialIndexDate().isBefore(contract.getStartDate()));
+            boolean completed = mh != null || legacyDone;
+            LocalDate handoverDate = mh != null
+                    ? mh.getHandoverDate()
+                    : (completed ? roomMeters.stream().map(Meter::getInitialIndexDate)
+                            .filter(Objects::nonNull).max(LocalDate::compareTo).orElse(null) : null);
+
             rooms.add(MeterReadingOverviewResponse.HandoverRoom.builder()
-                    .contractId(contract.getContractId()).roomId(contract.getRoomId())
-                    .buildingId(contract.getBuildingId()).roomNumber(contract.getRoomNumber())
+                    .contractId(contract.getContractId())
+                    .roomId(contract.getRoomId())
+                    .buildingId(contract.getBuildingId())
+                    .roomNumber(contract.getRoomNumber())
                     .moveInDate(contract.getStartDate())
+                    .completed(completed)
+                    .handoverDate(handoverDate)
                     .meters(roomMeters.stream().map(m -> meterItem(m, current.getMonthValue(),
                             current.getYear())).toList())
                     .build());
         }
+        rooms.sort(Comparator.comparing(MeterReadingOverviewResponse.HandoverRoom::isCompleted)
+                .thenComparing(MeterReadingOverviewResponse.HandoverRoom::getMoveInDate)
+                .thenComparing(MeterReadingOverviewResponse.HandoverRoom::getContractId,
+                        Comparator.nullsLast(Comparator.reverseOrder())));
         return rooms;
     }
 
-    private List<MeterReadingOverviewResponse.MissingRoom> missingRooms(List<BillingDataResponse> contracts,
-            YearMonth target, Long buildingId, List<Long> allowed,
-            List<MeterReadingOverviewResponse.HandoverRoom> handoverRooms) {
-        List<MeterReadingOverviewResponse.MissingRoom> rooms = new ArrayList<>();
+    private void buildClosingAndMissingRooms(
+            List<BillingDataResponse> contracts,
+            YearMonth target,
+            YearMonth current,
+            LocalDate todayVN,
+            Long buildingId,
+            List<Long> allowed,
+            Set<Long> pendingHandoverRoomIds,
+            List<MeterReadingOverviewResponse.ClosingRoom> closingOut,
+            List<MeterReadingOverviewResponse.MissingRoom> missingOut) {
+
+        Map<Long, RoomCandidate> candidates = new LinkedHashMap<>();
         for (BillingDataResponse contract : contracts == null ? List.<BillingDataResponse>of() : contracts) {
             if (!inScope(contract, buildingId, allowed) || contract.getStartDate() == null
                     || contract.getEndDate() == null) {
@@ -275,23 +399,121 @@ public class MeterReadingService {
                     || contract.getEndDate().isBefore(target.atDay(1))) {
                 continue;
             }
-            // Phong dang cho ban giao duoc hien o tab rieng, khong ep chot so thang.
-            boolean pendingHandover = handoverRooms.stream().anyMatch(h -> h.getRoomId().equals(contract.getRoomId()));
-            if (pendingHandover) {
+            if (pendingHandoverRoomIds.contains(contract.getRoomId())) {
                 continue;
             }
-            List<Meter> roomMeters = meters.findByRoomIdAndIsActiveTrue(contract.getRoomId());
-            List<MeterReadingOverviewResponse.MeterItem> missing = roomMeters.stream()
-                    .filter(m -> readings.findByMeter_IdAndMonthAndYear(m.getId(), target.getMonthValue(),
-                            target.getYear()).isEmpty())
-                    .map(m -> meterItem(m, target.getMonthValue(), target.getYear())).toList();
-            if (!missing.isEmpty()) {
-                rooms.add(MeterReadingOverviewResponse.MissingRoom.builder()
-                        .roomId(contract.getRoomId()).buildingId(contract.getBuildingId())
-                        .roomNumber(contract.getRoomNumber()).meters(missing).build());
+            if (target.equals(current) && contract.getStartDate().isAfter(todayVN)) {
+                continue;
+            }
+            RoomCandidate candidate = candidates.computeIfAbsent(contract.getRoomId(),
+                    id -> new RoomCandidate(contract.getRoomId(), contract.getBuildingId(), contract.getRoomNumber()));
+            if ("ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+                candidate.ensureMetersIfMissing = true;
             }
         }
-        return rooms;
+
+        // Bo sung cac phong da co chi so nhap trong ky du hop dong co the da duoc lọc/thay doi.
+        Page<MeterReading> periodReadings = buildingId != null
+                ? readings.search(null, null, buildingId, target.getMonthValue(), target.getYear(), PageRequest.of(0, 500))
+                : auth.isAdmin()
+                        ? readings.search(null, null, null, target.getMonthValue(), target.getYear(), PageRequest.of(0, 500))
+                        : (allowed == null || allowed.isEmpty()
+                                ? Page.empty()
+                                : readings.searchIn(allowed, null, null, target.getMonthValue(), target.getYear(),
+                                        PageRequest.of(0, 500)));
+        for (MeterReading r : periodReadings.getContent()) {
+            Long roomId = r.getMeter().getRoomId();
+            if (!pendingHandoverRoomIds.contains(roomId)) {
+                candidates.computeIfAbsent(roomId,
+                        id -> new RoomCandidate(roomId, r.getMeter().getBuildingId(), null));
+            }
+        }
+
+        boolean dueNow = target.isBefore(current)
+                || (target.equals(current) && todayVN.getDayOfMonth() >= 28);
+
+        List<RoomCandidate> sorted = new ArrayList<>(candidates.values());
+        sorted.sort(Comparator.comparing(
+                c -> c.roomNumber != null ? c.roomNumber : String.valueOf(c.roomId),
+                Comparator.naturalOrder()));
+
+        for (RoomCandidate candidate : sorted) {
+            List<Meter> roomMeters = meters.findByRoomIdAndIsActiveTrue(candidate.roomId);
+            if (roomMeters.isEmpty() && candidate.ensureMetersIfMissing) {
+                roomMeters = meterProvisioning.ensureDefaultMetersForRoom(candidate.roomId, candidate.buildingId);
+            }
+            if (roomMeters.isEmpty()) {
+                continue;
+            }
+
+            List<MeterReadingOverviewResponse.MeterItem> items = roomMeters.stream()
+                    .map(m -> meterItem(m, target.getMonthValue(), target.getYear()))
+                    .toList();
+            List<MeterReadingOverviewResponse.MeterItem> missingItems = items.stream()
+                    .filter(it -> it.getCurrentIndex() == null)
+                    .toList();
+            boolean incomplete = !missingItems.isEmpty();
+            boolean hasExistingReadings = items.stream().anyMatch(it -> it.getCurrentIndex() != null);
+            boolean missingReading = incomplete && dueNow;
+
+            List<Invoice> roomInvoices = invoices.findByRoomIdAndMonthAndYear(
+                    candidate.roomId, target.getMonthValue(), target.getYear());
+            boolean hasInvoice = !roomInvoices.isEmpty();
+            boolean locked = isInvoiceLocked(roomInvoices);
+            String paymentStatus = !hasInvoice ? "NONE" : (locked ? "PAID" : "UNPAID");
+
+            closingOut.add(MeterReadingOverviewResponse.ClosingRoom.builder()
+                    .roomId(candidate.roomId)
+                    .buildingId(candidate.buildingId)
+                    .roomNumber(candidate.roomNumber)
+                    .missingReading(missingReading)
+                    .incomplete(incomplete)
+                    .hasExistingReadings(hasExistingReadings)
+                    .hasInvoice(hasInvoice)
+                    .editable(!locked)
+                    .invoicePaymentStatus(paymentStatus)
+                    .meters(items)
+                    .build());
+
+            if (missingReading) {
+                missingOut.add(MeterReadingOverviewResponse.MissingRoom.builder()
+                        .roomId(candidate.roomId)
+                        .buildingId(candidate.buildingId)
+                        .roomNumber(candidate.roomNumber)
+                        .meters(missingItems)
+                        .build());
+            }
+        }
+    }
+
+    private Long resolveHandoverContractId(Long explicitContractId, Long roomId) {
+        if (explicitContractId != null) {
+            return explicitContractId;
+        }
+        LocalDate todayVN = LocalDate.now(clock.withZone(VN));
+        YearMonth current = YearMonth.from(todayVN);
+        List<BillingDataResponse> combined = new ArrayList<>();
+        List<BillingDataResponse> cur = fetchContracts(current.getMonthValue(), current.getYear());
+        if (cur != null) combined.addAll(cur);
+        YearMonth next = current.plusMonths(1);
+        List<BillingDataResponse> nxt = fetchContracts(next.getMonthValue(), next.getYear());
+        if (nxt != null) combined.addAll(nxt);
+
+        return combined.stream()
+                .filter(c -> Objects.equals(c.getRoomId(), roomId)
+                        && "ACTIVE".equalsIgnoreCase(c.getStatus())
+                        && c.getStartDate() != null
+                        && !YearMonth.from(c.getStartDate()).isBefore(current))
+                .map(BillingDataResponse::getContractId)
+                .findFirst()
+                .orElseGet(() -> contractInfos.findAll().stream()
+                        .filter(ci -> Objects.equals(ci.getRoomId(), roomId)
+                                && "ACTIVE".equalsIgnoreCase(ci.getStatus())
+                                && ci.getStartDate() != null
+                                && !YearMonth.from(ci.getStartDate()).isBefore(current))
+                        .map(ContractInfo::getContractId)
+                        .findFirst()
+                        .orElse(null));
     }
 
     private static boolean inScope(BillingDataResponse contract, Long buildingId, List<Long> allowed) {
@@ -301,24 +523,78 @@ public class MeterReadingService {
         return allowed == null || allowed.contains(contract.getBuildingId());
     }
 
-    private boolean hasReading(List<Meter> roomMeters, YearMonth month) {
-        return roomMeters.stream().anyMatch(m -> readings
-                .findByMeter_IdAndMonthAndYear(m.getId(), month.getMonthValue(), month.getYear()).isPresent());
-    }
-
     private MeterReadingOverviewResponse.MeterItem meterItem(Meter meter, int month, int year) {
-        BigDecimal current = readings.findByMeter_IdAndMonthAndYear(meter.getId(), month, year)
-                .map(MeterReading::getCurrentIndex).orElse(null);
-        return MeterReadingOverviewResponse.MeterItem.builder().meterId(meter.getId())
+        Optional<MeterReading> curOpt = readings.findByMeter_IdAndMonthAndYear(meter.getId(), month, year);
+        int prevMonth = month == 1 ? 12 : month - 1;
+        int prevYear = month == 1 ? year - 1 : year;
+        Optional<MeterReading> consecutivePrev = readings.findByMeter_IdAndMonthAndYear(
+                meter.getId(), prevMonth, prevYear);
+        Optional<MeterReading> latestPrior = consecutivePrev.isPresent()
+                ? consecutivePrev
+                : readings.findTopByMeter_IdAndYearAndMonthLessThanOrderByYearDescMonthDesc(meter.getId(), year, month);
+
+        BigDecimal prevIndex;
+        String prevSource;
+        if (curOpt.isPresent()) {
+            prevIndex = curOpt.get().getPrevIndex();
+            if (consecutivePrev.isPresent()) {
+                prevSource = "kỳ trước";
+            } else if (latestPrior.isPresent() && prevIndex.compareTo(meter.getInitialIndex()) != 0) {
+                prevSource = "kỳ gần nhất";
+            } else {
+                prevSource = "bàn giao";
+            }
+        } else if (consecutivePrev.isPresent()) {
+            prevIndex = consecutivePrev.get().getCurrentIndex();
+            prevSource = "kỳ trước";
+        } else if (latestPrior.isPresent()) {
+            prevIndex = latestPrior.get().getCurrentIndex();
+            prevSource = "kỳ gần nhất";
+        } else {
+            prevIndex = meter.getInitialIndex();
+            prevSource = "bàn giao";
+        }
+
+        return MeterReadingOverviewResponse.MeterItem.builder()
+                .meterId(meter.getId())
+                .utilityTypeId(meter.getUtilityType() == null ? null : meter.getUtilityType().getId())
                 .utilityTypeName(meter.getUtilityType() == null ? null : meter.getUtilityType().getName())
-                .initialIndex(meter.getInitialIndex()).initialIndexDate(meter.getInitialIndexDate())
-                .currentIndex(current).build();
+                .unit(meter.getUtilityType() == null ? null : meter.getUtilityType().getUnit())
+                .unitPrice(curOpt.map(MeterReading::getUnitPrice)
+                        .orElse(meter.getUtilityType() == null ? null : meter.getUtilityType().getUnitPrice()))
+                .initialIndex(meter.getInitialIndex())
+                .initialIndexDate(meter.getInitialIndexDate())
+                .readingId(curOpt.map(MeterReading::getId).orElse(null))
+                .prevIndex(prevIndex)
+                .prevIndexSource(prevSource)
+                .currentIndex(curOpt.map(MeterReading::getCurrentIndex).orElse(null))
+                .build();
     }
 
     private MeterReadingOverviewResponse emptyOverview(int month, int year) {
-        return MeterReadingOverviewResponse.builder().month(month).year(year).dayOfMonth(0)
-                .firstFiveDays(false).contractsAvailable(true).handoverRooms(List.of())
-                .missingRooms(List.of()).build();
+        LocalDate todayVN = LocalDate.now(clock.withZone(VN));
+        return MeterReadingOverviewResponse.builder()
+                .month(month)
+                .year(year)
+                .dayOfMonth(todayVN.getDayOfMonth())
+                .firstFiveDays(todayVN.getDayOfMonth() <= 5)
+                .endOfMonthReminder(todayVN.getDayOfMonth() >= 28)
+                .futurePeriod(YearMonth.of(year, month).isAfter(YearMonth.from(todayVN)))
+                .contractsAvailable(true)
+                .handoverRooms(List.of())
+                .missingRooms(List.of())
+                .closingRooms(List.of())
+                .build();
+    }
+
+    private void assertNotFuturePeriod(int month, int year) {
+        YearMonth target = YearMonth.of(year, month);
+        YearMonth current = YearMonth.from(LocalDate.now(clock.withZone(VN)));
+        if (target.isAfter(current)) {
+            throw new BusinessException("FUTURE_PERIOD_NOT_ALLOWED",
+                    "Không được nhập chỉ số cho tháng tương lai",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     private BigDecimal resolvePrevIndex(Meter meter, int month, int year) {
@@ -328,32 +604,26 @@ public class MeterReadingService {
         if (previous.isPresent()) {
             return previous.get().getCurrentIndex();
         }
-        // Tim chi so gan nhat truoc do (phong truong hop bo trong vai thang).
         Optional<MeterReading> latest = readings
                 .findTopByMeter_IdAndYearAndMonthLessThanOrderByYearDescMonthDesc(meter.getId(), year, month);
         return latest.map(MeterReading::getCurrentIndex).orElse(meter.getInitialIndex());
     }
 
-    /**
-     * Hóa đơn tự sinh nên tháng đã có hóa đơn vẫn phải sửa được chỉ số. Chỉ khóa khi
-     * tiền đã được thu (PAID/PARTIALLY_PAID hoặc có paidAmount) để không làm lệch sổ.
-     */
     private void assertInvoiceEditable(Long roomId, int month, int year) {
         List<Invoice> existing = invoices.findByRoomIdAndMonthAndYear(roomId, month, year);
-        boolean locked = existing.stream().anyMatch(i -> i.getStatus() == InvoiceStatus.PAID
-                || i.getStatus() == InvoiceStatus.PARTIALLY_PAID
-                || (i.getPaidAmount() != null && i.getPaidAmount().signum() > 0));
-        if (locked) {
+        if (isInvoiceLocked(existing)) {
             throw new BusinessException("MONTH_ALREADY_INVOICED",
                     "Tháng này đã ghi nhận thanh toán, không sửa chỉ số",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
-    /**
-     * Sinh/cập nhật hóa đơn sau khi chỉ số đã commit. Chạy sau commit để transaction mới
-     * của InvoiceAutomationService đọc được chỉ số vừa lưu.
-     */
+    private static boolean isInvoiceLocked(List<Invoice> existing) {
+        return existing.stream().anyMatch(i -> i.getStatus() == InvoiceStatus.PAID
+                || i.getStatus() == InvoiceStatus.PARTIALLY_PAID
+                || (i.getPaidAmount() != null && i.getPaidAmount().signum() > 0));
+    }
+
     private void triggerAutoInvoice(Long roomId, int month, int year) {
         Runnable task = () -> {
             try {
@@ -380,5 +650,18 @@ public class MeterReadingService {
                 .readingDate(reading.getReadingDate()).prevIndex(reading.getPrevIndex())
                 .currentIndex(reading.getCurrentIndex()).consumption(reading.getConsumption())
                 .unitPrice(reading.getUnitPrice()).amount(reading.getAmount()).build();
+    }
+
+    private static final class RoomCandidate {
+        final Long roomId;
+        final Long buildingId;
+        final String roomNumber;
+        boolean ensureMetersIfMissing;
+
+        RoomCandidate(Long roomId, Long buildingId, String roomNumber) {
+            this.roomId = roomId;
+            this.buildingId = buildingId;
+            this.roomNumber = roomNumber;
+        }
     }
 }

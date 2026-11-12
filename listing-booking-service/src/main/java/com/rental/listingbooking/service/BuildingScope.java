@@ -74,7 +74,7 @@ public class BuildingScope {
         try {
             UserClient.StaffBuildingsResponse response = userClient.getStaffBuildings(staffId);
             assigned = response == null ? null : response.buildingIds();
-        } catch (Exception unavailable) {
+        } catch (BusinessException | CallNotPermittedException | RetryableException unavailable) {
             throw dependencyUnavailable();
         }
         if (assigned == null) {

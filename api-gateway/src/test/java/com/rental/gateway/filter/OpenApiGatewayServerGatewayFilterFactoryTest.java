@@ -45,7 +45,10 @@ class OpenApiGatewayServerGatewayFilterFactoryTest {
                 {"openapi":"3.0.1",
                  "components":{"securitySchemes":{"apiKey":{"type":"apiKey","in":"header","name":"X-API-Key"}}},
                  "paths":{"/api/v1/rooms":{"get":{"security":[{"apiKey":[]}]}},
-                          "/api/v1/buildings/nearby":{"get":{}}}}
+                          "/api/v1/buildings/nearby":{"get":{}},
+                          "/api/v1/buildings/{buildingId}":{"get":{}},
+                          "/api/v1/listings/{id}":{"get":{}},
+                          "/api/v1/listings/room/{roomId}":{"get":{}}}}
                 """;
 
         var rewritten = json.readTree(filter.rewrite(source));
@@ -55,6 +58,12 @@ class OpenApiGatewayServerGatewayFilterFactoryTest {
         assertThat(roomSecurity.has("apiKey")).isTrue();
         assertThat(roomSecurity.has("bearerAuth")).isTrue();
         assertThat(rewritten.path("paths").path("/api/v1/buildings/nearby")
+                .path("get").has("security")).isFalse();
+        assertThat(rewritten.path("paths").path("/api/v1/buildings/{buildingId}")
+                .path("get").has("security")).isFalse();
+        assertThat(rewritten.path("paths").path("/api/v1/listings/{id}")
+                .path("get").has("security")).isFalse();
+        assertThat(rewritten.path("paths").path("/api/v1/listings/room/{roomId}")
                 .path("get").has("security")).isFalse();
     }
 }
