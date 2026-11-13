@@ -1474,7 +1474,8 @@ async function main() {
 
   await addTenantIfMissing(contractB201, 'mate', isoDayMonthsFromNow(-2));
 
-  await ensureMoveOut('A105-pending', 'renew', contractA105, isoDayFromNow(10), 'Chuyển về gần gia đình');
+  // A105 cố ý KHÔNG seed yêu cầu trả phòng: khách seed.renew phải tự vào /requests?tab=move-outs
+  // bấm gửi yêu cầu để kiểm thử đúng thao tác người dùng (Luồng 6).
   await ensureMoveOut('B201-pending', 'moveout', contractB201, isoDayFromNow(59), 'Chuyển công tác cuối năm');
   await ensureMoveOut('B203-approved', 'old', contractB203, isoDayFromNow(13), 'Đã tìm được chỗ ở mới');
   await approveMoveOut('B203-approved');

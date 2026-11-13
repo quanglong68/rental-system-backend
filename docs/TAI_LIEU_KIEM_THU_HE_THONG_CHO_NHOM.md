@@ -315,6 +315,8 @@ Hệ thống đã chuẩn hóa thông tin Chủ nhà hiển thị đồng bộ t
 4. **Bước 4 - Khảo sát công tơ và quyết toán hoàn cọc:** Đến ngày trả phòng thực tế, Quản lý cùng Kỹ thuật tiến hành kiểm tra tài sản phòng và chốt chỉ số điện nước cuối cùng. Quản lý vào /admin/contracts -> Bấm 'Quyết toán cọc' (Deposit Settlement). Nhập các khoản khấu trừ nếu có (tiền điện nước tháng cuối, phí vệ sinh) -> Hệ thống tự động tính số tiền cọc hoàn trả thực tế cho khách.
 5. **Bước 5 - Khách thuê nhận biên lai hoàn cọc:** Đăng nhập lại khách thuê seed.renew@test.local. Vào /my-room kiểm tra biên lai quyết toán hoàn cọc trực tuyến. Khách hàng đối chiếu các khoản khấu trừ minh bạch và nhận tiền hoàn cọc qua tài khoản ngân hàng.
 
+> 💡 **Kiểm thử nhánh từ chối & gửi lại:** Ở Bước 2, thay vì bấm 'Duyệt trả phòng', Quản lý bấm 'Từ chối' và nhập lý do. Khách thuê mở lại trang Yêu cầu sẽ thấy thông báo bị từ chối kèm phản hồi của Ban quản lý và form chọn ngày mới để **gửi lại yêu cầu** (hệ thống chỉ chặn khi đang có yêu cầu PENDING).
+
 #### ✅ Kết quả mong đợi (Expected Results):
 
 - Khách thuê gửi yêu cầu trả phòng có báo trước ngày cụ thể.

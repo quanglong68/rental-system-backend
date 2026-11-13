@@ -166,7 +166,8 @@ async function main() {
     const m = (moveOutPage.content ?? []).find((x) => String(x.id) === String(id));
     moveOuts[key] = m ? { status: m.status, expectedMoveOutDate: m.expectedMoveOutDate } : { status: 'MISSING' };
   }
-  check('A105 move-out PENDING', moveOuts['A105-pending']?.status, 'PENDING');
+  const a105MoveOut = (moveOutPage.content ?? []).find((x) => String(x.contractId) === String(contracts.A105 ?? ''));
+  check('A105 chưa có yêu cầu trả phòng seed sẵn (khách tự gửi)', a105MoveOut ? a105MoveOut.status : 'NONE', 'NONE');
   check('B201 move-out PENDING', moveOuts['B201-pending']?.status, 'PENDING');
   check('B203 move-out APPROVED', moveOuts['B203-approved']?.status, 'APPROVED');
 
